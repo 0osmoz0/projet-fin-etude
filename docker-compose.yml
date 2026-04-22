@@ -1,0 +1,73 @@
+name: pfe-escape
+
+services:
+  hub:
+    build: ./services/hub
+    ports:
+      - "8080:80"
+    networks:
+      - public_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  pivot:
+    build: ./services/pivot
+    ports:
+      - "8081:80"
+    networks:
+      - public_net
+      - internal_net
+    restart: unless-stopped
+    healthcheck:
+        test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+        interval: 10s
+        timeout: 3s
+        retries: 5
+        start_period: 5s
+
+  cctv:
+    build: ./services/cctv
+    networks:
+      - internal_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    
+  vault:
+    build: ./services/vault
+    networks:
+      - internal_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+  
+  alarm:
+    build: ./services/alarm
+    networks:
+      - internal_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+networks:
+  public_net:
+    driver: bridge
+  internal_net:
+    driver: bridge
