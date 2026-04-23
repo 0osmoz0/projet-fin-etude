@@ -10,11 +10,13 @@
     <p><strong>Session:</strong> OMEGA-OSINT-01</p>
     <input id="urlBar" type="text" placeholder="intel://start"/>
     <div id="view">Console prete. Entrez une URL de renseignement.</div>
+    <p><a href="mail-1.html">← Retour au Mail 1</a></p>
+    <p><a href="validation.html">Aller à la validation OSINT →</a></p>
 
     <script>
         const urlBar = document.getElementById("urlBar");
-
         const view = document.getElementById("view");
+        urlBar.focus();
 
             view.addEventListener("click", function (ev){
                 const link = ev.target.closest("a[data-url]");
@@ -49,6 +51,8 @@
                 }
             } 
         });
+        urlBar.value = "intel://start";
+        urlBar.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter"}));
      </script>
 </body>
 </html>
