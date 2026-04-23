@@ -1,0 +1,4 @@
+Auth Gateway v2.3.4
+hotfix BT-AUTH-4421 rolled back
+legacy mirror parser still enabled (tpl parameter)
+owner: n.morel

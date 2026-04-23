@@ -1,0 +1,4 @@
+deploy window: 02:00-03:00 UTC
+rollback profile: legacy-mirror
+template input: tpl
+approved by: n.morel
