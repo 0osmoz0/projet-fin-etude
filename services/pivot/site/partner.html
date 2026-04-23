@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Portal</title>
+</head>
+<body>
+    <h1>Black Tide Partner Portal</h1>
+    <p>Authentication failed. Incident reference: BT-AUTH-4421</p>
+    <!-- BT-AUTH-4421 linked to gateway fallback: /internal/auth-gateway/v2 -->
+    <p><small>Support note: if issue persists, contact relay node "n.morel".</small></p>
+    <!-- temp note: partner-auth fallback user format = first.last -->
+    <p>Access restricted to accredited operators.</p>
+    <p><small>Legacy mirror mode enabled when <code>mirror=legacy</code> is set.</small></p>
+    <form method="GET" action="partner.html">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Login</button>
+    </form>
+    <p><a href="index.html">← Back to official channel</a></p>
+    <p><small><a href="/internal/auth-gateway/v2/">gateway health check</a></small></p>
+    <!-- stack: nginx/1.27 + php-fpm (legacy partner module) -->
+</body>
+</html>
