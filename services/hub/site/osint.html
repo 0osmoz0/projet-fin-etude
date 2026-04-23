@@ -14,8 +14,18 @@
     <script>
         const urlBar = document.getElementById("urlBar");
 
+        const view = document.getElementById("view");
+
+            view.addEventListener("click", function (ev){
+                const link = ev.target.closest("a[data-url]");
+                if (!link) return;
+
+                ev.preventDefault();
+                urlBar.value = link.dataset.url;
+                urlBar.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter"}));
+            });
+
         urlBar.addEventListener("keydown", function (e){
-            const view = document.getElementById("view");
             if (e.key === "Enter"){
 
                 const query = urlBar.value.trim().toLowerCase();
@@ -27,43 +37,15 @@
                 }
 
                 if (query.startsWith("intel://start")){
-                    view.innerHTML = "<h2>Start Node</h2><p>Point d'entree OSINT initialise.</p><a href='#' id='toForum'>Ouvrir forum snapshot</a>";
+                    view.innerHTML = "<h2>Start Node</h2><p>Point d'entree OSINT initialise.</p><a href='#' data-url='intel://forum'>Ouvrir forum snapshot</a>";
                 } else if (query.startsWith("intel://forum")){
-                    view.innerHTML = "<h2>Forum Snapshot</h2><p>Pseudo observe: n.morel</p><p>Fenetre d'activite: 02:00-03:00 UTC</p><a href='#' id='toMarket'>Ouvrir market listing</a>";
+                    view.innerHTML = "<h2>Forum Snapshot</h2><p>Pseudo observe: n.morel</p><p>Fenetre d'activite: 02:00-03:00 UTC</p><a href='#' data-url='intel://market'>Ouvrir market listing</a>";
                 } else if (query.startsWith("intel://market")) {
-                    view.innerHTML = "<h2>Market Listing</h2><p>Reference: BT-SUP-4421</p><a href='#' id='toLeak'>Ouvrir note de fuite</a>";
+                    view.innerHTML = "<h2>Market Listing</h2><p>Reference: BT-SUP-4421</p><a href='#' data-url='intel://leak'>Ouvrir note de fuite</a>";
                 } else if (query.startsWith("intel://leak")) {
                     view.innerHTML = "<h2>Leak Note</h2><p>Email pattern repere: prenom.nom@blacktide-corp.tld</p>";
                 } else {
                     view.innerHTML = "URL inconnue";
-                }
-            
-                const toForum = document.getElementById("toForum");
-                if (toForum){
-                    toForum.addEventListener("click", function (ev){
-                        ev.preventDefault();
-                        urlBar.value = "intel://forum";
-                        urlBar.focus();
-                        view.innerHTML = "<h2>Forum Snapshot</h2><p>Pseudo observe: n.morel</p><p>Fenetre d'activite: 02:00-03:00 UTC</p><a href='#' id='toMarket'>Ouvrir market listing</a>";
-                    });
-                    }
-                const toMarket = document.getElementById("toMarket");
-                if (toMarket){
-                    toMarket.addEventListener("click", function (ev){
-                        ev.preventDefault();
-                        urlBar.value = "intel://market";
-                        urlBar.focus();
-                        view.innerHTML = "<h2>Market Listing</h2><p>Reference: BT-SUP-4421</p><a href='#' id='toLeak'>Ouvrir note de fuite</a>";
-                    });
-                    }
-                const toLeak = document.getElementById("toLeak");
-                if (toLeak){
-                    toLeak.addEventListener("click", function (ev){
-                        ev.preventDefault();
-                        urlBar.value = "intel://leak";
-                        urlBar.focus();
-                        view.innerHTML = "<h2>Leak Note</h2><p>Email pattern repere: prenom.nom@blacktide-corp.tld</p>";
-                    });
                 }
             } 
         });
