@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT</title>
+</head>
+<body>
+    <h1>OSINT Workbench</h1>
+    <p><strong>Session:</strong> OMEGA-OSINT-01</p>
+    <input id="urlBar" type="text" placeholder="intel://start"/>
+    <div id="view">Console prete. Entrez une URL de renseignement.</div>
+
+    <script>
+        const urlBar = document.getElementById("urlBar");
+
+        urlBar.addEventListener("keydown", function (e){
+            if (e.key === "Enter"){
+                const view = document.getElementById("view");
+
+                if (urlBar.value.startsWith("intel://start")){
+                    view.innerHTML = "<h2>Start Node</h2><p>Point d'entree OSINT initialise.</p><a href='#' id='toForum'>Ouvrir forum snapshot</a>";
+                } else if (urlBar.value.startsWith("intel://forum")){
+                    view.innerHTML = "<h2>Forum Snapshot</h2><p>Pseudo observe: n.morel</p><a href='#' id='toMarket'>Ouvrir market listing</a>";
+                } else if (urlBar.value.startsWith("intel://market")) {
+                    view.innerHTML = "<h2>Market Listing</h2><p>Reference: BT-SUP-4421</p>";
+                } else {
+                    view.innerHTML = "URL inconnue";
+                }
+            }
+            const toForum = document.getElementById("toForum");
+            if (toForum){
+                toForum.addEventListener("click", function (ev){
+                    ev.preventDefault();
+                    urlBar.value = "intel://forum";
+                    view.innerHTML = "<h2>Forum Snapshot</h2><p>Pseudo observe: n.morel</p>";
+                });
+            }
+            const toMarket = document.getElementById("toMarket");
+            if (toMarket){
+                toMarket.addEventListener("click", function (ev){
+                    ev.preventDefault();
+                    urlBar.value = "intel://market";
+                    view.innerHTML = "<h2>Market Listing</h2><p>Reference: BT-SUP-4421</p>";
+                });
+            }
+        });
+     </script>
+</body>
+</html>
