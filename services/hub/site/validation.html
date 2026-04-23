@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,42 @@
 </head>
 <body>
     <h1>Validation OSINT</h1>
-    <p>Page en construction...</p>
+    <form>
+        <label for="emailPattern">Format email interne :</label>
+        <input id="emailPattern" type="text" placeholder="prenom.nom@..."/>
+        <button type="submit">Valider</button>
+        <p id="result"></p>
+        <p id="nextStep" style="display:none;">
+            <a href="mail-2.html">Acceder au Mail 2</a>
+        </p>
+        <label for="targetUser">Utilisateur cible :</label>
+        <input id="targetUser" type="text" placeholder="prenom.nom"/>
+    </form>
     <p><a href="osint.html">← Retour à l'OSINT Workbench</a></p>
+
+    <script>
+        const form = document.querySelector("form");
+        const emailInput = document.getElementById("emailPattern")
+        const targetUserInput = document.getElementById("targetUser")
+        const nextStep = document.getElementById("nextStep");
+        const result = document.getElementById("result");
+
+        form.addEventListener("submit", function(e){
+            e.preventDefault();
+            const emailValue = emailInput.value.trim().toLowerCase();
+            const targetValue = targetUserInput.value.trim().toLowerCase();
+
+            const isEmailValid = emailValue === "prenom.nom@blacktide-corp.tld";
+            const isTargetValid = targetValue === "n.morel";
+
+            result.textContent = isEmailValid && isTargetValid ? "Validation OSINT reussie. Passage autorise vers Mail 2." : "Validation incomplete. Verifiez vos recoupements OSINT.";
+
+            if (isEmailValid && isTargetValid){
+                nextStep.style.display = "block";
+            } else {
+                nextStep.style.display = "none";
+            }
+        });
+    </script>
 </body>
 </html>
