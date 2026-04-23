@@ -1,0 +1,21 @@
+.mail-content {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.95));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+}
+
+.mail-meta p {
+  margin: 0 0 5px;
+}
+
+.mail-content hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 14px 0;
+}
+
+.mail-footer {
+  margin-top: 16px;
+}
