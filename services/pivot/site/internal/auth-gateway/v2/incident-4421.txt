@@ -1,0 +1,4 @@
+incident: BT-AUTH-4421
+scope: partner portal mirror mode
+trigger: mirror=legacy with tpl parameter
+status: mitigated (monitoring)

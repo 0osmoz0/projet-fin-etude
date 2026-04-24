@@ -20,9 +20,29 @@
         <input type="password" id="password" name="password" required>
         <button type="submit">Login</button>
     </form>
+    <p id="mirrorStatus" hidden><small></small></p>
     <!-- debug: mirror=legacy uses tpl from query string -->
     <p><a href="index.html">← Back to official channel</a></p>
     <p><small><a href="/internal/auth-gateway/v2/">gateway health check</a></small></p>
     <!-- stack: nginx/1.27 + php-fpm (legacy partner module) -->
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const mirror = params.get("mirror");
+            const tpl = params.get("tpl");
+            if (mirror !== "legacy") return;
+
+            const status = document.getElementById("mirrorStatus");
+            if (!status) return;
+
+            status.hidden = false;
+            const tplValue = tpl && tpl.trim() ? tpl.trim() : "default";
+            const tplLower = tplValue.toLowerCase();
+            const rejectedByPolicy = tplLower.includes("../") || tplLower.includes("%2e%2e");
+            status.firstElementChild.textContent = rejectedByPolicy
+                ? "Legacy mirror profile active. tpl rejected by policy."
+                : `Legacy mirror profile active. tpl=${tplValue}`;
+        })();
+    </script>
 </body>
 </html>

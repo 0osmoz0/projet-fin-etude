@@ -1,0 +1,4 @@
+correlation-id: BT-AUTH-4421
+source: partner.html mirror=legacy
+input-vector: tpl
+owner: relay node n.morel

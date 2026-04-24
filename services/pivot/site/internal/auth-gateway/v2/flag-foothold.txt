@@ -1,0 +1,3 @@
+FOOTHOLD: CASE-2194-A
+ref: BT-AUTH-4421
+vector: mirror=legacy + tpl
