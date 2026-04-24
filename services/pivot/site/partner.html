@@ -39,18 +39,21 @@
             if (!statusText) return;
 
             status.hidden = false;
-            const tplValue = tpl && tpl.trim() ? tpl.trim().toLowerCase() : "default";
-            const rejectedByPolicy = tplValue.includes("../") || tplValue.includes("%2e%2e");
+            const tplNormalized = tpl && tpl.trim() ? tpl.trim().toLowerCase() : "default";
+            const isPolicyBlocked = tplNormalized.includes("../") || tplNormalized.includes("%2e%2e");
 
-            const sidSource = `${mirror}:${tplValue}`;
-            const sid = `m${sidSource.length}-${sidSource.replace(/[^a-z0-9]/g, "").slice(0, 8)}`;
+            const sidInput = `${mirror}:${tplNormalized}`;
+            const sid = `m${sidInput.length}-${sidInput.replace(/[^a-z0-9]/g, "").slice(0, 8)}`;
 
-            const policy = rejectedByPolicy ? "BLOCK" : "ALLOW";
-        
-            
-            statusText.textContent = rejectedByPolicy
-            ? `Legacy mirror profile active. tpl rejected by policy. [LEGACY-BLOCK] sid=${sid} policy=${policy}`
-            : `Legacy mirror profile active. tpl=${tplValue} [LEGACY-OK] sid=${sid} policy=${policy}`;
+            const policy = isPolicyBlocked ? "BLOCK" : "ALLOW";
+
+            const ts = new Date().toISOString();
+
+            const message = isPolicyBlocked
+            ? `Legacy mirror profile active. tpl rejected by policy. [LEGACY-BLOCK] | sid=${sid} | policy=${policy} | ts=${ts} | src=partner-ui`
+            : `Legacy mirror profile active. tpl=${tplNormalized} [LEGACY-OK] | sid=${sid} | policy=${policy} | ts=${ts} | src=partner-ui`;
+
+            statusText.textContent = message;
         })();
     </script>
 </body>
