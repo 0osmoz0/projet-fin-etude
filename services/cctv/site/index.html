@@ -1,12 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMERAS PANEL</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCTV Internal Console</title>
 </head>
 <body>
-    <h1>CAMERAS PANEL OK</h1>
-    <p>Service de surveillance</p>
+  <h1>CCTV Internal Console</h1>
+  <p>Scope: internal_net only</p>
+  <p>Status: degraded export gateway profile loaded</p>
+
+  <h2>Exports</h2>
+  <ul>
+    <li>Public snapshot: <code>/api/export.php?id=pub-lobby</code></li>
+    <li>Public snapshot: <code>/api/export.php?id=pub-loading-bay</code></li>
+  </ul>
+
+  <h2>Operator notes</h2>
+  <p>Temporary compatibility mode is active for old relay clients.</p>
+  <p><small>Hint: legacy clients still pass <code>scope=legacy</code> in export calls.</small></p>
 </body>
 </html>

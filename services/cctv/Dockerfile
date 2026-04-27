@@ -1,2 +1,3 @@
-FROM nginx:1.27.0-alpine
-COPY ./site/ /usr/share/nginx/html/
+FROM php:8.2-apache
+COPY ./site/ /var/www/html/
+RUN chown -R www-data:www-data /var/www/html/exports

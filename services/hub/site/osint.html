@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OSINT Workbench</title>
-  <link rel="stylesheet" href="assets/css/common.css">
-  <link rel="stylesheet" href="assets/css/osint.css">
 </head>
 <body>
   <div class="container">
@@ -17,9 +15,10 @@
         <span class="dot red"></span>
         <span class="dot yellow"></span>
         <span class="dot green"></span>
-        <input id="urlBar" type="text" placeholder="intel://start" />
+        <input id="urlBar" type="text" placeholder="Requete OSINT (ex: incident auth-gateway, type:scan stack)" />
+        <button id="translateBtn" type="button">Traduire: OFF</button>
       </div>
-      <div id="view">Console prete. Entrez une URL de renseignement.</div>
+      <div id="view">Indexation en cours...</div>
     </div>
 
     <div class="footer-links">

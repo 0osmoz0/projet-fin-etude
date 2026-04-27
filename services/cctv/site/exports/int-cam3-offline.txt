@@ -1,0 +1,4 @@
+camera=cam-3
+window=02:00-03:00 UTC
+mode=blindspot-prep
+CCTV: BLINDSPOT-OK-2026-04-27T0200Z
