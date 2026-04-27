@@ -12,11 +12,26 @@
     <section class="card">
     <h1>Validation OSINT</h1>
     <form class="validation-form">
-        <label for="emailPattern">Format email interne :</label>
+        <label for="emailPattern">Format email interne : </label>
         <input id="emailPattern" type="text" placeholder="prenom.nom@..."/>
-        <label for="targetUser">Utilisateur cible :</label>
+        <label for="targetUser">Utilisateur cible : </label>
         <input id="targetUser" type="text" placeholder="prenom.nom"/>
+        <label for="portalSubdomain">Sous-domaine / portail expose :</label>
+        <input id="portalSubdomain" type="text" placeholder="ex: /internal/auth-gateway/v2"/>
+        <label for="portalStack">Stack technique du portail :</label>
+        <input id="portalStack" type="text" placeholder="ex: nginx/1.27 + php-fpm"/>
+        <label for="videoProvider">Prestataire videosurveillance :</label>
+        <input id="videoProvider" type="text" placeholder="ex: BT-SUP-4421"/>
+        <label for="internalProject">Nom du projet interne actif :</label>
+        <input id="internalProject" type="text" placeholder="ex: legacy-mirror"/>
+        <label for="operationRef">Reference operationnelle (ticket/ID) :</label>
+        <input id="operationRef" type="text" placeholder="ex: BT-AUTH-4421"/>
+        <label for="operationWindow">Fenetre temporelle d'operation :</label>
+        <input id="operationWindow" type="text" placeholder="ex: 02:00-03:00 UTC"/>
+        <label for="exposedPort">Port exposé du portail partenaire :</label>
+        <input id="exposedPort" type="text" placeholder="ex: 8081"/>
         <button type="submit">Valider</button>
+        <p id="progress">Progression OSINT: 0/8</p>
         <p id="result"></p>
         <p id="nextStep" style="display:none;">
             <a href="mail-2.html">Acceder au Mail 2</a>
