@@ -17,8 +17,6 @@ services:
 
   pivot:
     build: ./services/pivot
-    ports:
-      - "${PIVOT_PORT}:80"
     networks:
       - public_net
       - internal_net
@@ -65,6 +63,29 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+
+  blacktide_vuln:
+    image: vulnerables/web-dvwa
+    networks:
+      - public_net
+    restart: unless-stopped
+
+  blacktide_gateway:
+    build: ./services/blacktide-gateway
+    ports:
+      - "${PIVOT_PORT}:80"
+    networks:
+      - public_net
+    restart: unless-stopped
+    depends_on:
+      - blacktide_vuln
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
 
 networks:
   public_net:
