@@ -30,8 +30,9 @@ docker compose logs -f
 ```
 
 ## Vérifier l’accès (services exposés)
-- Hub: `http://localhost:8080`
-- Pivot: `http://localhost:8081`
+Ports définis dans `.env` (défaut **18080** / **18081** sur macOS) :
+- Hub: `http://localhost:18080`
+- Pivot: `http://localhost:18081`
 
 ## Arrêter
 ```bash
@@ -71,6 +72,17 @@ make ps
 ```bash
 make config
 make lint
+```
+
+### Port déjà utilisé (`bind: address already in use`)
+```bash
+make ports-check          # affiche quel processus bloque le port
+# Option A : libérer le port (ex. autre conteneur Docker)
+docker ps --format '{{.Names}} {{.Ports}}' | grep 8080
+# Option B : changer les ports dans .env
+#   HUB_PORT=18080
+#   PIVOT_PORT=18081
+make down && make up
 ```
 
 Guide complet : [devops.md](./devops.md).

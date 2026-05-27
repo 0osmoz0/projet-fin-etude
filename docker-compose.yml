@@ -9,8 +9,15 @@ x-logging: &default-logging
 x-restart: &default-restart
   restart: unless-stopped
 
-x-healthcheck-web: &healthcheck-web
-  test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+x-healthcheck-nginx: &healthcheck-nginx
+  test: ["CMD-SHELL", "curl -fsSL -o /dev/null http://127.0.0.1/ || exit 1"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 10s
+
+x-healthcheck-php: &healthcheck-php
+  test: ["CMD-SHELL", "curl -fsS http://localhost/ >/dev/null 2>&1 || exit 1"]
   interval: 10s
   timeout: 3s
   retries: 5
@@ -25,7 +32,7 @@ services:
       - public_net
     <<: *default-restart
     logging: *default-logging
-    healthcheck: *healthcheck-web
+    healthcheck: *healthcheck-nginx
     labels:
       - "com.pfe.service=hub"
       - "com.pfe.tier=public"
@@ -41,7 +48,7 @@ services:
       - internal_net
     <<: *default-restart
     logging: *default-logging
-    healthcheck: *healthcheck-web
+    healthcheck: *healthcheck-php
     labels:
       - "com.pfe.service=pivot"
       - "com.pfe.tier=pivot"
@@ -56,7 +63,7 @@ services:
       - internal_net
     <<: *default-restart
     logging: *default-logging
-    healthcheck: *healthcheck-web
+    healthcheck: *healthcheck-php
     labels:
       - "com.pfe.service=cctv"
       - "com.pfe.tier=internal"
@@ -71,7 +78,7 @@ services:
       - internal_net
     <<: *default-restart
     logging: *default-logging
-    healthcheck: *healthcheck-web
+    healthcheck: *healthcheck-nginx
     labels:
       - "com.pfe.service=vault"
       - "com.pfe.tier=internal"
@@ -86,7 +93,7 @@ services:
       - internal_net
     <<: *default-restart
     logging: *default-logging
-    healthcheck: *healthcheck-web
+    healthcheck: *healthcheck-nginx
     labels:
       - "com.pfe.service=alarm"
       - "com.pfe.tier=internal"
@@ -97,16 +104,17 @@ services:
 
   blacktide_vuln:
     image: vulnerables/web-dvwa:latest
+    platform: linux/amd64
     networks:
       - public_net
     <<: *default-restart
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\",80)?0:1);'"]
       interval: 15s
       timeout: 5s
-      retries: 8
-      start_period: 30s
+      retries: 10
+      start_period: 45s
     labels:
       - "com.pfe.service=blacktide-vuln"
       - "com.pfe.tier=lab"
@@ -126,7 +134,7 @@ services:
     depends_on:
       blacktide_vuln:
         condition: service_healthy
-    healthcheck: *healthcheck-web
+    healthcheck: *healthcheck-nginx
     labels:
       - "com.pfe.service=blacktide-gateway"
       - "com.pfe.tier=public"

@@ -12,8 +12,8 @@ cp .env.example .env
 make up
 ```
 
-- **Hub (OSINT)** : http://localhost:8080  
-- **Black Tide (pivot public)** : http://localhost:8081  
+- **Hub (OSINT)** : http://localhost:18080 (voir `HUB_PORT` dans `.env`)  
+- **Black Tide (pivot public)** : http://localhost:18081 (voir `PIVOT_PORT`)  
 
 Vérification : `make smoke` ou `make test`.
 
