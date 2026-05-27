@@ -1,0 +1,16 @@
+**/.git
+**/.github
+**/.env
+**/.env.*
+!**/.env.example
+**/.DS_Store
+**/README.md
+**/docs
+**/*.md
+**/.editorconfig
+**/.pre-commit-config.yaml
+**/Makefile
+**/scripts
+**/docker-compose*.yml
+**/.yamllint.yml
+**/.hadolint.yaml
