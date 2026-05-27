@@ -10,14 +10,14 @@ x-restart: &default-restart
   restart: unless-stopped
 
 x-healthcheck-nginx: &healthcheck-nginx
-  test: ["CMD-SHELL", "curl -fsSL -o /dev/null http://127.0.0.1/ || exit 1"]
+  test: ["CMD-SHELL", "curl -fsSL -o /dev/null http://127.0.0.1:8080/ || exit 1"]
   interval: 10s
   timeout: 3s
   retries: 5
   start_period: 10s
 
 x-healthcheck-php: &healthcheck-php
-  test: ["CMD-SHELL", "curl -fsS http://localhost/ >/dev/null 2>&1 || exit 1"]
+  test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
   interval: 10s
   timeout: 3s
   retries: 5
@@ -27,7 +27,7 @@ services:
   hub:
     build: ./services/hub
     ports:
-      - "${HUB_PORT}:80"
+      - "${HUB_PORT}:8080"
     networks:
       - public_net
     <<: *default-restart
@@ -126,7 +126,7 @@ services:
   blacktide_gateway:
     build: ./services/blacktide-gateway
     ports:
-      - "${PIVOT_PORT}:80"
+      - "${PIVOT_PORT}:8080"
     networks:
       - public_net
     <<: *default-restart

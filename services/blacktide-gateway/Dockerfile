@@ -1,2 +1,2 @@
-FROM nginx:1.27.0-alpine
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf

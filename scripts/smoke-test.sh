@@ -24,7 +24,7 @@ check_url "Pivot (gateway)" "http://127.0.0.1:${PIVOT_PORT}/"
 # Services internes via exec (pas exposés sur l'hôte)
 http_probe() {
   $COMPOSE exec -T "$1" sh -c \
-    'curl -fsS http://localhost/ >/dev/null 2>&1 || wget -qO- http://localhost/ >/dev/null 2>&1'
+    'curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1 || curl -fsS http://127.0.0.1/ >/dev/null 2>&1 || wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || wget -qO- http://127.0.0.1/ >/dev/null 2>&1'
 }
 
 for svc in pivot cctv vault alarm; do
