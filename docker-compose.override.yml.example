@@ -1,0 +1,15 @@
+# Copier vers compose.override.yml pour le dev local (gitignored).
+# cp docker-compose.override.yml.example compose.override.yml
+#
+# Exemple : monter les assets hub en live (nécessite nginx avec reload manuel).
+
+services:
+  hub:
+    # volumes:
+    #   - ./services/hub/site:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+
+  blacktide_gateway:
+    ports:
+      - "8081:80"

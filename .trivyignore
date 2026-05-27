@@ -1,0 +1,3 @@
+# Indices / flags du scénario — faux positifs secrets attendus
+services/pivot/site/internal/auth-gateway/v2/flag-foothold.txt
+services/pivot/site/internal/auth-gateway/v2/error.log
