@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, "feat/**", "fix/**"]
+    branches: [main, develop, "feat/**", "fix/**"]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Scan IaC (Compose + Dockerfiles)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: "services,docker-compose.yml"
@@ -127,11 +127,10 @@ jobs:
 
       - name: Scan images (services maison)
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1 --version
           while read -r img; do
             [[ -z "$img" || "$img" == "<none>" ]] && continue
             echo "::group::Trivy $img"
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-              aquasec/trivy:0.58.1 image --severity CRITICAL,HIGH --exit-code 0 "$img"
+              aquasec/trivy:0.69.3 image --severity CRITICAL,HIGH --exit-code 0 "$img"
             echo "::endgroup::"
           done < <(docker compose images --format '{{.Image}}' | sort -u | grep -v vulnerables || true)
