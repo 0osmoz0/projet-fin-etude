@@ -7,7 +7,7 @@ ENV_FILE ?= .env
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env-check config lint lint-docker lint-yaml lint-shell lint-workflows build up down restart ps logs smoke wait clean reset-hard pre-commit-install
+.PHONY: help env-check ports-check config lint lint-docker lint-yaml lint-shell lint-workflows build up down restart ps logs smoke wait clean reset-hard pre-commit-install
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z0-9_-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -17,6 +17,9 @@ env-check: ## Vérifie que .env existe (copie depuis .env.example si absent)
 		echo "→ $(ENV_FILE) absent, copie depuis .env.example"; \
 		cp .env.example "$(ENV_FILE)"; \
 	fi
+
+ports-check: env-check ## Vérifie que HUB_PORT et PIVOT_PORT sont libres
+	./scripts/check-ports.sh
 
 config: env-check ## Valide docker-compose.yml
 	$(COMPOSE) config -q
@@ -36,7 +39,7 @@ lint-docker: ## hadolint sur tous les Dockerfiles
 
 lint-shell: ## shellcheck sur scripts/
 	@command -v shellcheck >/dev/null || { echo "Installez shellcheck"; exit 1; }
-	shellcheck scripts/*.sh
+	shellcheck -x scripts/*.sh scripts/lib/common.sh
 
 lint-workflows: ## actionlint sur les workflows GitHub
 	@command -v actionlint >/dev/null || { echo "Installez actionlint: https://github.com/rhysd/actionlint"; exit 1; }
@@ -45,7 +48,7 @@ lint-workflows: ## actionlint sur les workflows GitHub
 build: env-check ## Build toutes les images
 	$(COMPOSE) build --pull
 
-up: env-check ## Démarre la stack (détaché)
+up: env-check ports-check ## Démarre la stack (détaché)
 	$(COMPOSE) up -d --build
 
 down: ## Arrête la stack

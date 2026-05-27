@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# shellcheck source=lib/common.sh
+# shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 
 TIMEOUT="${TIMEOUT:-180}"

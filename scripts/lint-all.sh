@@ -16,7 +16,7 @@ for f in services/*/Dockerfile; do
 done
 
 echo "==> shellcheck"
-shellcheck scripts/*.sh
+shellcheck -x scripts/*.sh scripts/lib/common.sh
 
 if command -v actionlint >/dev/null; then
   echo "==> actionlint"
