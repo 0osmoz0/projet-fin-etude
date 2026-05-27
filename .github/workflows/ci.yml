@@ -84,12 +84,10 @@ jobs:
         run: docker compose build --pull
 
       - name: Start stack
-        run: docker compose up -d
+        run: docker compose up -d --wait --wait-timeout 240
 
-      - name: Wait for health
-        run: ./scripts/wait-healthy.sh
-        env:
-          TIMEOUT: "240"
+      - name: Compose status
+        run: docker compose ps -a
 
       - name: Smoke tests
         run: ./scripts/smoke-test.sh
