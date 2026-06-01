@@ -39,4 +39,22 @@ if ! grep -q 'CCTV: BLINDSPOT-OK-' <<<"$body"; then
 fi
 log "OK CCTV (voie SSH ops → réseau interne)"
 
+# shellcheck disable=SC2029
+terrain="$(ssh "${ssh_opts[@]}" ops@127.0.0.1 \
+  "curl -fsS 'http://cctv:8080/api/export.php?id=int-cam3-plan&token=BT-CCTV-ADMIN-4421&as=admin'" \
+  2>/dev/null || true)"
+if ! grep -q 'TERRAIN: CAM3-PLAN-EXPORT-' <<<"$terrain"; then
+  die "Terrain via SSH: flag absent"
+fi
+log "OK Terrain (SSH → cctv plan)"
+
+# shellcheck disable=SC2029
+omega="$(ssh "${ssh_opts[@]}" ops@127.0.0.1 \
+  "curl -fsS 'http://vault:8080/api/dossier.php?token=OMEGA-VAULT-SA-4421'" \
+  2>/dev/null || true)"
+if ! grep -qE 'OMEGA: DOSSIER-OMEGA-SHA256=[a-f0-9]{64}' <<<"$omega"; then
+  die "OMEGA via SSH: flag absent"
+fi
+log "OK OMEGA (SSH → vault dossier)"
+
 log "Smoke SSH réussi."

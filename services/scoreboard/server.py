@@ -13,6 +13,7 @@ FLAGS = {
     "FOOTHOLD":  { "pattern": r"^FOOTHOLD:\s*CASE-2194-A$",                     "points": 100 },
     "ELEVATION": { "pattern": r"^ELEVATION:\s*OPS-CLEARANCE-2$",                "points": 200 },
     "CCTV":      { "pattern": r"^CCTV:\s*BLINDSPOT-OK-\d+$",                    "points": 300 },
+    "TERRAIN":   { "pattern": r"^TERRAIN:\s*CAM3-PLAN-EXPORT-[A-F0-9]{6}$",     "points": 350 },
     "OMEGA":     { "pattern": r"^OMEGA:\s*DOSSIER-OMEGA-SHA256=[a-f0-9]{64}$",  "points": 500 },
 }
 SPEED_BONUS = 50  # Points bonus pour la première équipe à capturer un flag
