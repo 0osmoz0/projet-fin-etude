@@ -116,8 +116,11 @@ Voir `omega/ops/tunnel-note` (legacy render ou relay mesh).
 L’équipe terrain ne doit pas partir tant que l’alerting est armé. **Silencer avant** l’export plan cam-3.
 
 1. Statut : `tpl=omega/ops/alarm-token` ou `action=mesh` sur le relay.
-2. UI interne : tunnel SSH `ssh -L 18083:alarm:8080 ops@127.0.0.1 -p 2222` → http://127.0.0.1:18083/
-3. Silence (relay) :
+2. **UI navigateur (recommandé)** — après `bind` + upgrade clearance 2 sur le relay (même navigateur / cookies) :
+   `http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/ops-alarm-panel.php`
+3. UI directe alarm (optionnel) : tunnel SSH **depuis le Mac** (pas depuis le shell ops) :
+   `ssh -i <clé_ops> -p 2222 -N -L 18083:alarm:8080 ops@127.0.0.1` → http://127.0.0.1:18083/
+4. Silence (relay CLI) :
 
 ```bash
 curl -b cookies.txt -G \
@@ -127,7 +130,7 @@ curl -b cookies.txt -G \
   "http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/ops-relay.php"
 ```
 
-4. Depuis **ops@pivot** : `curl -fsS 'http://alarm:8080/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3'`
+5. Depuis **ops@pivot** : `curl -fsS 'http://alarm:8080/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3'`
 
 Preuve : **`ALERT: SILENCED-BT-4421`**
 
