@@ -11,6 +11,8 @@ alarm_silence=/api/silence.php?token=<alarm_ops_token>&window=cam3
 alarm_token_channel=omega/ops/alarm-token (legacy tpl)
 alarm_gate=terrain plan blocked until armed=no
 alarm_ui_browser=ops-alarm-panel.php (relay session clearance 2, via gateway :18081)
+cctv_ui_browser=ops-cctv-panel.php (relay session clearance 2, via gateway :18081)
+cctv_console_native=/console.php (tunnel 18082:cctv:8080 optional)
 
 cctv_export=/api/export.php?id=int-cam3-offline&scope=legacy&as=ops
 cctv_plan=/api/export.php?id=int-cam3-plan&token=<cctv_admin_token>&as=admin

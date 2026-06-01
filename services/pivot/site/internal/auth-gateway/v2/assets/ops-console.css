@@ -1,0 +1,189 @@
+:root {
+  --bg: #0b0f14;
+  --surface: #121820;
+  --surface-2: #1a2330;
+  --border: #2a3544;
+  --text: #e8edf4;
+  --muted: #8b9cb3;
+  --accent: #3d8bfd;
+  --danger: #f85149;
+  --warn: #d29922;
+  --ok: #3fb950;
+  --mono: "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(90deg, #0f1623, #141c2b);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar h1 { margin: 0; font-size: 1rem; font-weight: 600; }
+.topbar .meta { font-size: 0.75rem; color: var(--muted); }
+.topbar .nav-links a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.8rem;
+  margin-left: 1rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100vh - 49px);
+}
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.sidebar a {
+  display: block;
+  padding: 0.45rem 0.6rem;
+  margin-bottom: 0.2rem;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.sidebar a:hover, .sidebar a.active {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.main { padding: 1.25rem 1.5rem 2rem; }
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.stat { font-size: 1.2rem; font-weight: 700; }
+.stat.ok { color: var(--ok); }
+.stat.danger { color: var(--danger); }
+
+.pill {
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pill-armed { background: rgba(248, 81, 73, 0.15); color: var(--danger); }
+.pill-clear { background: rgba(63, 185, 80, 0.15); color: var(--ok); }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { padding: 0.5rem; border-bottom: 1px solid var(--border); text-align: left; }
+th { color: var(--muted); font-size: 0.72rem; }
+
+pre, .log {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+label { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; }
+input[type="password"], input[type="text"] {
+  width: 100%;
+  max-width: 300px;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+button, .btn {
+  display: inline-block;
+  margin-top: 0.65rem;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.btn.secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
+code { font-family: var(--mono); font-size: 0.85em; background: var(--surface-2); padding: 0.1rem 0.3rem; }
+
+.cam-tile {
+  aspect-ratio: 16/10;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin-bottom: 0.4rem;
+}
+
+.cam-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.gate-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 49px);
+  padding: 2rem;
+}
+
+.gate-card { max-width: 480px; width: 100%; }
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+}

@@ -3,24 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CCTV Internal Console</title>
+  <title>Black Tide — NVR Internal</title>
+  <link rel="stylesheet" href="/assets/bt-console.css">
 </head>
 <body>
-  <h1>CCTV Internal Console</h1>
-  <p>Scope: internal_net only</p>
-  <p>Status: degraded export gateway profile loaded</p>
-
-  <h2>Exports</h2>
-  <ul>
-    <li>Public snapshot: <code>/api/export.php?id=pub-lobby</code></li>
-    <li>Public snapshot: <code>/api/export.php?id=pub-loading-bay</code></li>
-  </ul>
-
-  <h2>Operator</h2>
-  <p><a href="/console.php">Operator console</a> (token required for plan exports)</p>
-
-  <h2>Operator notes</h2>
-  <p>Temporary compatibility mode is active for old relay clients.</p>
-  <p><small>Hint: legacy clients still pass <code>scope=legacy</code> in export calls.</small></p>
+  <header class="topbar">
+    <h1>BLACK TIDE · NVR Internal</h1>
+    <span class="meta">internal_net · export gateway</span>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <a href="/" class="active">Accueil</a>
+        <a href="/console.php">Console opérateur</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <div class="grid">
+        <div class="card">
+          <h2>Profil gateway</h2>
+          <p class="stat warn" style="color:var(--warn)">degraded</p>
+          <p class="hint">Compatibilité relay legacy active</p>
+        </div>
+        <div class="card">
+          <h2>Exports publics</h2>
+          <p class="hint"><code>pub-lobby</code> · <code>pub-loading-bay</code></p>
+        </div>
+        <div class="card">
+          <h2>Exports internes</h2>
+          <p class="hint">Rôle ops / admin · token pour plan terrain</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <h2>Accès opérateur</h2>
+        <p>Console complète : plan cam-3, fenêtre offline, statut alerting.</p>
+        <a class="btn" href="/console.php">Ouvrir la console opérateur</a>
+      </div>
+    </main>
+  </div>
 </body>
 </html>

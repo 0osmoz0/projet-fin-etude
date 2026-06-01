@@ -1,0 +1,222 @@
+:root {
+  --bg: #0b0f14;
+  --surface: #121820;
+  --surface-2: #1a2330;
+  --border: #2a3544;
+  --text: #e8edf4;
+  --muted: #8b9cb3;
+  --accent: #3d8bfd;
+  --danger: #f85149;
+  --warn: #d29922;
+  --ok: #3fb950;
+  --mono: "SF Mono", "Cascadia Code", "Consolas", monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(90deg, #0f1623, #141c2b);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.topbar .meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 49px);
+}
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.sidebar nav a {
+  display: block;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.25rem;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.sidebar nav a:hover,
+.sidebar nav a.active {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.main {
+  padding: 1.25rem 1.5rem 2rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+}
+
+.card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stat {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.stat.ok { color: var(--ok); }
+.stat.danger { color: var(--danger); }
+.stat.warn { color: var(--warn); }
+
+.pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pill-armed { background: rgba(248, 81, 73, 0.15); color: var(--danger); }
+.pill-clear { background: rgba(63, 185, 80, 0.15); color: var(--ok); }
+.pill-degraded { background: rgba(210, 153, 34, 0.15); color: var(--warn); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th { color: var(--muted); font-weight: 600; font-size: 0.75rem; }
+
+pre, .log {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  margin: 0.5rem 0 0;
+}
+
+form.inline label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0.5rem 0 0.25rem;
+}
+
+input[type="password"],
+input[type="text"] {
+  width: 100%;
+  max-width: 320px;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+button, .btn {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+button.secondary, .btn.secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.75rem;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--surface-2);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.cam-tile {
+  aspect-ratio: 16/10;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.cam-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+}
