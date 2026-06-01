@@ -28,7 +28,8 @@ ssh_opts=(
   -o ConnectTimeout="$HTTP_TIMEOUT"
 )
 
-# shellcheck disable=SC2029 -- URL constante, expansion locale voulue pour curl distant
+# URL constante : expansion locale voulue pour la commande curl distante.
+# shellcheck disable=SC2029
 body="$(ssh "${ssh_opts[@]}" ops@127.0.0.1 \
   "curl -fsS 'http://cctv:8080/api/export.php?id=int-cam3-offline&scope=legacy&as=ops'" \
   2>/dev/null || true)"
