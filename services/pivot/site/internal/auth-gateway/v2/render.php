@@ -10,7 +10,14 @@ const TEMPLATES_SAFE = ['default', 'status'];
  * Mode legacy-mirror (rollback BT-AUTH-4421) : résolution depuis la racine v2,
  * pas uniquement templates/ — comportement de régression documenté côté ops.
  */
-const TEMPLATES_LEGACY = ['default', 'status', 'diag', 'omega/proofs/foothold'];
+const TEMPLATES_LEGACY = [
+    'default',
+    'status',
+    'diag',
+    'omega/proofs/foothold',
+    'omega/logs/audit',
+    'omega/ops/runbook',
+];
 
 function normalize_param(string $value): string
 {

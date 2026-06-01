@@ -30,6 +30,29 @@ if ! grep -q 'FOOTHOLD: CASE-2194-A' <<<"$foothold_body"; then
 fi
 log "OK Foothold (legacy artifact channel)"
 
+relay_base="http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/ops-relay.php"
+relay_jar="$(mktemp)"
+trap 'rm -f "$relay_jar"' EXIT
+
+relay_bind="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  "${relay_base}?bind=ops-sess-8842" 2>/dev/null || true)"
+if ! grep -q 'RELAY BOUND' <<<"$relay_bind"; then
+  die "Elevation: liaison session relay échouée"
+fi
+
+relay_up="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  -X POST -d 'action=upgrade&key=1442-HTUA-TB:n.morel' "$relay_base" 2>/dev/null || true)"
+if ! grep -q 'clearance=2' <<<"$relay_up"; then
+  die "Elevation: upgrade relay échoué"
+fi
+
+elevation_body="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  "${relay_base}?action=export&artifact=elevation" 2>/dev/null || true)"
+if ! grep -q 'ELEVATION: OPS-CLEARANCE-2' <<<"$elevation_body"; then
+  die "Elevation: flag attendu absent (ops-relay export)"
+fi
+log "OK Elevation (ops-relay clearance 2)"
+
 # Services internes via exec (pas exposés sur l'hôte)
 http_probe() {
   $COMPOSE exec -T "$1" sh -c \

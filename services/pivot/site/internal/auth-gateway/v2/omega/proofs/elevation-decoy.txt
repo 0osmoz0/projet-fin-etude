@@ -1,0 +1,2 @@
+ELEVATION: OPS-CLEARANCE-1-INVALID
+note=decoy artifact — valid clearance-2 proof requires ops-relay export

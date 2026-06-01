@@ -4,4 +4,5 @@ rollback=BT-AUTH-4421
 template_root=auth-gateway/v2 (legacy resolver)
 hint=legacy mode resolves tpl from gateway root, not only templates/
 artifact_tpl=omega/proofs/foothold
-ops=see deploy-note.txt
+audit_tpl=omega/logs/audit
+ops=post-foothold: audit log + runbook channel (not public partner UI)

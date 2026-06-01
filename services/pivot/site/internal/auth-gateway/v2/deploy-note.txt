@@ -3,5 +3,8 @@ rollback profile: legacy-mirror
 template input: tpl
 mode switch: legacy (compatibility reader)
 artifact channel: omega/proofs/foothold (mission proofs, .txt suffix)
+relay_console: /internal/auth-gateway/v2/ops-relay.php (session bind + clearance upgrade)
+audit channel: omega/logs/audit (legacy tpl)
+runbook channel: omega/ops/runbook (legacy tpl)
 approved by: n.morel
-do not expose artifact channel on public partner surface
+do not expose relay or clearance artifacts on public partner surface
