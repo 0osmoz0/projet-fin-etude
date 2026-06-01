@@ -61,6 +61,15 @@ if ! grep -q 'service=cctv' <<<"$relay_mesh"; then
 fi
 log "OK Pivot mesh (clearance 2)"
 
+alarm_silence_path='/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3'
+relay_alarm="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  -G --data-urlencode 'action=probe' --data-urlencode 'target=alarm' --data-urlencode "path=${alarm_silence_path}" \
+  "$relay_base" 2>/dev/null || true)"
+if ! grep -q 'ALERT: SILENCED-BT-4421' <<<"$relay_alarm"; then
+  die "Alarm: silence / flag ALERT attendu absent (ops-relay probe → alarm)"
+fi
+log "OK Alarm (field alerting silenced)"
+
 relay_probe="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
   -G --data-urlencode 'action=probe' --data-urlencode 'target=cctv' --data-urlencode "path=${cctv_path}" \
   "$relay_base" 2>/dev/null || true)"

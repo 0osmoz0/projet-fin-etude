@@ -1,12 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>alarm panel</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Black Tide — Field Alerting</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; margin: 2rem; }
+    .panel { max-width: 520px; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; }
+    .armed { color: #f85149; font-weight: bold; }
+    .ok { color: #3fb950; font-weight: bold; }
+    input, button { margin: 0.25rem 0; padding: 0.4rem; }
+    code { background: #161b22; padding: 0.1rem 0.3rem; }
+  </style>
 </head>
 <body>
-    <h1>alarm panel OK</h1>
-    <p>Service des alarmes</p>
+  <div class="panel">
+    <h1>Field Alerting Console</h1>
+    <p>Scope: internal_net — liaison équipe terrain / CCTV cam-3</p>
+    <p id="status">Chargement…</p>
+    <h2>Silencer (ops)</h2>
+    <form method="POST" action="/api/silence.php">
+      <label>Token <input type="password" name="token" autocomplete="off" required></label><br>
+      <label>Fenêtre <input type="text" name="window" value="cam3" required></label><br>
+      <button type="submit">Confirmer angle mort terrain</button>
+    </form>
+    <p><small>API: <code>GET /api/status.php</code> · <code>POST /api/silence.php</code></small></p>
+    <p><small>Token provisioning: pivot <code>omega/ops/alarm-token</code></small></p>
+  </div>
+  <script>
+    fetch('/api/status.php').then(r => r.text()).then(t => {
+      const el = document.getElementById('status');
+      el.textContent = t.trim();
+      el.className = t.includes('armed=no') ? 'ok' : 'armed';
+    });
+  </script>
 </body>
 </html>

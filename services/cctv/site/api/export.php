@@ -15,6 +15,18 @@ $exports = [
 $adminToken = 'BT-CCTV-ADMIN-4421';
 $providedToken = trim($_GET['token'] ?? '');
 
+function field_alerting_silenced(): bool
+{
+    $ctx = stream_context_create([
+        'http' => [
+            'timeout' => 3,
+            'header' => "User-Agent: CCTV-Export-Policy/1.0\r\n",
+        ],
+    ]);
+    $body = @file_get_contents('http://alarm:8080/api/status.php', false, $ctx);
+    return is_string($body) && str_contains($body, 'armed=no');
+}
+
 if (!isset($exports[$id])) {
     http_response_code(404);
     echo "EXPORT NOT FOUND\n";
@@ -34,6 +46,12 @@ if ($isPlanExport) {
         http_response_code(403);
         echo "EXPORT BLOCKED plan=token_or_admin_required id={$id}\n";
         echo "hint=ops token channel on pivot (omega/ops/cctv-token)\n";
+        exit;
+    }
+    if (!field_alerting_silenced()) {
+        http_response_code(423);
+        echo "EXPORT BLOCKED alarm=armed (silence field alerting before terrain plan)\n";
+        echo "hint=alarm:8080/api/silence.php window=cam3 (token: pivot omega/ops/alarm-token)\n";
         exit;
     }
 }

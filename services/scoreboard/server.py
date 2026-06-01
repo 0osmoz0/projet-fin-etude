@@ -13,6 +13,7 @@ FLAGS = {
     "FOOTHOLD":  { "pattern": r"^FOOTHOLD:\s*CASE-2194-A$",                     "points": 100 },
     "ELEVATION": { "pattern": r"^ELEVATION:\s*OPS-CLEARANCE-2$",                "points": 200 },
     "CCTV":      { "pattern": r"^CCTV:\s*BLINDSPOT-OK-\d+$",                    "points": 300 },
+    "ALERT":     { "pattern": r"^ALERT:\s*SILENCED-BT-4421$",                    "points": 275 },
     "TERRAIN":   { "pattern": r"^TERRAIN:\s*CAM3-PLAN-EXPORT-[A-F0-9]{6}$",     "points": 350 },
     "OMEGA":     { "pattern": r"^OMEGA:\s*DOSSIER-OMEGA-SHA256=[a-f0-9]{64}$",  "points": 500 },
 }
