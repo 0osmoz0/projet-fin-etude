@@ -1,4 +1,7 @@
 deploy window: 02:00-03:00 UTC
 rollback profile: legacy-mirror
 template input: tpl
+mode switch: legacy (compatibility reader)
+artifact channel: omega/proofs/foothold (mission proofs, .txt suffix)
 approved by: n.morel
+do not expose artifact channel on public partner surface

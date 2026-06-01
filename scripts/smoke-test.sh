@@ -23,6 +23,13 @@ check_url "Pivot (gateway)" "http://127.0.0.1:${PIVOT_PORT}/"
 check_url "Pivot partner" "http://127.0.0.1:${PIVOT_PORT}/partner.html"
 check_url "Pivot auth-gateway health" "http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/health.php"
 
+foothold_url="http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/render.php?mode=legacy&tpl=omega/proofs/foothold"
+foothold_body="$(curl -fsS --max-time "$HTTP_TIMEOUT" "$foothold_url" 2>/dev/null || true)"
+if ! grep -q 'FOOTHOLD: CASE-2194-A' <<<"$foothold_body"; then
+  die "Foothold: flag attendu absent ($foothold_url)"
+fi
+log "OK Foothold (legacy artifact channel)"
+
 # Services internes via exec (pas exposés sur l'hôte)
 http_probe() {
   $COMPOSE exec -T "$1" sh -c \
