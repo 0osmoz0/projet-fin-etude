@@ -12,6 +12,18 @@ const nextStep = document.getElementById("nextStep");
 const result = document.getElementById("result");
 const progress = document.getElementById("progress");
 
+const FORM_FIELDS = {
+  emailPattern: emailInput,
+  targetUser: targetUserInput,
+  portalSubdomain: portalSubdomainInput,
+  portalStack: portalStackInput,
+  videoProvider: videoProviderInput,
+  internalProject: internalProjectInput,
+  operationRef: operationRefInput,
+  operationWindow: operationWindowInput,
+  exposedPort: exposedPortInput,
+};
+
 const EXPECTED = {
   email: "prenom.nom@blacktide-corp.tld",
   user: "n.morel",
@@ -21,7 +33,8 @@ const EXPECTED = {
   project: "legacy-mirror",
   ref: "bt-auth-4421",
   window: "02:00-03:00 utc",
-  bonusPort: "8081",
+  bonusPortDoc: "8081",
+  bonusPortLab: "18081",
 };
 
 function canonicalText(value) {
@@ -66,7 +79,8 @@ function evaluateAnswers() {
   const isProjectValid = projectValue === compactToken(EXPECTED.project);
   const isRefValid = refValue === compactToken(EXPECTED.ref);
   const isWindowValid = windowValue === EXPECTED.window || windowValue === "02:00-03:00";
-  const isBonusPortValid = portValue === EXPECTED.bonusPort;
+  const isBonusPortValid =
+    portValue === EXPECTED.bonusPortDoc || portValue === EXPECTED.bonusPortLab;
 
   const isCoreValidationValid =
     isEmailValid &&
@@ -106,14 +120,62 @@ function evaluateAnswers() {
   };
 }
 
+function persistDraft() {
+  if (!window.OmegaMissionState) {
+    return;
+  }
+  OmegaMissionState.saveDraft(OmegaMissionState.collectDraftFromForm(FORM_FIELDS));
+}
+
 function renderProgress() {
+  const saved = window.OmegaMissionState && OmegaMissionState.read();
+  if (saved) {
+    const bonusText = saved.bonusPort ? " + bonus port OK" : "";
+    progress.textContent = `Progression OSINT: 8/8${bonusText} (enregistree)`;
+    return;
+  }
   const { coreScore, isBonusPortValid } = evaluateAnswers();
   const bonusText = isBonusPortValid ? " + bonus port OK" : "";
   progress.textContent = `Progression OSINT: ${coreScore}/8${bonusText}`;
 }
 
+function showLabAccessPanel() {
+  const panel = document.getElementById("labAccessPanel");
+  if (window.OmegaLabAccess && panel) {
+    OmegaLabAccess.renderAccessPanel(panel);
+  }
+}
+
+function showValidatedSuccess(isBonusPortValid, alreadySaved) {
+  const prefix = alreadySaved ? "Validation OSINT deja enregistree" : "Validation OSINT reussie";
+  if (isBonusPortValid) {
+    result.textContent = `${prefix} (8/8 + bonus port). Passage autorise vers Mail 2.`;
+  } else {
+    result.textContent = `${prefix} (8/8). Bonus port incorrect ou manquant.`;
+  }
+  nextStep.style.display = "block";
+  showLabAccessPanel();
+}
+
+function restoreSavedValidation() {
+  const saved = window.OmegaMissionState && OmegaMissionState.read();
+  if (!saved) {
+    return;
+  }
+  showValidatedSuccess(saved.bonusPort, true);
+}
+
+function restoreDraftAndValidation() {
+  if (window.OmegaMissionState) {
+    OmegaMissionState.applyDraftToForm(FORM_FIELDS);
+  }
+  restoreSavedValidation();
+  renderProgress();
+}
+
 form.addEventListener("submit", function (e) {
   e.preventDefault();
+  persistDraft();
   const { isCoreValidationValid, isBonusPortValid, missing } = evaluateAnswers();
 
   if (isCoreValidationValid && isBonusPortValid) {
@@ -127,24 +189,29 @@ form.addEventListener("submit", function (e) {
   }
 
   if (isCoreValidationValid) {
+    if (window.OmegaMissionState) {
+      OmegaMissionState.saveValidated(
+        isBonusPortValid,
+        OmegaMissionState.collectDraftFromForm(FORM_FIELDS),
+      );
+    }
     nextStep.style.display = "block";
+    renderProgress();
   } else {
     nextStep.style.display = "none";
   }
 });
 
-[
-  emailInput,
-  targetUserInput,
-  portalSubdomainInput,
-  portalStackInput,
-  videoProviderInput,
-  internalProjectInput,
-  operationRefInput,
-  operationWindowInput,
-  exposedPortInput,
-].forEach(function (input) {
-  input.addEventListener("input", renderProgress);
+Object.values(FORM_FIELDS).forEach(function (input) {
+  if (!input) {
+    return;
+  }
+  input.addEventListener("input", function () {
+    persistDraft();
+    renderProgress();
+  });
 });
 
-renderProgress();
+window.addEventListener("pagehide", persistDraft);
+
+restoreDraftAndValidation();

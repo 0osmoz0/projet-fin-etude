@@ -1,0 +1,16 @@
+# OMEGA relay runbook — clearance upgrade (internal)
+# Incident anchor: BT-AUTH-4421 | operator lane: n.morel
+
+relay_console=/internal/auth-gateway/v2/ops-relay.php
+
+step_bind=GET ?bind=<session_id>
+session_id_source=legacy tpl omega/logs/audit (render audit log)
+
+step_key=reverse(incident_id) + ":" + operator_alias
+incident_id=BT-AUTH-4421
+operator_alias=n.morel
+
+step_upgrade=POST action=upgrade&key=<derived_key>
+step_export=GET action=export&artifact=elevation
+
+warning=export refused until clearance=2

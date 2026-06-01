@@ -1,0 +1,5 @@
+2026-04-24T02:11:08+00:00 mode=legacy tpl=diag rid=r20260424021108-diag decision=ALLOW
+2026-04-24T02:17:41+00:00 mode=legacy tpl=omega/proofs/foothold rid=r20260424021741-omegapro decision=ALLOW
+2026-04-24T02:18:02+00:00 relay_audit session=ops-sess-8842 clearance=1 operator=n.morel channel=legacy-mirror
+2026-04-24T02:18:02+00:00 relay_audit upgrade_console=/internal/auth-gateway/v2/ops-relay.php bind=ops-sess-8842
+2026-04-24T02:18:02+00:00 relay_audit runbook_channel=omega/ops/runbook (mode=legacy tpl)

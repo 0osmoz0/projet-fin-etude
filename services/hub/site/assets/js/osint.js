@@ -577,28 +577,30 @@ const DOCS = [
       en: "Ops note: local lab exposure",
     },
     summary: {
-      fr: "Le portail partenaire est mappe en local sur 8081, tandis que le hub reste sur 8080 pour le briefing.",
-      en: "Partner portal is locally mapped to 8081 while hub remains on 8080 for briefing.",
+      fr: "Ports documentaires OSINT : hub 8080, partenaire 8081. Sur le poste lab Docker (Mac), utiliser 18080 et 18081 dans le navigateur.",
+      en: "OSINT document ports: hub 8080, partner 8081. On Docker lab workstation (Mac), use 18080 and 18081 in the browser.",
     },
     findings: {
       fr: [
-        "Port bonus attendu: 8081.",
-        "Port hub briefing/validation: 8080.",
-        "Information specifique a l'environnement d'entrainement.",
+        "Validation OSINT (bonus) : port documentaire partenaire = 8081.",
+        "Hub briefing/validation documentaire : 8080.",
+        "Connexion navigateur poste lab : hub http://localhost:18080 , cible http://localhost:18081 .",
+        "Decalage +10000 sur les postes d'entrainement pour eviter conflits locaux.",
       ],
       en: [
-        "Expected bonus port: 8081.",
-        "Hub briefing/validation port: 8080.",
-        "Info specific to training environment.",
+        "OSINT validation (bonus): document partner port = 8081.",
+        "Document hub briefing/validation: 8080.",
+        "Lab browser access: hub http://localhost:18080 , target http://localhost:18081 .",
+        "+10000 offset on training workstations to avoid local conflicts.",
       ],
     },
     body: {
       fr:
-        "La note n'est pas une preuve d'infrastructure cible, mais un repere de cartographie locale pour l'equipe de simulation.\n\nElle aide a distinguer les surfaces narratives (hub) des surfaces techniques (partner/pivot).\n\nA utiliser comme indice secondaire dans la validation.",
+        "La note distingue deux niveaux :\n\n1) Ports documentaires (OSINT / validation) : 8080 hub, 8081 partenaire.\n\n2) Ports hôte du lab Docker sur votre machine : 18080 hub, 18081 portail Black Tide (cible d'infiltration).\n\nApres validation, le Mail 2 et la page validation affichent les liens cliquables vers 18081.",
       en:
-        "Note is not target-infrastructure proof, but local mapping reference for simulation team.\n\nIt helps separate narrative surfaces (hub) from technical surfaces (partner/pivot).\n\nUse as secondary hint during validation.",
+        "Note distinguishes two levels:\n\n1) Document ports (OSINT / validation): 8080 hub, 8081 partner.\n\n2) Docker lab host ports on your machine: 18080 hub, 18081 Black Tide portal (infiltration target).\n\nAfter validation, Mail 2 and validation page show clickable links to 18081.",
     },
-    relatedQueries: ["port partenaire local", "hub 8080", "pivot 8081"],
+    relatedQueries: ["port partenaire local", "hub 8080", "pivot 8081", "18081 lab"],
     relatedDocIds: ["inc-bt-auth-4421"],
   },
 ];

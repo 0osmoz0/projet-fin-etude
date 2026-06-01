@@ -26,8 +26,10 @@
         <input id="operationRef" type="text" placeholder="ex: BT-AUTH-4421"/>
         <label for="operationWindow">Fenetre temporelle d'operation :</label>
         <input id="operationWindow" type="text" placeholder="ex: 02:00-03:00 UTC"/>
-        <label for="exposedPort">Port exposé du portail partenaire :</label>
+        <label for="exposedPort">Port exposé du portail partenaire (bonus, port documentaire OSINT) :</label>
         <input id="exposedPort" type="text" placeholder="ex: 8081"/>
+        <p class="muted"><small>Reponse OSINT attendue : <code>8081</code>. Connexion navigateur sur le lab : <code>18081</code> (voir liens apres validation).</small></p>
+        <div id="labAccessPanel" class="lab-access-panel" hidden></div>
         <button type="submit">Valider</button>
         <p id="progress">Progression OSINT: 0/8</p>
         <p id="result"></p>
@@ -38,6 +40,8 @@
     <p class="actions"><a href="osint.html">&larr; Retour a l'OSINT Workbench</a></p>
     </section>
   </main>
+  <script src="assets/js/mission-state.js"></script>
+  <script src="assets/js/lab-access.js"></script>
   <script src="assets/js/validation.js"></script>
 </body>
 </html>

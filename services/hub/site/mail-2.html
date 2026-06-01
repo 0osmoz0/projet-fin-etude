@@ -43,10 +43,40 @@
     </p>
 
     <p><strong>Vous avez l'autorisation. Executez.</strong></p>
+    <div id="labAccessPanel" class="lab-access-panel" hidden></div>
     <p><a href="osint.html">Ouvrir la console d'investigation →</a></p>
 
-    <p><a href="validation.html">← Retour a la validation OSINT</a></p>
+    <p>
+      <a href="validation.html">Validation OSINT</a>
+      &middot; <a href="mail-1.html">Mail 1</a>
+    </p>
     </div>
   </main>
+  <script src="assets/js/mission-state.js"></script>
+  <script src="assets/js/lab-access.js"></script>
+  <script>
+    (function () {
+      if (window.OmegaMissionState && OmegaMissionState.isValidated() && window.OmegaLabAccess) {
+        OmegaLabAccess.renderAccessPanel(document.getElementById("labAccessPanel"));
+      }
+      if (!window.OmegaMissionState || OmegaMissionState.isValidated()) {
+        return;
+      }
+      const note = document.createElement("p");
+      note.className = "muted";
+      note.textContent =
+        "Note: la validation OSINT n'est pas enregistree sur ce navigateur. Completez la validation pour conserver l'acces au Mail 2.";
+      const content = document.querySelector(".mail-content");
+      const heading = content && content.querySelector("h1");
+      if (content && heading) {
+        const anchor = heading.nextElementSibling;
+        if (anchor) {
+          content.insertBefore(note, anchor);
+        } else {
+          heading.insertAdjacentElement("afterend", note);
+        }
+      }
+    })();
+  </script>
 </body>
 </html> 
