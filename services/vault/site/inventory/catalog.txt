@@ -1,0 +1,6 @@
+# Evidence vault catalog (internal)
+dossier=DOSSIER-OMEGA.txt classification=omega-sensitive
+access=api/dossier.php token=service-account (pivot ops channel)
+audit=exfil logged via SA token
+
+archive_policy=hash-only proof line for mission cell

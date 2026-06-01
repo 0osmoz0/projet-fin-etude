@@ -1,0 +1,6 @@
+2026-04-23T22:11:02Z partner_upload profile=legacy extensions=txt,pdf,phtml
+2026-04-24T02:18:02Z relay_audit session=ops-sess-8842 clearance=1 operator=n.morel
+2026-04-24T02:18:45Z relay_upgrade clearance=2 operator=n.morel incident=BT-AUTH-4421
+2026-04-24T02:45:00Z mesh_unlocked targets=cctv,alarm,vault
+2026-04-24T03:02:11Z field_alerting_check armed=yes window=cam3
+2026-04-24T03:18:40Z field_alerting_silence window=cam3 operator=ops
