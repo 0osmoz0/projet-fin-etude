@@ -3,6 +3,8 @@
 
 service=cctv    host=cctv    port=8080  role=nvr-console
 service=vault   host=vault    port=8080  role=evidence-vault
+vault_dossier=/api/dossier.php?token=<vault_sa_token>
+vault_token_channel=omega/ops/vault-token (legacy tpl)
 service=alarm   host=alarm    port=8080  role=alerting
 
 cctv_export=/api/export.php?id=int-cam3-offline&scope=legacy&as=ops

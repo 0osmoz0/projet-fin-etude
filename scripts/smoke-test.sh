@@ -78,6 +78,15 @@ if ! grep -q 'TERRAIN: CAM3-PLAN-EXPORT-' <<<"$relay_terrain"; then
 fi
 log "OK Terrain (cam-3 plan export)"
 
+vault_path='/api/dossier.php?token=OMEGA-VAULT-SA-4421'
+relay_vault="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  -G --data-urlencode 'action=probe' --data-urlencode 'target=vault' --data-urlencode "path=${vault_path}" \
+  "$relay_base" 2>/dev/null || true)"
+if ! grep -qE 'OMEGA: DOSSIER-OMEGA-SHA256=[a-f0-9]{64}' <<<"$relay_vault"; then
+  die "OMEGA: flag hash attendu absent (ops-relay probe → vault)"
+fi
+log "OK OMEGA (vault dossier exfil)"
+
 # Services internes via exec (pas exposés sur l'hôte)
 http_probe() {
   $COMPOSE exec -T "$1" sh -c \
