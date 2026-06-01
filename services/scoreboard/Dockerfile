@@ -23,6 +23,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY server.py .
 COPY site/ site/
 
+# Utilisateur non-root (Trivy DS-0002, aligné sur les autres services)
+RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin scoreboard \
+  && chown -R scoreboard:scoreboard /app
+USER scoreboard
+
 # ── Port exposé ──────────────────────────────────────────────────────────────
 EXPOSE 8000
 
