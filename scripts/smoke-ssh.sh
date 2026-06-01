@@ -40,6 +40,15 @@ fi
 log "OK CCTV (voie SSH ops → réseau interne)"
 
 # shellcheck disable=SC2029
+alarm="$(ssh "${ssh_opts[@]}" ops@127.0.0.1 \
+  "curl -fsS 'http://alarm:8080/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3'" \
+  2>/dev/null || true)"
+if ! grep -q 'ALERT: SILENCED-BT-4421' <<<"$alarm"; then
+  die "Alarm via SSH: flag ALERT absent"
+fi
+log "OK Alarm (SSH → silence field alerting)"
+
+# shellcheck disable=SC2029
 terrain="$(ssh "${ssh_opts[@]}" ops@127.0.0.1 \
   "curl -fsS 'http://cctv:8080/api/export.php?id=int-cam3-plan&token=BT-CCTV-ADMIN-4421&as=admin'" \
   2>/dev/null || true)"

@@ -1,0 +1,9 @@
+# Field alerting console (post-clearance ops lane)
+alarm_ops_token=BT-ALARM-OPS-4421
+status_api=GET http://alarm:8080/api/status.php
+silence_api=POST http://alarm:8080/api/silence.php
+silence_params=token=<alarm_ops_token>&window=cam3
+relay_silence=ops-relay.php?action=probe&target=alarm&path=/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3
+
+narrative=silence alerting BEFORE cam-3 terrain plan export (gate on cctv int-cam3-plan)
+proof=ALERT: SILENCED-BT-4421

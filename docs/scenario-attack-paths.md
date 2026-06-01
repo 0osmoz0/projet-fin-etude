@@ -109,9 +109,33 @@ Voir `omega/ops/tunnel-note` (legacy render ou relay mesh).
 
 ---
 
+## Étape 3b — Alarme terrain `ALERT: SILENCED-BT-4421`
+
+**Prérequis :** clearance 2 (même session relay que CCTV).
+
+L’équipe terrain ne doit pas partir tant que l’alerting est armé. **Silencer avant** l’export plan cam-3.
+
+1. Statut : `tpl=omega/ops/alarm-token` ou `action=mesh` sur le relay.
+2. UI interne : tunnel SSH `ssh -L 18083:alarm:8080 ops@127.0.0.1 -p 2222` → http://127.0.0.1:18083/
+3. Silence (relay) :
+
+```bash
+curl -b cookies.txt -G \
+  --data-urlencode 'action=probe' \
+  --data-urlencode 'target=alarm' \
+  --data-urlencode 'path=/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3' \
+  "http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/ops-relay.php"
+```
+
+4. Depuis **ops@pivot** : `curl -fsS 'http://alarm:8080/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3'`
+
+Preuve : **`ALERT: SILENCED-BT-4421`**
+
+---
+
 ## Étape 4 — Terrain `TERRAIN: CAM3-PLAN-EXPORT-<hex>`
 
-**Prérequis :** clearance 2 + token admin CCTV (pivot).
+**Prérequis :** clearance 2 + token admin CCTV + **alarme silencée** (armed=no).
 
 1. Token : `render.php?mode=legacy&tpl=omega/ops/cctv-token` ou `action=mesh`.
 2. Export plan :
@@ -154,4 +178,6 @@ make smoke      # foothold → OMEGA (relay)
 make smoke-ssh  # SSH ops → CCTV (+ terrain/vault en local)
 ```
 
-Parcours scoreboard complet : FOOTHOLD → ELEVATION → CCTV → TERRAIN → OMEGA.
+Parcours complet : FOOTHOLD → ELEVATION → CCTV → **ALERT** → TERRAIN → OMEGA.
+
+(Si scoreboard utilisé plus tard : flag **ALERT** ajouté côté `server.py`.)
