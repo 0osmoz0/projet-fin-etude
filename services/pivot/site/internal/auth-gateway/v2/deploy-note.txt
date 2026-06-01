@@ -10,4 +10,5 @@ runbook channel: omega/ops/runbook (legacy tpl)
 mesh channel: omega/ops/mesh (relay action=mesh after clearance 2)
 ssh_lane: ops@pivot:22 (relay action=ssh-bundle)
 approved by: n.morel
+post_clearance=cctv-token + vault-token channels (legacy tpl)
 do not expose relay or clearance artifacts on public partner surface
