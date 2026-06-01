@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# shellcheck source=lib/common.sh
+# shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 
 HTTP_TIMEOUT="${HTTP_TIMEOUT:-10}"
-CURL_OPTS=(-fsS --max-time "$HTTP_TIMEOUT" -o /dev/null -w '%{http_code}')
 
 check_url() {
   local name="$1" url="$2" expect="${3:-200}"
@@ -25,7 +24,7 @@ check_url "Pivot (gateway)" "http://127.0.0.1:${PIVOT_PORT}/"
 # Services internes via exec (pas exposés sur l'hôte)
 http_probe() {
   $COMPOSE exec -T "$1" sh -c \
-    'curl -fsS http://localhost/ >/dev/null 2>&1 || wget -qO- http://localhost/ >/dev/null 2>&1'
+    'curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1 || curl -fsS http://127.0.0.1/ >/dev/null 2>&1 || wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || wget -qO- http://127.0.0.1/ >/dev/null 2>&1'
 }
 
 for svc in pivot cctv vault alarm; do

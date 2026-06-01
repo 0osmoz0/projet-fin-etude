@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# shellcheck source=lib/common.sh
+# shellcheck source=scripts/lib/common.sh
 source "$(dirname "$0")/lib/common.sh"
 
 TIMEOUT="${TIMEOUT:-180}"
@@ -10,9 +10,20 @@ INTERVAL="${INTERVAL:-5}"
 log "Attente des services (timeout ${TIMEOUT}s)…"
 
 deadline=$((SECONDS + TIMEOUT))
-expected=7
+expected="$($COMPOSE config --services 2>/dev/null | wc -l | tr -d ' ')"
+if [[ -z "$expected" || "$expected" == "0" ]]; then
+  expected=7
+fi
 
 while (( SECONDS < deadline )); do
+  total="$($COMPOSE ps -a -q 2>/dev/null | wc -l | tr -d ' ')"
+  if [[ "$total" == "0" ]]; then
+    log "Aucun conteneur détecté (docker compose ps vide)."
+    $COMPOSE ps -a || true
+    $COMPOSE config || true
+    die "La stack n'a pas démarré (up a probablement échoué)"
+  fi
+
   exited="$($COMPOSE ps --status exited -q 2>/dev/null | wc -l | tr -d ' ')"
   if [[ "$exited" != "0" ]]; then
     $COMPOSE ps
