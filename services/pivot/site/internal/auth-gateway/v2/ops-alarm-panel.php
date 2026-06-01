@@ -2,78 +2,24 @@
 declare(strict_types=1);
 
 /**
- * Console alerting (proxy interne) — clearance 2 + session relay liée.
- * Accessible depuis le navigateur via la gateway (ex. :18081), sans tunnel SSH.
+ * Console alerting (proxy pivot) — clearance 2, navigateur via gateway :18081.
  */
-session_start();
+require_once __DIR__ . '/ops-console-lib.php';
 
-const VALID_SESSION = 'ops-sess-8842';
+ops_console_require_clearance('Field Alerting');
+
 const ALARM_BASE = 'http://alarm:8080';
-
-function clearance(): int
-{
-    return (int) ($_SESSION['clearance'] ?? 0);
-}
-
-function has_bound_session(): bool
-{
-    return isset($_SESSION['ops_session']) && $_SESSION['ops_session'] === VALID_SESSION;
-}
-
-function render_gate_page(): void
-{
-    header('Content-Type: text/html; charset=UTF-8');
-    $bound = has_bound_session();
-    $cl = clearance();
-    $relay = 'ops-relay.php';
-    echo '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Alerting — préparation session</title>';
-    echo '<style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;margin:2rem}.panel{max-width:520px;border:1px solid #30363d;border-radius:8px;padding:1.25rem}code{background:#161b22;padding:.1rem .3rem}a{color:#58a6ff}</style></head><body><div class="panel">';
-    echo '<h1>Field Alerting — accès relay</h1>';
-    echo '<p>Session : ' . ($bound ? 'liée' : 'non liée') . ' · clearance=' . $cl . ' (2 requis)</p>';
-    if (!$bound) {
-        echo '<p><a href="' . htmlspecialchars($relay, ENT_QUOTES, 'UTF-8') . '?bind=ops-sess-8842">1. Lier la session relay</a> (audit log / error.log)</p>';
-    } elseif ($cl < 2) {
-        echo '<p>2. Upgrade clearance (clé runbook / deploy-note) :</p>';
-        echo '<form method="POST" action="' . htmlspecialchars($relay, ENT_QUOTES, 'UTF-8') . '">';
-        echo '<input type="hidden" name="action" value="upgrade">';
-        echo '<label>Clé <input type="password" name="key" required autocomplete="off"></label> ';
-        echo '<button type="submit">Upgrade</button></form>';
-        echo '<p><small>Puis recharger cette page.</small></p>';
-    }
-    echo '</div></body></html>';
-    exit;
-}
-
-if (!has_bound_session() || clearance() < 2) {
-    http_response_code(403);
-    render_gate_page();
-}
-
-function alarm_fetch(string $path): string
-{
-    $url = rtrim(ALARM_BASE, '/') . $path;
-    $ctx = stream_context_create([
-        'http' => [
-            'timeout' => 8,
-            'ignore_errors' => true,
-            'header' => "User-Agent: OMEGA-OPS-AlarmPanel/1.0\r\n",
-        ],
-    ]);
-    $body = @file_get_contents($url, false, $ctx);
-    return $body === false ? '' : $body;
-}
 
 $result = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = trim((string) ($_POST['token'] ?? ''));
     $window = strtolower(trim((string) ($_POST['window'] ?? 'cam3')));
     $qs = http_build_query(['token' => $token, 'window' => $window]);
-    $result = alarm_fetch('/api/silence.php?' . $qs);
+    $result = trim(ops_console_internal_fetch(ALARM_BASE, '/api/silence.php?' . $qs));
 }
 
-$status = trim(alarm_fetch('/api/status.php'));
-$armed = $status !== '' && !str_contains($status, 'armed=no');
-$statusClass = $armed ? 'armed' : 'ok';
+$status = trim(ops_console_internal_fetch(ALARM_BASE, '/api/status.php'));
+$armed = ops_console_alarm_armed($status);
 
 header('Content-Type: text/html; charset=UTF-8');
 header('X-BT-Subsystem: ops-alarm-panel');
@@ -83,35 +29,66 @@ header('X-BT-Subsystem: ops-alarm-panel');
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Black Tide — Field Alerting (ops relay)</title>
-  <style>
-    body { font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; margin: 2rem; }
-    .panel { max-width: 560px; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; }
-    .armed { color: #f85149; font-weight: bold; }
-    .ok { color: #3fb950; font-weight: bold; }
-    pre { background: #161b22; padding: 0.75rem; overflow-x: auto; font-size: 0.9rem; }
-    input, button { margin: 0.25rem 0; padding: 0.4rem; }
-    code { background: #161b22; padding: 0.1rem 0.3rem; }
-  </style>
+  <title>OMEGA · Field Alerting (relay)</title>
+  <link rel="stylesheet" href="/internal/auth-gateway/v2/assets/ops-console.css">
 </head>
 <body>
-  <div class="panel">
-    <h1>Field Alerting Console</h1>
-    <p>Relais ops → <code>alarm:8080</code> (réseau interne)</p>
-    <p class="<?= htmlspecialchars($statusClass, ENT_QUOTES, 'UTF-8') ?>">
-      <?= $status !== '' ? htmlspecialchars($status, ENT_QUOTES, 'UTF-8') : 'Statut indisponible (service alarm ?)' ?>
-    </p>
-    <?php if ($result !== ''): ?>
-    <h2>Dernière action</h2>
-    <pre><?= htmlspecialchars($result, ENT_QUOTES, 'UTF-8') ?></pre>
-    <?php endif; ?>
-    <h2>Silencer (ops)</h2>
-    <form method="POST">
-      <label>Token <input type="password" name="token" autocomplete="off" required></label><br>
-      <label>Fenêtre <input type="text" name="window" value="cam3" required></label><br>
-      <button type="submit">Confirmer angle mort terrain</button>
-    </form>
-    <p><small>Token : pivot <code>omega/ops/alarm-token</code> · relay <code>action=probe&target=alarm</code></small></p>
+  <header class="topbar">
+    <h1>OMEGA · Field Alerting</h1>
+    <span class="meta">relay → alarm:8080</span>
+    <div class="nav-links">
+      <a href="ops-cctv-panel.php">Console CCTV</a>
+      <a href="ops-relay.php?action=mesh">Mesh</a>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <a href="ops-alarm-panel.php" class="active">Alerting</a>
+        <a href="ops-cctv-panel.php">NVR / CCTV</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <div class="grid">
+        <div class="card">
+          <h2>État</h2>
+          <p class="stat <?= $armed ? 'danger' : 'ok' ?>"><?= $armed ? 'ARMED' : 'SILENCED' ?></p>
+          <span class="pill <?= $armed ? 'pill-armed' : 'pill-clear' ?>"><?= $armed ? 'ARMED' : 'CLEAR' ?></span>
+        </div>
+        <div class="card">
+          <h2>Fenêtre</h2>
+          <p class="stat">cam-3</p>
+        </div>
+        <div class="card">
+          <h2>Gate CCTV</h2>
+          <p class="hint"><?= $armed ? 'Plan terrain bloqué' : 'Export plan autorisé' ?></p>
+        </div>
+      </div>
+
+      <?php if ($status !== ''): ?>
+      <div class="card" style="margin-top:1rem">
+        <h2>Statut live</h2>
+        <pre class="log"><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?></pre>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($result !== ''): ?>
+      <div class="card" style="margin-top:1rem">
+        <h2>Dernière action</h2>
+        <pre class="log"><?= htmlspecialchars($result, ENT_QUOTES, 'UTF-8') ?></pre>
+      </div>
+      <?php endif; ?>
+
+      <div class="card" style="margin-top:1rem">
+        <h2>Silencer ops</h2>
+        <form method="POST">
+          <label>Token <input type="password" name="token" autocomplete="off" required></label>
+          <label>Fenêtre <input type="text" name="window" value="cam3" required></label>
+          <button type="submit">Confirmer angle mort terrain</button>
+        </form>
+        <p class="hint">Token : <code>omega/ops/alarm-token</code> · CLI : <code>action=probe&target=alarm</code></p>
+      </div>
+    </main>
   </div>
 </body>
 </html>

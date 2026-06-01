@@ -12,4 +12,5 @@ ssh_lane: ops@pivot:22 (relay action=ssh-bundle)
 approved by: n.morel
 post_clearance=cctv-token + vault-token + alarm-token channels (legacy tpl)
 alarm_lane=silence cam3 alerting before terrain plan export
+ops_consoles_browser=ops-alarm-panel.php + ops-cctv-panel.php (clearance 2, gateway)
 do not expose relay or clearance artifacts on public partner surface

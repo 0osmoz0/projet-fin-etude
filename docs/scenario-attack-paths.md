@@ -90,6 +90,12 @@ curl -b cookies.txt -G \
 
 Inventaire : `action=mesh`.
 
+**Console NVR (navigateur, recommandé)** — après bind + clearance 2 :
+
+`http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/ops-cctv-panel.php`
+
+Token admin : `omega/ops/cctv-token` · exports blindspot / plan depuis l’UI.
+
 ### Voie B — SSH + curl interne
 
 1. `GET action=ssh-bundle` (clearance 2) ou lire `/opt/omega/ops/ssh/id_ops.leak` en shell.
@@ -141,7 +147,8 @@ Preuve : **`ALERT: SILENCED-BT-4421`**
 **Prérequis :** clearance 2 + token admin CCTV + **alarme silencée** (armed=no).
 
 1. Token : `render.php?mode=legacy&tpl=omega/ops/cctv-token` ou `action=mesh`.
-2. Export plan :
+2. **Console NVR** : `ops-cctv-panel.php` (alarme silencée requise pour le plan).
+3. Export plan (CLI) :
 
 ```bash
 curl -b cookies.txt -G \

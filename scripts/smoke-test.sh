@@ -61,6 +61,21 @@ if ! grep -q 'service=cctv' <<<"$relay_mesh"; then
 fi
 log "OK Pivot mesh (clearance 2)"
 
+panel_base="http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2"
+alarm_panel="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  "${panel_base}/ops-alarm-panel.php" 2>/dev/null || true)"
+if ! grep -q 'Field Alerting' <<<"$alarm_panel"; then
+  die "Ops alarm panel: console relay inaccessible ou contenu inattendu"
+fi
+log "OK Ops alarm panel (browser relay)"
+
+cctv_panel="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  "${panel_base}/ops-cctv-panel.php" 2>/dev/null || true)"
+if ! grep -q 'NVR' <<<"$cctv_panel"; then
+  die "Ops CCTV panel: console relay inaccessible ou contenu inattendu"
+fi
+log "OK Ops CCTV panel (browser relay)"
+
 alarm_silence_path='/api/silence.php?token=BT-ALARM-OPS-4421&window=cam3'
 relay_alarm="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
   -G --data-urlencode 'action=probe' --data-urlencode 'target=alarm' --data-urlencode "path=${alarm_silence_path}" \
