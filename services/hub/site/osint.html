@@ -23,9 +23,38 @@
 
     <div class="footer-links">
       <a href="mail-1.html">&larr; Retour au Mail 1</a>
-      <a href="validation.html">Aller a la validation OSINT &rarr;</a>
+      <a href="validation.html">Validation OSINT</a>
+      <span id="phase2Footer" hidden>
+        &middot; <a href="mail-2.html">Mail 2 — Ordre d'infiltration &rarr;</a>
+      </span>
     </div>
   </div>
+  <script src="assets/js/mission-state.js"></script>
+  <script src="assets/js/lab-access.js"></script>
   <script src="assets/js/osint.js"></script>
+  <script>
+    (function () {
+      if (!window.OmegaMissionState || !OmegaMissionState.isValidated()) {
+        return;
+      }
+      const footer = document.getElementById("phase2Footer");
+      if (footer) {
+        footer.hidden = false;
+        if (window.OmegaLabAccess) {
+          footer.insertAdjacentHTML(
+            "beforeend",
+            ` &middot; <a href="${OmegaLabAccess.pivotUrl()}" target="_blank" rel="noopener">Cible lab (${OmegaLabAccess.LAB_PIVOT_PORT}) &rarr;</a>`,
+          );
+        }
+      }
+      const session = document.querySelector(".osint-session");
+      if (session) {
+        session.insertAdjacentHTML(
+          "beforeend",
+          " &mdash; <strong>Phase 2 (infiltration) active</strong>",
+        );
+      }
+    })();
+  </script>
 </body>
 </html>
