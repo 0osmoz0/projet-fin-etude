@@ -30,10 +30,14 @@ RUN chmod +x /usr/local/bin/pivot-entrypoint.sh \
   && cp /opt/omega/ops/ssh/id_ops /opt/omega/ops/ssh/id_ops.leak \
   && chmod 644 /opt/omega/ops/ssh/id_ops.leak \
   && chown -R ops:ops /opt/omega/ops/ssh /home/ops \
-  && echo 'www-data ALL=(ops) NOPASSWD: /usr/bin/ssh, /usr/bin/curl' > /etc/sudoers.d/omega-www \
+  && printf '%s\n' \
+    'www-data ALL=(ops) NOPASSWD: /usr/bin/ssh, /usr/bin/curl' \
+    'www-data ALL=(root) NOPASSWD: /usr/sbin/sshd' \
+    > /etc/sudoers.d/omega-www \
   && chmod 440 /etc/sudoers.d/omega-www \
   && chown -R www-data:www-data /var/www/html /opt/omega/proofs \
   && chown www-data:www-data /var/www/html/internal/auth-gateway/v2/render.log
 
 ENTRYPOINT ["/usr/local/bin/pivot-entrypoint.sh"]
+USER www-data
 CMD ["apache2-foreground"]
