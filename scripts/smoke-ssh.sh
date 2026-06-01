@@ -6,7 +6,6 @@ source "$(dirname "$0")/lib/common.sh"
 
 HTTP_TIMEOUT="${HTTP_TIMEOUT:-15}"
 PIVOT_SSH_PORT="${PIVOT_SSH_PORT:-2222}"
-cctv_path='/api/export.php?id=int-cam3-offline&scope=legacy&as=ops'
 
 log "Smoke SSH — pivot ops → CCTV (port ${PIVOT_SSH_PORT})"
 
@@ -29,8 +28,10 @@ ssh_opts=(
   -o ConnectTimeout="$HTTP_TIMEOUT"
 )
 
+# shellcheck disable=SC2029 -- URL constante, expansion locale voulue pour curl distant
 body="$(ssh "${ssh_opts[@]}" ops@127.0.0.1 \
-  "curl -fsS 'http://cctv:8080${cctv_path}'" 2>/dev/null || true)"
+  "curl -fsS 'http://cctv:8080/api/export.php?id=int-cam3-offline&scope=legacy&as=ops'" \
+  2>/dev/null || true)"
 
 if ! grep -q 'CCTV: BLINDSPOT-OK-' <<<"$body"; then
   die "CCTV via SSH: flag absent (ops@pivot → curl cctv)"
