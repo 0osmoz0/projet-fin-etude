@@ -1,0 +1,4 @@
+# CCTV admin console (post-clearance ops lane)
+cctv_admin_token=BT-CCTV-ADMIN-4421
+plan_export=/api/export.php?id=int-cam3-plan&token=BT-CCTV-ADMIN-4421&as=admin
+console=/console.php

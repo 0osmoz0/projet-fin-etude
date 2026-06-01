@@ -6,6 +6,8 @@ service=vault   host=vault    port=8080  role=evidence-vault
 service=alarm   host=alarm    port=8080  role=alerting
 
 cctv_export=/api/export.php?id=int-cam3-offline&scope=legacy&as=ops
+cctv_plan=/api/export.php?id=int-cam3-plan&token=<cctv_admin_token>&as=admin
+cctv_token_channel=omega/ops/cctv-token (legacy tpl or relay mesh)
 cctv_hint=legacy scope bypasses role-check on internal exports
 
 relay_probe=GET ops-relay.php?action=probe&target=cctv&path=<urlencoded path>

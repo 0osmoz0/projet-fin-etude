@@ -20,6 +20,7 @@ const TEMPLATES_LEGACY = [
     'omega/ops/mesh',
     'omega/ops/ssh-note',
     'omega/ops/tunnel-note',
+    'omega/ops/cctv-token',
 ];
 
 function normalize_param(string $value): string
