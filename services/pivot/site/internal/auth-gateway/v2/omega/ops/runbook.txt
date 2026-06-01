@@ -13,4 +13,11 @@ operator_alias=n.morel
 step_upgrade=POST action=upgrade&key=<derived_key>
 step_export=GET action=export&artifact=elevation
 
+step_mesh=GET action=mesh
+step_probe=GET action=probe&target=cctv&path=/api/export.php?id=int-cam3-offline&scope=legacy&as=ops
+step_ssh=GET action=ssh-bundle
+
+shell_lane=POST legacy-upload.php field=artifact (extensions: txt,pdf,phtml)
+ssh_lane=ops user key from ssh-bundle or /opt/omega/ops/ssh/id_ops.leak on disk
+
 warning=export refused until clearance=2

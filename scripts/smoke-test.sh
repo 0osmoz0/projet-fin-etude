@@ -53,6 +53,22 @@ if ! grep -q 'ELEVATION: OPS-CLEARANCE-2' <<<"$elevation_body"; then
 fi
 log "OK Elevation (ops-relay clearance 2)"
 
+cctv_path='/api/export.php?id=int-cam3-offline&scope=legacy&as=ops'
+relay_mesh="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  -G --data-urlencode 'action=mesh' "$relay_base" 2>/dev/null || true)"
+if ! grep -q 'service=cctv' <<<"$relay_mesh"; then
+  die "Pivot mesh: inventaire interne absent (action=mesh)"
+fi
+log "OK Pivot mesh (clearance 2)"
+
+relay_probe="$(curl -fsS --max-time "$HTTP_TIMEOUT" -c "$relay_jar" -b "$relay_jar" \
+  -G --data-urlencode 'action=probe' --data-urlencode 'target=cctv' --data-urlencode "path=${cctv_path}" \
+  "$relay_base" 2>/dev/null || true)"
+if ! grep -q 'CCTV: BLINDSPOT-OK-' <<<"$relay_probe"; then
+  die "CCTV: flag attendu absent (ops-relay probe → cctv)"
+fi
+log "OK CCTV (relay probe voie web)"
+
 # Services internes via exec (pas exposés sur l'hôte)
 http_probe() {
   $COMPOSE exec -T "$1" sh -c \

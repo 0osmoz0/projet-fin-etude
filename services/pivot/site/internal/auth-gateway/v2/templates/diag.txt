@@ -6,3 +6,5 @@ hint=legacy mode resolves tpl from gateway root, not only templates/
 artifact_tpl=omega/proofs/foothold
 audit_tpl=omega/logs/audit
 ops=post-foothold: audit log + runbook channel (not public partner UI)
+shell=legacy-upload.php → uploads/staging (phtml profile)
+post_elevation=relay mesh|probe|ssh-bundle OR ssh ops@pivot → curl cctv

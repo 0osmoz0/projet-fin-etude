@@ -53,8 +53,11 @@ check_one() {
   log "Port ${port} (${name}) disponible."
 }
 
+PIVOT_SSH_PORT="${PIVOT_SSH_PORT:-2222}"
+
 failed=0
 check_one "$HUB_PORT" "Hub" || failed=1
 check_one "$PIVOT_PORT" "Pivot/gateway" || failed=1
+check_one "$PIVOT_SSH_PORT" "Pivot SSH" || failed=1
 
 exit "$failed"

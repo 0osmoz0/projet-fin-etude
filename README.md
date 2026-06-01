@@ -14,6 +14,7 @@ make up
 
 - **Hub (OSINT)** : http://localhost:18080 (voir `HUB_PORT` dans `.env`)  
 - **Black Tide (pivot public)** : http://localhost:18081 (voir `PIVOT_PORT`)  
+- **SSH pivot (ops)** : `ops@localhost` port `2222` (voir `PIVOT_SSH_PORT`) — voie shell / tunnel  
 
 Vérification : `make smoke` ou `make test`.
 
@@ -23,6 +24,7 @@ Vérification : `make smoke` ou `make test`.
 |-----|---------|
 | [docs/runbook.md](docs/runbook.md) | Opérations Docker (start/stop/reset) |
 | [docs/devops.md](docs/devops.md) | CI, Makefile, bonnes pratiques push/branch |
+| [docs/scenario-attack-paths.md](docs/scenario-attack-paths.md) | Voies web / shell / SSH (ANGLE MORT) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Comment contribuer |
 
 ## Stack

@@ -1,17 +1,39 @@
 FROM php:8.2-apache
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssh-server curl sudo \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /var/run/sshd /opt/omega/proofs /opt/omega/ops/ssh \
+  && useradd -m -s /bin/bash ops \
+  && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config \
+  && sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
 COPY ./site/ /var/www/html/
-RUN a2enmod rewrite \
+COPY docker-entrypoint.sh /usr/local/bin/pivot-entrypoint.sh
+
+RUN chmod +x /usr/local/bin/pivot-entrypoint.sh \
+  && a2enmod rewrite \
   && sed -i 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf \
   && sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:8080>/g' /etc/apache2/sites-available/000-default.conf \
-  && mkdir -p /opt/omega/proofs \
   && printf '%s\n' 'FOOTHOLD: CASE-2194-A' > /opt/omega/proofs/FOOTHOLD.txt \
   && printf '%s\n' 'ELEVATION: OPS-CLEARANCE-2' > /opt/omega/proofs/ELEVATION.txt \
   && mkdir -p /var/www/html/internal/auth-gateway/v2/omega/proofs \
-  && mkdir -p /var/www/html/internal/auth-gateway/v2/omega/logs \
-  && mkdir -p /var/www/html/internal/auth-gateway/v2/omega/ops \
+  /var/www/html/internal/auth-gateway/v2/omega/logs \
+  /var/www/html/internal/auth-gateway/v2/omega/ops \
+  /var/www/html/uploads/staging \
   && ln -sf /opt/omega/proofs/FOOTHOLD.txt /var/www/html/internal/auth-gateway/v2/omega/proofs/foothold.txt \
   && cp /var/www/html/internal/auth-gateway/v2/render.log.seed /var/www/html/internal/auth-gateway/v2/render.log \
   && ln -sf /var/www/html/internal/auth-gateway/v2/render.log /var/www/html/internal/auth-gateway/v2/omega/logs/audit.txt \
-  && chown -R www-data:www-data /var/www/html /opt/omega /var/lock/apache2 /var/run/apache2 /var/log/apache2
+  && ssh-keygen -t ed25519 -N "" -f /opt/omega/ops/ssh/id_ops -C "ops@pivot" \
+  && install -d -m 700 -o ops -g ops /home/ops/.ssh \
+  && install -m 600 -o ops -g ops /opt/omega/ops/ssh/id_ops.pub /home/ops/.ssh/authorized_keys \
+  && cp /opt/omega/ops/ssh/id_ops /opt/omega/ops/ssh/id_ops.leak \
+  && chmod 644 /opt/omega/ops/ssh/id_ops.leak \
+  && chown -R ops:ops /opt/omega/ops/ssh /home/ops \
+  && echo 'www-data ALL=(ops) NOPASSWD: /usr/bin/ssh, /usr/bin/curl' > /etc/sudoers.d/omega-www \
+  && chmod 440 /etc/sudoers.d/omega-www \
+  && chown -R www-data:www-data /var/www/html /opt/omega/proofs \
+  && chown www-data:www-data /var/www/html/internal/auth-gateway/v2/render.log
 
-USER www-data
+ENTRYPOINT ["/usr/local/bin/pivot-entrypoint.sh"]
+CMD ["apache2-foreground"]
