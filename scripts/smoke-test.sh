@@ -20,6 +20,8 @@ log "Smoke tests — $PROJECT_NAME"
 
 check_url "Hub" "http://127.0.0.1:${HUB_PORT}/"
 check_url "Pivot (gateway)" "http://127.0.0.1:${PIVOT_PORT}/"
+check_url "Pivot partner" "http://127.0.0.1:${PIVOT_PORT}/partner.html"
+check_url "Pivot auth-gateway health" "http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/health.php"
 
 # Services internes via exec (pas exposés sur l'hôte)
 http_probe() {

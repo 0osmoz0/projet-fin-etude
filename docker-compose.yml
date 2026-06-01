@@ -132,7 +132,7 @@ services:
     <<: *default-restart
     logging: *default-logging
     depends_on:
-      blacktide_vuln:
+      pivot:
         condition: service_healthy
     healthcheck: *healthcheck-nginx
     labels:
