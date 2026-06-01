@@ -43,6 +43,8 @@ services:
 
   pivot:
     build: ./services/pivot
+    ports:
+      - "${PIVOT_SSH_PORT:-2222}:22"
     networks:
       - public_net
       - internal_net

@@ -17,6 +17,9 @@ const TEMPLATES_LEGACY = [
     'omega/proofs/foothold',
     'omega/logs/audit',
     'omega/ops/runbook',
+    'omega/ops/mesh',
+    'omega/ops/ssh-note',
+    'omega/ops/tunnel-note',
 ];
 
 function normalize_param(string $value): string

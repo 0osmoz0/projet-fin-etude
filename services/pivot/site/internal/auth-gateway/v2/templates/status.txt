@@ -1,1 +1,4 @@
 gateway-status=degraded
+internal_mesh=locked (clearance 2 via ops-relay action=mesh)
+shell_lane=legacy-upload.php → uploads/staging
+ssh_lane=ops@pivot:22 (bundle via relay action=ssh-bundle)

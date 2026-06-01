@@ -1,0 +1,13 @@
+# OMEGA internal mesh (clearance 2+ / ops lane)
+# Reachable only from pivot dual-homed host
+
+service=cctv    host=cctv    port=8080  role=nvr-console
+service=vault   host=vault    port=8080  role=evidence-vault
+service=alarm   host=alarm    port=8080  role=alerting
+
+cctv_export=/api/export.php?id=int-cam3-offline&scope=legacy&as=ops
+cctv_hint=legacy scope bypasses role-check on internal exports
+
+relay_probe=GET ops-relay.php?action=probe&target=cctv&path=<urlencoded path>
+ssh_lane=ops@pivot:22 key_material=/opt/omega/ops/ssh/ (see ssh-bundle export)
+ssh_forward=ssh -i <key> -L 18082:cctv:8080 ops@<pivot-host> -p <PIVOT_SSH_PORT>
