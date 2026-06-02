@@ -1,0 +1,6 @@
+# Backup fragment — omega-ops sudoers
+#
+# ops ALL=(root) NOPASSWD: /usr/bin/tar
+#
+# Note: tar utilisé dans les snapshots /opt/omega/proofs (mauvais scope NOPASSWD).
+

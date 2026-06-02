@@ -19,6 +19,9 @@ RUN chmod +x /usr/local/bin/pivot-entrypoint.sh \
   && sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:8080>/g' /etc/apache2/sites-available/000-default.conf \
   && printf '%s\n' 'FOOTHOLD: CASE-2194-A' > /opt/omega/proofs/FOOTHOLD.txt \
   && printf '%s\n' 'ELEVATION: OPS-CLEARANCE-2' > /opt/omega/proofs/ELEVATION.txt \
+  && printf '%s\n' 'ROOT: OMEGA-PRIV-ROOT-4421' > /opt/omega/proofs/ROOT.txt \
+  && chown root:root /opt/omega/proofs/ROOT.txt \
+  && chmod 600 /opt/omega/proofs/ROOT.txt \
   && mkdir -p /var/www/html/internal/auth-gateway/v2/omega/proofs \
   /var/www/html/internal/auth-gateway/v2/omega/logs \
   /var/www/html/internal/auth-gateway/v2/omega/ops \
@@ -37,6 +40,8 @@ RUN chmod +x /usr/local/bin/pivot-entrypoint.sh \
     'www-data ALL=(root) NOPASSWD: /usr/sbin/sshd' \
     > /etc/sudoers.d/omega-www \
   && chmod 440 /etc/sudoers.d/omega-www \
+  && printf '%s\n' 'ops ALL=(root) NOPASSWD: /usr/bin/tar' > /etc/sudoers.d/omega-ops \
+  && chmod 440 /etc/sudoers.d/omega-ops \
   && chown -R www-data:www-data /var/www/html /opt/omega/proofs \
   && chown www-data:www-data /var/www/html/internal/auth-gateway/v2/render.log \
   && chown -R ops:ops /home/ops /opt/omega/logs /opt/omega/config /opt/omega/backups /opt/omega/ops/archive \
