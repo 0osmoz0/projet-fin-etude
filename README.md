@@ -228,7 +228,7 @@ Validation automatique : `make smoke` et `make smoke-ssh`.
 │   └── smoke-ssh.sh        # Parcours SSH ops
 └── services/
     ├── hub/                # OSINT
-    ├── pivot/              # Auth-gateway v2, relay, uploads
+    ├── pivot/              # Auth-gateway v2, relay, lab-fs (home ops, logs)
     ├── blacktide-gateway/  # Nginx → pivot
     ├── cctv/               # NVR interne
     ├── alarm/              # Alerting terrain

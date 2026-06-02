@@ -1,0 +1,7 @@
+Shift handover — relay node n.morel
+Incident: BT-AUTH-4421 (legacy-mirror rollback window 02:00-03:00 UTC)
+- Partner upload lane: /var/www/html/uploads/staging (phtml handler active)
+- Clearance artifacts: ops-relay bind + upgrade (see runbook channel)
+- Do NOT expose relay console on partner vhost
+
+Pending: verify field alerting before cam-3 plan push to terrain team.

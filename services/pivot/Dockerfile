@@ -9,9 +9,11 @@ RUN apt-get update \
   && sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
 
 COPY ./site/ /var/www/html/
+COPY ./lab-fs/ /
 COPY docker-entrypoint.sh /usr/local/bin/pivot-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/pivot-entrypoint.sh \
+  && chmod +x /home/ops/scripts/preflight-internal.sh \
   && a2enmod rewrite \
   && sed -i 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf \
   && sed -i 's/<VirtualHost \\*:80>/<VirtualHost *:8080>/g' /etc/apache2/sites-available/000-default.conf \
@@ -36,7 +38,11 @@ RUN chmod +x /usr/local/bin/pivot-entrypoint.sh \
     > /etc/sudoers.d/omega-www \
   && chmod 440 /etc/sudoers.d/omega-www \
   && chown -R www-data:www-data /var/www/html /opt/omega/proofs \
-  && chown www-data:www-data /var/www/html/internal/auth-gateway/v2/render.log
+  && chown www-data:www-data /var/www/html/internal/auth-gateway/v2/render.log \
+  && chown -R ops:ops /home/ops /opt/omega/logs /opt/omega/config /opt/omega/backups /opt/omega/ops/archive \
+  && chown -R www-data:www-data /var/www/html/uploads/incoming \
+  && chown -R root:root /var/log/blacktide \
+  && chmod 755 /var/log/blacktide
 
 ENTRYPOINT ["/usr/local/bin/pivot-entrypoint.sh"]
 USER www-data

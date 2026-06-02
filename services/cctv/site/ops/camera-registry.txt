@@ -1,0 +1,9 @@
+# NVR camera registry — internal_net
+cam-1=lobby-public     tier=public   export=pub-lobby
+cam-2=loading-bay-south tier=public   export=pub-loading-bay
+cam-3=loading-bay-north tier=internal role=terrain-blindspot
+plan_export=int-cam3-plan
+offline_export=int-cam3-offline
+
+console=/console.php
+admin_token_channel=pivot:omega/ops/cctv-token
