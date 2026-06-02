@@ -1,0 +1,4 @@
+Media index
+
+- placeholder-photo.txt (stand-in)
+- colors.svg (brand palette sample)
