@@ -8,6 +8,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ .
 COPY site/ ./site/
 
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
