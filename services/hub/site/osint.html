@@ -3,75 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OSINT Workbench</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA · OSINT Workbench</title>
   <link rel="stylesheet" href="assets/css/hub.css">
 </head>
 <body>
+  <script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
+
+  <div class="classif-banner">INTERNE · OPÉRATION OMEGA · PRIORITÉ ALPHA · USAGE RESTREINT</div>
+
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html">
-        <span class="brand-badge" aria-hidden="true"></span>
-        <span class="brand-title">OSINT Workbench</span>
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span class="brand-label">SECUREMAIL OMEGA <span>/ OSINT</span></span>
       </a>
-      <nav class="nav" aria-label="Navigation">
+      <nav class="nav" aria-label="Navigation principale">
         <a href="mail-1.html">Mail 1</a>
-        <a class="primary" href="osint.html">OSINT</a>
+        <a class="active" href="osint.html">OSINT</a>
         <a href="validation.html">Validation</a>
         <a href="mail-2.html">Mail 2</a>
-        <a id="navConsolesAlarm" href="#" target="_blank" rel="noopener">Console Alarm</a>
-        <a id="navConsolesCctv" href="#" target="_blank" rel="noopener">Console CCTV</a>
+        <a id="navConsolesAlarm" href="#" target="_blank" rel="noopener">Alarm</a>
+        <a id="navConsolesCctv" href="#" target="_blank" rel="noopener">CCTV</a>
       </nav>
     </div>
   </header>
 
-  <div class="container">
-    <h1 class="osint-title">OSINT Workbench</h1>
-    <p class="osint-session"><strong>Session:</strong> OMEGA-OSINT-01</p>
+  <div class="page">
+    <div class="osint-meta">
+      <span class="badge intern">OSINT</span>
+      <span>Nœud de recherche · Session <span class="mono">OMEGA-OSINT-01</span></span>
+      <span id="phase2Badge"></span>
+    </div>
 
     <div class="browser">
       <div class="toolbar">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
-        <input id="urlBar" type="text" placeholder="Requete OSINT (ex: incident auth-gateway, type:scan stack)" />
-        <button id="translateBtn" type="button">Traduire: OFF</button>
+        <span class="dot red" aria-hidden="true"></span>
+        <span class="dot yellow" aria-hidden="true"></span>
+        <span class="dot green" aria-hidden="true"></span>
+        <input id="urlBar" type="text" placeholder="Requête OSINT (ex: incident auth-gateway, type:scan stack)" aria-label="Requête OSINT" />
+        <button id="translateBtn" type="button">Langue: FR</button>
       </div>
-      <div id="view">Indexation en cours...</div>
+      <div id="view" role="region" aria-live="polite">Indexation en cours...</div>
     </div>
 
     <div class="footer-links">
-      <a href="mail-1.html">&larr; Retour au Mail 1</a>
+      <a href="mail-1.html">← Mail 1</a>
       <a href="validation.html">Validation OSINT</a>
       <span id="phase2Footer" hidden>
-        &middot; <a href="mail-2.html">Mail 2 — Ordre d'infiltration &rarr;</a>
+        · <a href="mail-2.html">Mail 2 — Infiltration →</a>
       </span>
     </div>
   </div>
-  <script src="assets/js/mission-state.js"></script>
-  <script src="assets/js/lab-access.js"></script>
-  <script src="assets/js/nav.js"></script>
-  <script src="assets/js/osint.js"></script>
+
+  <script src="assets/js/mission-state.js" defer></script>
+  <script src="assets/js/lab-access.js" defer></script>
+  <script src="assets/js/nav.js" defer></script>
+  <script src="assets/js/osint.js" defer></script>
   <script>
     (function () {
-      if (!window.OmegaMissionState || !OmegaMissionState.isValidated()) {
-        return;
-      }
-      const footer = document.getElementById("phase2Footer");
-      if (footer) {
-        footer.hidden = false;
-        if (window.OmegaLabAccess) {
-          footer.insertAdjacentHTML(
-            "beforeend",
-            ` &middot; <a href="${OmegaLabAccess.pivotUrl()}" target="_blank" rel="noopener">Cible lab (${OmegaLabAccess.LAB_PIVOT_PORT}) &rarr;</a>`,
-          );
+      function init() {
+        if (!window.OmegaMissionState || !OmegaMissionState.isValidated()) return;
+        const footer = document.getElementById("phase2Footer");
+        if (footer) {
+          footer.hidden = false;
+          if (window.OmegaLabAccess) {
+            footer.insertAdjacentHTML(
+              "beforeend",
+              ` · <a href="${OmegaLabAccess.pivotUrl()}" target="_blank" rel="noopener">Cible lab (${OmegaLabAccess.LAB_PIVOT_PORT}) →</a>`
+            );
+          }
+        }
+        const badge = document.getElementById("phase2Badge");
+        if (badge) {
+          badge.innerHTML = ' — <strong>Phase 2 (infiltration) active</strong>';
         }
       }
-      const session = document.querySelector(".osint-session");
-      if (session) {
-        session.insertAdjacentHTML(
-          "beforeend",
-          " &mdash; <strong>Phase 2 (infiltration) active</strong>",
-        );
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
       }
     })();
   </script>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>SecureMail OMEGA</title>
+  <link rel="stylesheet" href="assets/css/hub.css">
+  <style>
+    /* ---- app mail plein écran ---- */
+    html, body { height: 100%; margin: 0; overflow: hidden }
+
+    .mail-app {
+      display: flex;
+      height: 100%;
+      font-size: 13px;
+      background: var(--bg);
+    }
+
+    /* sidebar gauche */
+    .mail-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .mail-appbar {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,.2);
+    }
+    .mail-appbar-title {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--text);
+    }
+    .mail-appbar-classif {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--alpha);
+      letter-spacing: .06em;
+    }
+
+    .mail-folders {
+      padding: 10px 14px 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .mail-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 6px 8px;
+    }
+    .mail-item {
+      padding: 10px 10px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      margin-bottom: 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .mail-item:hover {
+      background: rgba(255,255,255,.04);
+      border-color: var(--border);
+    }
+    .mail-item.active {
+      background: rgba(59,130,196,.12);
+      border-color: rgba(59,130,196,.28);
+    }
+    .mail-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+    .mail-item-from {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mail-item-date {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .mail-item-subject {
+      font-size: 12px;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mail-item-preview {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mail-item.locked {
+      opacity: .55;
+    }
+    .mail-item.locked .mail-item-from::after {
+      content: " 🔒";
+    }
+
+    .mail-status-bar {
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    #validStatus { color: var(--ok, #2e7d52) }
+
+    /* viewer droite */
+    .mail-viewer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .mail-viewer-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-family: var(--mono);
+    }
+
+    /* en-tête du mail sélectionné */
+    .mail-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,.1);
+      flex-shrink: 0;
+    }
+    .mail-header-classif {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .mail-fields { display: grid; gap: 4px }
+    .mail-field  { display: grid; grid-template-columns: 72px 1fr; gap: 8px; font-size: 13px }
+    .mail-field .lbl { font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 1px }
+
+    /* corps */
+    .mail-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px 32px;
+      line-height: 1.75;
+    }
+    .mail-body h2 {
+      margin: 20px 0 8px;
+      font-size: 12px;
+      font-family: var(--mono);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #7a8a9a;
+    }
+    .mail-body ul, .mail-body ol { margin: 8px 0; padding-left: 20px }
+    .mail-body li { margin-bottom: 4px }
+    .mail-body p  { margin: 0 0 10px }
+
+    /* message "verrouillé" */
+    .mail-locked-msg {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .mail-locked-msg .lock-icon { font-size: 40px; opacity: .4 }
+    .mail-locked-msg a { color: var(--accent) }
+
+    /* action bar mail 1 */
+    .mail-action-bar {
+      padding: 10px 20px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
+
+  <div class="mail-app">
+
+    <!-- Sidebar -->
+    <div class="mail-sidebar">
+      <div class="mail-appbar">
+        <span style="font-size:18px">✉</span>
+        <span class="mail-appbar-title">SecureMail OMEGA</span>
+        <span class="mail-appbar-classif">ALPHA</span>
+      </div>
+      <div class="mail-folders">Boîte de réception (2)</div>
+      <div class="mail-list">
+
+        <div class="mail-item" id="item-msg1" onclick="showMail('msg1')" tabindex="0" aria-label="Mail 1 — Ordre de mission">
+          <div class="mail-item-head">
+            <span class="mail-item-from">Cellule OMEGA</span>
+            <span class="mail-item-date">24 AVR 02:11</span>
+          </div>
+          <div class="mail-item-subject">Ordre de mission — Phase 1 (OSINT)</div>
+          <div class="mail-item-preview">La cellule OMEGA vous engage en appui cyber…</div>
+        </div>
+
+        <div class="mail-item locked" id="item-msg2" onclick="showMail('msg2')" tabindex="0" aria-label="Mail 2 — Infiltration (verrouillé)">
+          <div class="mail-item-head">
+            <span class="mail-item-from">Commandement OMEGA</span>
+            <span class="mail-item-date">24 AVR 04:30</span>
+          </div>
+          <div class="mail-item-subject">Autorisation d'infiltration — Phase 2</div>
+          <div class="mail-item-preview">Validation OSINT requise…</div>
+        </div>
+
+      </div>
+      <div class="mail-status-bar">
+        <span id="validStatus">⬤ Validation OSINT : en attente</span>
+      </div>
+    </div>
+
+    <!-- Viewer -->
+    <div class="mail-viewer" id="viewer">
+      <div class="mail-viewer-empty" id="emptyState">
+        Sélectionnez un message.
+      </div>
+    </div>
+
+  </div>
+
+  <script src="assets/js/mission-state.js" defer></script>
+  <script src="assets/js/lab-access.js" defer></script>
+  <script>
+    /* ---- contenus des mails ---- */
+    var MAILS = {
+      msg1: {
+        id: "MSG-001",
+        from: "Cellule OMEGA / Commandement opérationnel",
+        to: "Agent terrain cyber",
+        subject: "OPÉRATION OMEGA — Classification interne / Priorité alpha",
+        canal: "SecureMail OMEGA",
+        date: "2026-04-24 · 02:11 UTC",
+        body: function() { return [
+          "<p>Agent,</p>",
+          "<p>La cellule OMEGA vous engage en appui cyber d'une intervention terrain visant le réseau criminel <strong>Black Tide</strong>. Votre mission est de préparer l'entrée des équipes, de produire du renseignement exploitable et de sécuriser l'opération sans déclencher d'alerte prématurée.</p>",
+          "<p>Black Tide n'est pas un groupe opportuniste : c'est une structure criminelle violente, disciplinée et industrialisée. Ils financent leurs opérations par l'extorsion numérique, le sabotage ciblé et l'exploitation de données volées.</p>",
+          "<p>Vous vous souvenez de la crise énergétique qui a paralysé le pays il y a deux ans ? Ce n'était pas un accident. C'était eux.</p>",
+          "<p>Nos analystes sont dépassés : aucune piste n'a permis de reconstituer leur chaîne opérationnelle, et Black Tide continue de provoquer OMEGA publiquement. C'est pour cela que nous faisons appel à vous. <strong>Vous êtes notre meilleur agent, et notre dernière chance.</strong></p>",
+          "<h2>Objectifs — Phase 1 (OSINT)</h2>",
+          "<ol><li>Identifier le format d'email interne utilisé par l'organisation.</li><li>Identifier un utilisateur cible crédible.</li><li>Identifier le sous-domaine du portail exposé.</li><li>Identifier la stack technique du portail.</li><li>Identifier le prestataire lié à la vidéosurveillance.</li><li>Identifier le nom du projet interne actif.</li><li>Identifier une référence opérationnelle exploitable (ticket/ID).</li><li>Identifier une fenêtre temporelle d'opération.</li></ol>",
+          "<h2>Règles d'engagement</h2>",
+          "<ul><li><strong>Discrétion absolue (low-noise) :</strong> éviter scans agressifs et patterns automatisés détectables.</li><li><strong>Validation par corrélation :</strong> chaque conclusion doit être recoupée par plusieurs sources.</li><li><strong>Périmètre strict :</strong> investigation limitée à l'environnement de simulation autorisé.</li></ul>",
+          "<h2>Suite de mission</h2>",
+          "<p>Après validation des éléments OSINT, vous recevrez le <strong>Mail 2 — Ordre d'infiltration</strong> : accès initial, élévation de privilèges, pivot interne, neutralisation CCTV, exfiltration du Dossier OMEGA.</p>",
+        ].join(""); },
+        action: '<a class="btn primary" href="osint.html" target="_blank">Lancer la phase OSINT →</a>'
+      },
+      msg2: {
+        id: "MSG-002",
+        from: "Commandement OMEGA",
+        to: "Agent terrain cyber",
+        subject: "Autorisation d'infiltration — Phase 2",
+        canal: "SecureMail OMEGA",
+        date: "2026-04-24 · 04:30 UTC",
+        ref: "BT-AUTH-4421 / OMEGA-OP-002",
+        body: function() { return [
+          "<p>Agent,</p>",
+          "<p>Validation OSINT confirmée. Les recoupements sont cohérents : la fenêtre d'activité ennemie est active, les identifiants cibles sont exploitables, et le vecteur d'entrée est confirmé.</p>",
+          "<p>À partir de maintenant, vous passez en phase d'infiltration active. Black Tide surveille ses surfaces exposées en continu. Toute action bruyante peut déclencher une contre-mesure immédiate.</p>",
+          "<h2>Objectifs opérationnels</h2>",
+          "<ol><li>Obtenir un accès initial sur l'infrastructure cible.</li><li>Consolider l'accès et collecter du renseignement interne exploitable.</li><li>Préparer un angle mort CCTV pour synchroniser l'équipe terrain.</li><li>Identifier le chemin vers le dossier OMEGA sans compromettre l'opération.</li></ol>",
+          "<h2>Règles en phase active</h2>",
+          "<ul><li>Priorité au low-noise : discret, précis, pas de gestes inutiles.</li><li>Conserver une trace des preuves (artefacts, références, horodatage).</li><li>Aucune action destructive non nécessaire à la mission.</li></ul>",
+          "<p>Si vous êtes repéré, Black Tide peut verrouiller ses accès internes et effacer des traces critiques. Vous n'aurez qu'une seule fenêtre propre.</p>",
+          "<p><strong>Vous avez l'autorisation. Exécutez.</strong></p>",
+        ].join(""); },
+        action: ''
+      }
+    };
+
+    var currentId = null;
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    function isValidated() {
+      return window.OmegaMissionState && OmegaMissionState.isValidated();
+    }
+
+    function updateSidebar() {
+      var item2 = document.getElementById("item-msg2");
+      var status = document.getElementById("validStatus");
+      if (isValidated()) {
+        item2.classList.remove("locked");
+        status.textContent = "⬤ Validation OSINT : confirmée";
+        status.style.color = "var(--ok, #2e7d52)";
+      } else {
+        item2.classList.add("locked");
+        status.textContent = "⬤ Validation OSINT : en attente";
+        status.style.color = "";
+      }
+    }
+
+    function showMail(id) {
+      /* gérer verrou */
+      if (id === "msg2" && !isValidated()) {
+        renderLocked();
+        setActive(id);
+        currentId = id;
+        return;
+      }
+
+      var m = MAILS[id];
+      if (!m) return;
+      currentId = id;
+      setActive(id);
+
+      var viewer = document.getElementById("viewer");
+      viewer.innerHTML = [
+        '<div class="mail-header">',
+          '<div class="mail-header-classif">',
+            '<span class="badge intern">SECUREMAIL OMEGA</span>',
+            '<span class="mono">', esc(m.id), '</span>',
+            '<span class="badge alpha" style="margin-left:auto">ALPHA</span>',
+          '</div>',
+          '<div class="mail-fields">',
+            '<div class="mail-field"><span class="lbl">De</span><span>', esc(m.from), '</span></div>',
+            '<div class="mail-field"><span class="lbl">À</span><span>', esc(m.to), '</span></div>',
+            '<div class="mail-field"><span class="lbl">Objet</span><span>', esc(m.subject), '</span></div>',
+            m.ref ? '<div class="mail-field"><span class="lbl">Réf.</span><span class="mono">' + esc(m.ref) + '</span></div>' : '',
+            '<div class="mail-field"><span class="lbl">Date</span><span class="mono">', esc(m.date), '</span></div>',
+          '</div>',
+        '</div>',
+        '<div class="mail-body">', m.body(), '</div>',
+        m.action ? '<div class="mail-action-bar">' + m.action + '</div>' : '',
+      ].join("");
+    }
+
+    function renderLocked() {
+      var viewer = document.getElementById("viewer");
+      viewer.innerHTML = [
+        '<div class="mail-locked-msg">',
+          '<span class="lock-icon">🔒</span>',
+          '<span>Accès restreint — validation OSINT requise.</span>',
+          '<span style="font-size:12px;color:var(--muted)">',
+            'Complétez la validation dans <a href="validation.html" target="_blank">ClearanceForm</a>,',
+            '<br>puis revenez ici pour déverrouiller ce message.',
+          '</span>',
+        '</div>',
+      ].join("");
+    }
+
+    function setActive(id) {
+      document.querySelectorAll(".mail-item").forEach(function(el) { el.classList.remove("active") });
+      var item = document.getElementById("item-" + id);
+      if (item) item.classList.add("active");
+    }
+
+    /* accessibilité clavier sur les items */
+    document.querySelectorAll(".mail-item").forEach(function(item) {
+      item.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.click() }
+      });
+    });
+
+    /* init après chargement des scripts defer */
+    function init() {
+      updateSidebar();
+      /* ouvrir Mail 1 par défaut */
+      showMail("msg1");
+      /* écouter les changements de validation (ex: depuis un autre onglet) */
+      window.addEventListener("storage", function() {
+        updateSidebar();
+        /* si Mail 2 est affiché et vient d'être déverrouillé, recharger */
+        if (currentId === "msg2" && isValidated()) showMail("msg2");
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      /* scripts defer → DOMContentLoaded déjà passé dans certains cas */
+      window.addEventListener("load", init);
+    }
+  </script>
+</body>
+</html>
