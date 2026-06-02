@@ -3,67 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Operation OMEGA</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA-OS · Poste opérateur sécurisé</title>
   <link rel="stylesheet" href="assets/css/hub.css">
+  <link rel="stylesheet" href="assets/css/desktop.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="index.html">
-        <span class="brand-badge" aria-hidden="true"></span>
-        <span class="brand-title">Operation OMEGA</span>
-      </a>
-      <nav class="nav" aria-label="Navigation">
-        <a href="mail-1.html">Ordre de mission</a>
-        <a href="osint.html">OSINT</a>
-        <a href="validation.html">Validation</a>
-        <a id="navConsolesAlarm" href="#" target="_blank" rel="noopener">Console Alarm</a>
-        <a id="navConsolesCctv" href="#" target="_blank" rel="noopener">Console CCTV</a>
-      </nav>
+
+  <!-- Écran de boot -->
+  <div class="boot-overlay" aria-hidden="true">
+    <div class="boot-title">OMEGA-OS</div>
+    <div class="boot-bar"><div class="boot-progress"></div></div>
+    <div class="boot-sub">Initialisation poste opérateur · CLASSIFICATION ALPHA</div>
+  </div>
+
+  <!-- Bureau -->
+  <div id="desktop" class="desktop">
+    <div class="desktop-icons" role="list" aria-label="Applications">
+
+      <div class="desk-icon" role="listitem" tabindex="0"
+           aria-label="SecureMail OMEGA"
+           ondblclick="OmegaDesktop.open('mail','SecureMail OMEGA','mail.html',900,580)">
+        <span class="glyph" aria-hidden="true">✉</span>
+        <span class="label">SecureMail<br>OMEGA</span>
+      </div>
+
+      <div class="desk-icon" role="listitem" tabindex="0"
+           aria-label="IntelNode OSINT"
+           ondblclick="OmegaDesktop.open('osint','IntelNode · OSINT','osint.html',980,640)">
+        <span class="glyph" aria-hidden="true">🔍</span>
+        <span class="label">IntelNode<br>OSINT</span>
+      </div>
+
+      <div class="desk-icon" role="listitem" tabindex="0"
+           aria-label="ClearanceForm Validation"
+           ondblclick="OmegaDesktop.open('valid','ClearanceForm','validation.html',720,660)">
+        <span class="glyph" aria-hidden="true">📋</span>
+        <span class="label">ClearanceForm</span>
+      </div>
+
+      <div class="desk-icon" role="listitem" tabindex="0"
+           id="iconAlarm"
+           aria-label="Alarm Console"
+           data-url=""
+           ondblclick="var u=this.dataset.url;if(u)OmegaDesktop.open('alarm','Alarm Console',u,740,520)">
+        <span class="glyph" aria-hidden="true">⚠</span>
+        <span class="label">Alarm<br>Console</span>
+      </div>
+
+      <div class="desk-icon" role="listitem" tabindex="0"
+           id="iconCctv"
+           aria-label="CCTV Console"
+           data-url=""
+           ondblclick="var u=this.dataset.url;if(u)OmegaDesktop.open('cctv','CCTV Console',u,780,560)">
+        <span class="glyph" aria-hidden="true">📹</span>
+        <span class="label">CCTV<br>Console</span>
+      </div>
+
     </div>
-  </header>
+  </div>
 
-  <main class="container">
-    <section class="card hero">
-      <span class="tag">SECUREMAIL OMEGA · PRIORITÉ ALPHA</span>
-      <h1>Hub de mission</h1>
-      <p class="muted">Briefing, phase OSINT, validation, puis accès aux consoles opérateur du lab.</p>
-      <div class="hero-actions">
-        <a class="btn primary" href="mail-1.html">Ouvrir l’ordre de mission (Mail 1) →</a>
-        <a class="btn" href="osint.html">Aller à l’OSINT Workbench</a>
-        <a class="btn" href="validation.html">Valider l’OSINT</a>
-      </div>
+  <!-- Taskbar -->
+  <footer class="taskbar" role="toolbar" aria-label="Barre des tâches">
+    <span class="tb-brand" aria-label="OMEGA-OS">OMEGA-OS</span>
+    <div class="tb-apps" id="tb-apps" role="list" aria-label="Fenêtres ouvertes"></div>
+    <div class="tb-sys">
+      <span class="tb-indicator" aria-live="polite">
+        <span class="tb-dot" aria-hidden="true"></span>
+        SYS OK
+      </span>
+      <span class="tb-classif">ALPHA</span>
+      <span class="tb-clock" id="os-clock" aria-label="Heure">--:--:--</span>
+    </div>
+  </footer>
 
-      <div class="grid" aria-label="Étapes">
-        <div class="step col-6">
-          <h2>Phase 1 — OSINT</h2>
-          <p>Recouper les éléments (format email, cible, sous-domaine, stack, prestataire, ticket, fenêtre).</p>
-          <a class="step-link btn" href="osint.html">Ouvrir le workbench</a>
-        </div>
-        <div class="step col-6">
-          <h2>Validation</h2>
-          <p>Enregistre la progression navigateur et déverrouille le Mail 2 (phase infiltration).</p>
-          <a class="step-link btn" href="validation.html">Ouvrir la validation</a>
-        </div>
-        <div class="step col-4">
-          <h2>Mail 2 — Infiltration</h2>
-          <p>Disponible après validation OSINT (sinon message d’avertissement).</p>
-          <a class="step-link btn" href="mail-2.html">Ouvrir Mail 2</a>
-        </div>
-        <div class="step col-4">
-          <h2>Consoles (pivot)</h2>
-          <p>Accès aux consoles ops via le portail partenaire (ouvre dans un nouvel onglet).</p>
-          <a class="step-link btn" id="navPivotTarget" href="#" target="_blank" rel="noopener">Ouvrir la cible lab</a>
-        </div>
-        <div class="step col-4">
-          <h2>Rappel</h2>
-          <p class="muted">Les consoles Alarm/CCTV peuvent aussi être atteintes via tunnel SSH, mais les panels “pro” évitent le tunnel.</p>
-        </div>
-      </div>
-    </section>
-  </main>
+  <!-- Scripts : defer = non-bloquants, exécutés après parsing HTML -->
+  <script src="assets/js/lab-access.js" defer></script>
+  <script src="assets/js/desktop.js" defer></script>
 
-  <script src="assets/js/lab-access.js"></script>
-  <script src="assets/js/nav.js"></script>
+  <!-- accessibilité clavier : Enter/Space ouvre les icônes -->
+  <script>
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var icon = e.target.closest(".desk-icon");
+      if (icon) { e.preventDefault(); icon.dispatchEvent(new MouseEvent("dblclick")); }
+    });
+  </script>
 </body>
 </html>
