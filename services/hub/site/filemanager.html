@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explorateur — OMEGA-OS</title>
+  <link rel="stylesheet" href="assets/css/hub.css">
+  <style>
+    * { box-sizing: border-box }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0c1219; color: #b8c5d0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 13px }
+
+    /* layout racine */
+    #app { display: flex; flex-direction: column; height: 100% }
+
+    /* toolbar */
+    #toolbar {
+      flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
+      background: #0e1520;
+    }
+    #btnUp {
+      padding: 3px 9px; border: 1px solid rgba(255,255,255,.1); border-radius: 3px;
+      background: rgba(255,255,255,.04); color: #64748b; cursor: pointer; font-size: 12px;
+    }
+    #btnUp:hover:not(:disabled) { color: #b8c5d0; background: rgba(255,255,255,.08) }
+    #btnUp:disabled { opacity: .3; cursor: default }
+    #addr {
+      flex: 1; padding: 4px 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 3px;
+      background: rgba(0,0,0,.25); font-family: ui-monospace, monospace; font-size: 12px; color: #b8c5d0;
+    }
+
+    /* corps principal */
+    #body { display: flex; flex: 1; overflow: hidden; min-height: 0 }
+
+    /* arbre */
+    #tree {
+      width: 190px; flex-shrink: 0; overflow-y: auto;
+      border-right: 1px solid rgba(255,255,255,.08); padding: 6px 0;
+    }
+    .t-head { padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #3e4e5e }
+    .t-row {
+      display: flex; align-items: center; gap: 6px; padding: 5px 12px;
+      cursor: pointer; font-size: 12px; border-left: 2px solid transparent;
+    }
+    .t-row:hover { background: rgba(255,255,255,.05) }
+    .t-row.cur { background: rgba(37,99,168,.14); border-left-color: rgba(37,99,168,.5); color: #90b8d8 }
+
+    /* zone principale : grille + statusbar */
+    #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0 }
+    #grid {
+      flex: 1; overflow-y: auto; padding: 12px;
+      display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px;
+    }
+    #statusbar { flex-shrink: 0; padding: 4px 12px; border-top: 1px solid rgba(255,255,255,.08); font-family: ui-monospace, monospace; font-size: 10px; color: #3e4e5e }
+
+    /* icônes */
+    .cell {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 8px 5px 7px; border-radius: 5px; border: 1px solid transparent;
+      width: 84px; cursor: pointer; user-select: none; text-align: center;
+    }
+    .cell:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.08) }
+    .cell.sel { background: rgba(37,99,168,.2); border-color: rgba(37,99,168,.38) }
+    .cell-img { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center }
+    .cell-name { font-size: 10px; line-height: 1.3; color: #b8c5d0; word-break: break-word; max-width: 80px }
+
+    /* visionneuse (overlay) */
+    #viewer {
+      display: none; position: absolute; inset: 32px 0 0 190px;
+      flex-direction: column; background: #0c1219; border-left: 1px solid rgba(255,255,255,.08); z-index: 10;
+    }
+    #viewer.open { display: flex }
+    #v-bar { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,.08); background: #0e1520 }
+    #v-title { font-family: ui-monospace, monospace; font-size: 12px; flex: 1; color: #b8c5d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+    #v-date  { font-family: ui-monospace, monospace; font-size: 10px; color: #3e4e5e }
+    #v-close { padding: 3px 9px; border: 1px solid rgba(255,255,255,.1); border-radius: 3px; background: rgba(255,255,255,.04); color: #64748b; cursor: pointer; font-size: 11px }
+    #v-close:hover { color: #b8c5d0 }
+    #v-body { flex: 1; overflow-y: auto; padding: 16px 20px; font-size: 13px; line-height: 1.7 }
+    .mbox { font-family: ui-monospace, monospace; font-size: 11px; border: 1px solid rgba(255,255,255,.08); border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; display: grid; gap: 4px }
+    .mrow { display: grid; grid-template-columns: 110px 1fr; gap: 8px }
+    .mk { color: #3e5060 }
+    .sec { font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #3e4e5e; margin: 14px 0 6px }
+    .bpre { white-space: pre-wrap; color: #b8c5d0; margin: 0; font-family: ui-monospace, monospace; font-size: 12px }
+    .fl { margin: 0; padding-left: 18px }
+    .fl li { margin-bottom: 3px }
+    .hi { color: #2e7d52 } .mhi { color: #7a9a2e } .md { color: #64748b } .lo { color: #8c5a14 }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <button id="btnUp" disabled onclick="goUp()">↑ Parent</button>
+    <div id="addr">OMEGA-OS://</div>
+  </div>
+  <div id="body">
+    <div id="tree">
+      <div class="t-head">Dossiers</div>
+    </div>
+    <div id="main">
+      <div id="grid"></div>
+      <div id="statusbar">—</div>
+    </div>
+  </div>
+  <!-- visionneuse en overlay -->
+  <div id="viewer">
+    <div id="v-bar">
+      <span id="v-title">—</span>
+      <span id="v-date"></span>
+      <button id="v-close" onclick="closeViewer()">✕ Fermer</button>
+    </div>
+    <div id="v-body"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Système de fichiers OMEGA
+   Une entrée de fichier a toujours .icon; un dossier n'en a pas.
+   ============================================================ */
+var FS = {
+  "DOSSIER_OMEGA": {
+    "README.txt": { icon:"file", conf:null, date:"2026-04-24",
+      title:"Guide de navigation", source:"ops_note",
+      summary:"Index des sous-dossiers et conventions de nommage.",
+      body:"Structure :\n  incidents/   — fiches incidents\n  memos/       — notes techniques\n  runbooks/    — procedures ops\n  forums/      — captures forums\n  dns/         — releves DNS passifs\n  scans/       — fingerprints\n  procurement/ — approvisionnement\n  reports/     — audits\n  crawls/      — archives robots\n  ops/         — notes terrain\n\nConfiance : [HIGH] recoupee · [MED-HI] solide · [MED] secondaire · [LOW] leurre",
+      findings:[]
+    },
+    "incidents": {
+      "BT-AUTH-4421.txt": { icon:"warn", conf:"high", date:"2026-04-24",
+        title:"Fiche incident BT-AUTH-4421", source:"incident_registry",
+        summary:"Incident de reference sur le portail partenaire. Mode mirror=legacy.",
+        body:"Le flux partenaire bascule vers un parseur legacy en cas de degradation.\nLes controles fallback restent partiels tant que le profil de compatibilite n'est pas retire.\nCorriger en priorite les routes exposees par le miroir d'authentification.",
+        findings:["Reference : BT-AUTH-4421.","Surface : /internal/auth-gateway/v2.","Profil legacy-mirror cite dans la chronologie corrective."]
+      }
+    },
+    "memos": {
+      "relay-profile-map.txt": { icon:"file", conf:"medium-high", date:"2026-04-24",
+        title:"Cartographie des profils relay", source:"relay_memo",
+        summary:"Profil interne actif : legacy-mirror. Alimente auth-gateway et exports CCTV.",
+        body:"legacy-mirror sert de rustine operationnelle pendant les fenetres de charge.\nConserve pour continuite partenaires, au prix de controles d'entree reduits.",
+        findings:["Projet interne actif : legacy-mirror.","Usage : auth gateway + chaines export CCTV.","Mode compatibilite, encore en production."]
+      },
+      "directory-pattern-current.txt": { icon:"ok", conf:"high", date:"2026-04-22",
+        title:"Format email interne (actif)", source:"directory_sync",
+        summary:"Format valide : prenom.nom@blacktide-corp.tld.",
+        body:"Changement de domaine finalise. Seeds pre-migration a ne pas utiliser.\nFormat actuel : standard unique de validation.",
+        findings:["Pattern : prenom.nom@blacktide-corp.tld.","Alias legacy encore indexables.","Ne pas utiliser les seeds pre-2026."]
+      },
+      "directory-legacy-seed.txt": { icon:"file", conf:"low", date:"2025-12-14",
+        title:"Seed annuaire legacy (pre-migration)", source:"directory_sync",
+        summary:"Format first.last@blacktide.local — leurre, non conforme a la mission.",
+        body:"Seed exporte avant la normalisation du domaine.\nIdentifiants plausibles mais inexploitables pour la campagne en cours.",
+        findings:["Format non valide.","Archive uniquement.","A declasser face aux memos 2026."]
+      }
+    },
+    "runbooks": {
+      "ops-deploy-window.txt": { icon:"ok", conf:"high", date:"2026-04-24",
+        title:"Runbook ops : cadence de deploiement", source:"ops_dump",
+        summary:"Fenetre d'action 02:00-03:00 UTC. Relais n.morel.",
+        body:"Deploiements concentres entre 02:00 et 03:00 UTC pour reduire la visibilite externe.\nInterventions d'urgence via n.morel.\nRollback cite le profil legacy-mirror.",
+        findings:["Fenetre : 02:00-03:00 UTC.","Operateur : n.morel.","Rollback : legacy-mirror."]
+      }
+    },
+    "forums": {
+      "forum-7782.txt": { icon:"file", conf:"medium", date:"2026-04-23",
+        title:"Capture forum #7782 (miroir recent)", source:"bt_forum_mirror",
+        summary:"Alias n.morel et activite 02:00-03:00 UTC. Source secondaire.",
+        body:"Source secondaire utile pour valider le tempo operationnel.\nConverge avec le runbook ops sans le remplacer.",
+        findings:["Alias repete : n.morel.","Activite nocturne confirmee.","References au fallback partenaire."]
+      },
+      "forum-5511.txt": { icon:"file", conf:"low", date:"2026-03-02",
+        title:"Archive forum #5511 (obsolescent — leurre)", source:"bt_forum_mirror",
+        summary:"Archive ancienne : n.moreau, fenetre 00:00-01:00 UTC. A declasser.",
+        body:"Maintenu pour reproduire le bruit d'une collecte OSINT reelle.\nA declasser face a tout artefact du 24 avril.",
+        findings:["Alias divergent : n.moreau.","Fenetre incoherente.","Leurre historique."]
+      }
+    },
+    "dns": {
+      "dns-partner-fallback.txt": { icon:"file", conf:"medium-high", date:"2026-04-24",
+        title:"DNS passif : fallback partenaire", source:"passive_dns",
+        summary:"Resolvers pointant vers /internal/auth-gateway/v2.",
+        body:"Signal DNS seul insuffisant, mais confirme le chemin d'exposition.\nConfiance elevee en correlation avec BT-AUTH-4421.",
+        findings:["Chemin : /internal/auth-gateway/v2.","Reconnaissance passive, non intrusive.","A croiser avec robots archive."]
+      }
+    },
+    "scans": {
+      "stack-edge-fingerprint.txt": { icon:"ok", conf:"medium-high", date:"2026-04-24",
+        title:"Empreinte edge du portail", source:"header_capture",
+        summary:"Stack : nginx/1.27 + php-fpm (legacy partner module).",
+        body:"Fingerprint HTTP passif sur le frontal partenaire.\nnginx + php-fpm stable sur la periode d'observation.",
+        findings:["Stack de validation : nginx/1.27 + php-fpm.","Module legacy partner mentionne.","Traces apache = obsoletes."]
+      },
+      "stack-old-sample.txt": { icon:"file", conf:"low", date:"2026-02-18",
+        title:"Echantillon en-tete obsolete (leurre)", source:"header_capture",
+        summary:"Trace apache/2.4 pre-migration. Non fiable.",
+        body:"Simule les contradictions d'un environnement OSINT realiste.\nUtile pour l'historique, pas pour valider l'etat courant.",
+        findings:["Antérieur a la migration.","Faux positifs de stack.","Bruit historique."]
+      }
+    },
+    "procurement": {
+      "lot-BT-SUP-4421.txt": { icon:"file", conf:"medium-high", date:"2026-04-20",
+        title:"Approvisionnement : lot BT-SUP-4421", source:"vendor_exchange_dump",
+        summary:"Lot BT-SUP-4421 associe aux flux CCTV / maintenance.",
+        body:"Identifiant robuste pour lier les traces techniques au volet contractuel.\nBT-SUP-4421 = cle de recoupement principale.",
+        findings:["Ref fournisseur : BT-SUP-4421.","Perimetre : relay maintenance + exports camera.","Nom legal masque dans cette source."]
+      }
+    },
+    "reports": {
+      "cctv-handoff-audit.txt": { icon:"warn", conf:"medium", date:"2026-04-25",
+        title:"Audit handoff CCTV", source:"audit_cell",
+        summary:"BT-SUP-4421 dans les traces maintenance, correlé profils legacy mode degrade.",
+        body:"La videosurveillance partage les memes compromis de compatibilite qu'auth-gateway.\nSurveiller les handoffs pendant 02:00-03:00 UTC.",
+        findings:["BT-SUP-4421 correlé flux CCTV.","Profils legacy dans les exports.","Risque accru fenetres de maintenance."]
+      }
+    },
+    "crawls": {
+      "robots-archive.txt": { icon:"file", conf:"medium", date:"2026-04-24",
+        title:"Archive robots : chemins exposes", source:"crawler",
+        summary:"Disallow sur /internal/auth-gateway/v2 et sous-chemins.",
+        body:"Robots ne donne pas acces, mais signale les zones sensibles.\nDecisif dans une chaine de recoupement.",
+        findings:["Chemin visible : /internal/auth-gateway/v2.","Reconnaissance passive.","A croiser avec incident registry."]
+      }
+    },
+    "ops": {
+      "local-port-note.txt": { icon:"file", conf:"medium", date:"2026-04-25",
+        title:"Note ops : ports lab", source:"ops_note",
+        summary:"Ports OSINT : hub 8080, partenaire 8081. Lab Docker : 18080/18081.",
+        body:"1) Ports documentaires OSINT : hub=8080, partenaire=8081.\n2) Ports hote Docker : hub=18080, cible=18081.",
+        findings:["Bonus OSINT : port partenaire = 8081.","Hub lab : http://localhost:18080","Cible lab : http://localhost:18081"]
+      }
+    }
+  }
+};
+
+/* ============================================================
+   Moteur de navigation
+   ============================================================ */
+var curPath = [];        /* ex: ["DOSSIER_OMEGA","incidents"] */
+var histStack = [];
+var sel = null;
+
+function isDir(n) {
+  return n && typeof n === "object" && !n.icon;
+}
+
+/* Résout un tableau de chemins vers le nœud correspondant */
+function resolve(parts) {
+  var n = FS;
+  for (var i = 0; i < parts.length; i++) {
+    n = n[parts[i]];
+    if (!n) return null;
+  }
+  return n;
+}
+
+function setAddr() {
+  var p = ["OMEGA-OS:"].concat(curPath).join("/");
+  document.getElementById("addr").textContent = p + "/";
+  document.getElementById("btnUp").disabled = curPath.length === 0;
+}
+
+/* Surligne l'item courant dans l'arbre */
+function syncTree() {
+  var key = curPath.join("/");
+  document.querySelectorAll(".t-row").forEach(function(r) {
+    r.classList.toggle("cur", r.dataset.p === key);
+  });
+}
+
+function navigate(parts) {
+  histStack.push(curPath.slice());
+  curPath = parts.slice();
+  closeViewer();
+  renderGrid();
+}
+
+function goUp() {
+  if (curPath.length === 0) return;
+  if (histStack.length) curPath = histStack.pop();
+  else curPath = curPath.slice(0, -1);
+  closeViewer();
+  renderGrid();
+}
+
+/* ============================================================
+   Grille
+   ============================================================ */
+function renderGrid() {
+  setAddr();
+  syncTree();
+  sel = null;
+
+  var grid = document.getElementById("grid");
+  var sb   = document.getElementById("statusbar");
+  grid.innerHTML = "";
+
+  var node = resolve(curPath);
+  if (!node || !isDir(node)) { sb.textContent = "Dossier introuvable."; return; }
+
+  var names = Object.keys(node).sort(function(a,b) {
+    var da = isDir(node[a]) ? 0 : 1, db = isDir(node[b]) ? 0 : 1;
+    return da - db || a.localeCompare(b);
+  });
+
+  names.forEach(function(name) {
+    var child = node[name];
+    var dir   = isDir(child);
+
+    var cell = document.createElement("div");
+    cell.className = "cell";
+    cell.innerHTML =
+      '<div class="cell-img">' + (dir ? svgFolder() : svgFile(child.icon)) + '</div>' +
+      '<div class="cell-name">' + name + '</div>';
+
+    cell.onclick = function() {
+      if (sel) sel.classList.remove("sel");
+      sel = cell; cell.classList.add("sel");
+      if (dir) {
+        navigate(curPath.concat([name]));
+      } else {
+        showFile(child, name);
+      }
+    };
+
+    grid.appendChild(cell);
+  });
+
+  sb.textContent = names.length + " élément" + (names.length > 1 ? "s" : "");
+}
+
+/* ============================================================
+   Visionneuse
+   ============================================================ */
+function confCls(c) { return {high:"hi","medium-high":"mhi",medium:"md",low:"lo"}[c]||"md" }
+function confLbl(c) { return {high:"HIGH","medium-high":"MED-HI",medium:"MED",low:"LOW"}[c]||(c||"—") }
+
+function showFile(f, name) {
+  document.getElementById("v-title").textContent = name;
+  document.getElementById("v-date").textContent  = f.date || "";
+
+  var fl = (f.findings||[]).map(function(x){return "<li>"+x+"</li>"}).join("");
+
+  document.getElementById("v-body").innerHTML =
+    '<div class="mbox">' +
+      '<div class="mrow"><span class="mk">Titre</span><span>'+(f.title||name)+'</span></div>' +
+      '<div class="mrow"><span class="mk">Source</span><span>'+(f.source||"—")+'</span></div>' +
+      '<div class="mrow"><span class="mk">Date</span><span>'+(f.date||"—")+'</span></div>' +
+      (f.conf ? '<div class="mrow"><span class="mk">Confiance</span><span class="'+confCls(f.conf)+'">['+confLbl(f.conf)+']</span></div>' : '') +
+    '</div>' +
+    (f.summary ? '<div class="sec">Résumé</div><p>'+f.summary+'</p>' : '') +
+    (fl ? '<div class="sec">Constats clés</div><ul class="fl">'+fl+'</ul>' : '') +
+    (f.body ? '<div class="sec">Corps du document</div><pre class="bpre">'+f.body+'</pre>' : '');
+
+  document.getElementById("viewer").classList.add("open");
+}
+
+function closeViewer() {
+  document.getElementById("viewer").classList.remove("open");
+}
+
+/* ============================================================
+   Arbre latéral
+   ============================================================ */
+function buildTreeUI(node, prefix, container, depth) {
+  Object.keys(node).sort().forEach(function(name) {
+    var child = node[name];
+    if (!isDir(child)) return;
+    var path = prefix ? prefix + "/" + name : name;
+    var row = document.createElement("div");
+    row.className = "t-row";
+    row.dataset.p = path;
+    row.style.paddingLeft = (12 + depth*14) + "px";
+    row.innerHTML = svgFolder(true) + name;
+    row.onclick = function() { navigate(path.split("/")) };
+    container.appendChild(row);
+    buildTreeUI(child, path, container, depth + 1);
+  });
+}
+
+/* SVG */
+function svgFolder(small) {
+  var s = small ? 13 : 34;
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" style="fill:#c49a14;stroke:#9a7a0e;stroke-width:1.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+}
+function svgFile(ic) {
+  var col = ic==="warn" ? "#c49a14" : ic==="ok" ? "#2e7d52" : "#7a9bbc";
+  return '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+}
+
+/* ============================================================
+   Init
+   ============================================================ */
+buildTreeUI(FS, "", document.getElementById("tree"), 0);
+navigate(["DOSSIER_OMEGA"]);
+</script>
+</body>
+</html>
