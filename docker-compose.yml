@@ -41,6 +41,28 @@ services:
         limits:
           memory: 128M
 
+  platform:
+    build: ./services/platform
+    ports:
+      - "${PLATFORM_PORT:-18082}:8000"
+    networks:
+      - public_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/state')\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    labels:
+      - "com.pfe.service=platform"
+      - "com.pfe.tier=public"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
   pivot:
     build: ./services/pivot
     ports:
