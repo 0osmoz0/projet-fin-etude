@@ -1,0 +1,10 @@
+Partner FAQ (public extract)
+
+Q: Où déposer des documents partenaires ?
+A: Utilisez le canal partenaire officiel. Les dépôts non conformes seront rejetés.
+
+Q: Fenêtre de maintenance ?
+A: Une fenêtre récurrente est utilisée pour les interventions planifiées.
+
+Q: Stack du portail ?
+A: Le frontal est stabilisé pour compatibilité (module legacy partenaire).

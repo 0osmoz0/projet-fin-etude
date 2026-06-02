@@ -1,0 +1,3 @@
+[placeholder]
+This is a text stand-in for a press photo.
+In production, this would be a JPEG/PNG asset.
