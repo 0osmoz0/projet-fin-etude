@@ -11,24 +11,24 @@
     <h1>Validation OSINT</h1>
     <form class="validation-form">
         <label for="emailPattern">Format email interne : </label>
-        <input id="emailPattern" type="text" placeholder="prenom.nom@..."/>
+        <input id="emailPattern" type="text" placeholder="ex: prenom.nom@domaine.tld"/>
         <label for="targetUser">Utilisateur cible : </label>
-        <input id="targetUser" type="text" placeholder="prenom.nom"/>
+        <input id="targetUser" type="text" placeholder="ex: prenom.nom"/>
         <label for="portalSubdomain">Sous-domaine / portail expose :</label>
-        <input id="portalSubdomain" type="text" placeholder="ex: /internal/auth-gateway/v2"/>
+        <input id="portalSubdomain" type="text" placeholder="ex: /chemin/portail"/>
         <label for="portalStack">Stack technique du portail :</label>
-        <input id="portalStack" type="text" placeholder="ex: nginx/1.27 + php-fpm"/>
+        <input id="portalStack" type="text" placeholder="ex: nginx + php-fpm"/>
         <label for="videoProvider">Prestataire videosurveillance :</label>
-        <input id="videoProvider" type="text" placeholder="ex: BT-SUP-4421"/>
+        <input id="videoProvider" type="text" placeholder="ex: <code fournisseur>"/>
         <label for="internalProject">Nom du projet interne actif :</label>
-        <input id="internalProject" type="text" placeholder="ex: legacy-mirror"/>
+        <input id="internalProject" type="text" placeholder="ex: <nom de projet>"/>
         <label for="operationRef">Reference operationnelle (ticket/ID) :</label>
-        <input id="operationRef" type="text" placeholder="ex: BT-AUTH-4421"/>
+        <input id="operationRef" type="text" placeholder="ex: BT-XXXX-1234"/>
         <label for="operationWindow">Fenetre temporelle d'operation :</label>
         <input id="operationWindow" type="text" placeholder="ex: 02:00-03:00 UTC"/>
         <label for="exposedPort">Port exposé du portail partenaire (bonus, port documentaire OSINT) :</label>
         <input id="exposedPort" type="text" placeholder="ex: 8081"/>
-        <p class="muted"><small>Reponse OSINT attendue : <code>8081</code>. Connexion navigateur sur le lab : <code>18081</code> (voir liens apres validation).</small></p>
+        <p class="muted"><small>Indice : un des champs a une valeur « bonus » (port documentaire). La connexion navigateur au lab se fait via les ports hôte (voir liens après validation).</small></p>
         <div id="labAccessPanel" class="lab-access-panel" hidden></div>
         <button type="submit">Valider</button>
         <p id="progress">Progression OSINT: 0/8</p>
