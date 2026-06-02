@@ -1,0 +1,13 @@
+Drop note — 2026-04-24
+---------------------
+
+Incident: BT-AUTH-4421
+Window: 02:00-03:00 UTC
+
+Checklist:
+- [ ] déposer le bundle "press-pack" sur le canal public (index.html)
+- [ ] confirmer que le parser legacy (tpl) est en mode mirror
+- [ ] ne pas exposer la console ops-relay sur la surface partenaire
+
+Owner: n.morel
+
