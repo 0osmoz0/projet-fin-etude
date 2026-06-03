@@ -1,4 +1,4 @@
-const form = document.querySelector("form");
+const form = document.getElementById("cfForm") || document.querySelector("form");
 const emailInput = document.getElementById("emailPattern");
 const targetUserInput = document.getElementById("targetUser");
 const portalSubdomainInput = document.getElementById("portalSubdomain");
@@ -10,7 +10,6 @@ const operationWindowInput = document.getElementById("operationWindow");
 const exposedPortInput = document.getElementById("exposedPort");
 const nextStep = document.getElementById("nextStep");
 const result = document.getElementById("result");
-const progress = document.getElementById("progress");
 
 const FORM_FIELDS = {
   emailPattern: emailInput,
@@ -23,6 +22,17 @@ const FORM_FIELDS = {
   operationWindow: operationWindowInput,
   exposedPort: exposedPortInput,
 };
+
+const FIELD_ORDER = [
+  "emailPattern",
+  "targetUser",
+  "portalSubdomain",
+  "portalStack",
+  "videoProvider",
+  "internalProject",
+  "operationRef",
+  "operationWindow",
+];
 
 const EXPECTED = {
   email: "prenom.nom@blacktide-corp.tld",
@@ -68,57 +78,53 @@ function evaluateAnswers() {
   const windowValue = canonicalWindow(operationWindowInput.value);
   const portValue = canonicalText(exposedPortInput.value);
 
-  const isEmailValid = emailValue === EXPECTED.email;
-  const isTargetValid = targetValue === EXPECTED.user;
-  const isPortalValid =
-    portalValue === EXPECTED.portal || compactToken(portalValue) === "internalauthgatewayv2";
-  const isStackValid =
-    stackValue === EXPECTED.stack ||
-    stackValue === "nginx/1.27 + php-fpm (legacy partner module)";
-  const isProviderValid = providerValue === compactToken(EXPECTED.provider);
-  const isProjectValid = projectValue === compactToken(EXPECTED.project);
-  const isRefValid = refValue === compactToken(EXPECTED.ref);
-  const isWindowValid = windowValue === EXPECTED.window || windowValue === "02:00-03:00";
-  const isBonusPortValid =
-    portValue === EXPECTED.bonusPortDoc || portValue === EXPECTED.bonusPortLab;
+  const fieldValid = {
+    emailPattern: emailValue === EXPECTED.email,
+    targetUser: targetValue === EXPECTED.user,
+    portalSubdomain:
+      portalValue === EXPECTED.portal ||
+      compactToken(portalValue) === "internalauthgatewayv2",
+    portalStack:
+      stackValue === EXPECTED.stack ||
+      stackValue === "nginx/1.27 + php-fpm (legacy partner module)",
+    videoProvider: providerValue === compactToken(EXPECTED.provider),
+    internalProject: projectValue === compactToken(EXPECTED.project),
+    operationRef: refValue === compactToken(EXPECTED.ref),
+    operationWindow:
+      windowValue === EXPECTED.window || windowValue === "02:00-03:00",
+    exposedPort:
+      portValue === EXPECTED.bonusPortDoc || portValue === EXPECTED.bonusPortLab,
+  };
 
-  const isCoreValidationValid =
-    isEmailValid &&
-    isTargetValid &&
-    isPortalValid &&
-    isStackValid &&
-    isProviderValid &&
-    isProjectValid &&
-    isRefValid &&
-    isWindowValid;
+  const isCoreValidationValid = FIELD_ORDER.every(function (key) {
+    return fieldValid[key];
+  });
+  const isBonusPortValid = fieldValid.exposedPort;
 
   const missing = [];
-  if (!isEmailValid) missing.push("format email");
-  if (!isTargetValid) missing.push("utilisateur cible");
-  if (!isPortalValid) missing.push("sous-domaine/portail");
-  if (!isStackValid) missing.push("stack technique");
-  if (!isProviderValid) missing.push("prestataire videosurveillance");
-  if (!isProjectValid) missing.push("projet interne actif");
-  if (!isRefValid) missing.push("reference operationnelle");
-  if (!isWindowValid) missing.push("fenetre temporelle");
+  if (!fieldValid.emailPattern) missing.push("format email");
+  if (!fieldValid.targetUser) missing.push("utilisateur cible");
+  if (!fieldValid.portalSubdomain) missing.push("sous-domaine/portail");
+  if (!fieldValid.portalStack) missing.push("stack technique");
+  if (!fieldValid.videoProvider) missing.push("prestataire videosurveillance");
+  if (!fieldValid.internalProject) missing.push("projet interne actif");
+  if (!fieldValid.operationRef) missing.push("reference operationnelle");
+  if (!fieldValid.operationWindow) missing.push("fenetre temporelle");
 
-  const coreScore =
-    Number(isEmailValid) +
-    Number(isTargetValid) +
-    Number(isPortalValid) +
-    Number(isStackValid) +
-    Number(isProviderValid) +
-    Number(isProjectValid) +
-    Number(isRefValid) +
-    Number(isWindowValid);
+  const coreScore = FIELD_ORDER.reduce(function (n, key) {
+    return n + Number(fieldValid[key]);
+  }, 0);
 
   return {
     isCoreValidationValid,
     isBonusPortValid,
     missing,
     coreScore,
+    fieldValid,
   };
 }
+
+window.evaluateAnswers = evaluateAnswers;
 
 function persistDraft() {
   if (!window.OmegaMissionState) {
@@ -127,34 +133,108 @@ function persistDraft() {
   OmegaMissionState.saveDraft(OmegaMissionState.collectDraftFromForm(FORM_FIELDS));
 }
 
-function renderProgress() {
+function setResultMessage(text, type) {
+  if (!result) return;
+  result.textContent = text;
+  result.className = "cf-result";
+  if (type === "success") result.classList.add("success");
+  else if (type === "error") result.classList.add("error");
+}
+
+function syncClearanceUI() {
+  const scoreEl = document.getElementById("cfScore");
+  const fillEl = document.getElementById("cfFill");
+  const submitBtn = document.getElementById("cfSubmitBtn");
+  if (!scoreEl) return;
+
   const saved = window.OmegaMissionState && OmegaMissionState.read();
-  if (saved) {
-    const bonusText = saved.bonusPort ? " + bonus port OK" : "";
-    progress.textContent = `Progression OSINT: 8/8${bonusText} (enregistree)`;
-    return;
+  const { coreScore, isBonusPortValid, fieldValid } = evaluateAnswers();
+  const score = saved ? 8 : coreScore;
+  const pct = Math.round((score / 8) * 100);
+
+  scoreEl.textContent = score + " / 8";
+  if (fillEl) fillEl.style.width = pct + "%";
+
+  FIELD_ORDER.forEach(function (fid, i) {
+    const row = document.getElementById("row-" + fid);
+    if (row) {
+      if (saved || fieldValid[fid]) row.classList.add("valid");
+      else row.classList.remove("valid");
+    }
+    const seg = document.getElementById("seg-" + i);
+    if (seg) seg.className = "cf-seg" + (saved || fieldValid[fid] ? " done" : "");
+    const ctx = document.getElementById("ctx-" + (i + 1));
+    if (ctx) {
+      if (saved || fieldValid[fid]) ctx.classList.add("done");
+      else ctx.classList.remove("done");
+    }
+  });
+
+  const bonusSeg = document.getElementById("seg-bonus");
+  if (bonusSeg) {
+    bonusSeg.className = "cf-seg" + ((saved && saved.bonusPort) || isBonusPortValid ? " bonus" : "");
   }
-  const { coreScore, isBonusPortValid } = evaluateAnswers();
-  const bonusText = isBonusPortValid ? " + bonus port OK" : "";
-  progress.textContent = `Progression OSINT: ${coreScore}/8${bonusText}`;
+  const bonusRow = document.getElementById("row-exposedPort");
+  if (bonusRow) {
+    if ((saved && saved.bonusPort) || isBonusPortValid) bonusRow.classList.add("valid");
+    else bonusRow.classList.remove("valid");
+  }
+
+  if (submitBtn) {
+    if (score === 8) submitBtn.classList.add("ready");
+    else submitBtn.classList.remove("ready");
+  }
+
+  const dotOsint = document.getElementById("ctxDotOsint");
+  const lblOsint = document.getElementById("ctxLabelOsint");
+  const dotMail2 = document.getElementById("ctxDotMail2");
+  const lblMail2 = document.getElementById("ctxLabelMail2");
+
+  if (window.OmegaMissionState && OmegaMissionState.isValidated()) {
+    if (dotOsint) dotOsint.className = "ctx-dot ok";
+    if (lblOsint) lblOsint.textContent = "OSINT — validé";
+    if (dotMail2) {
+      dotMail2.className = "ctx-dot ok";
+      dotMail2.style.opacity = "";
+    }
+    if (lblMail2) {
+      lblMail2.textContent = "Mail 2 — déverrouillé";
+      lblMail2.style.opacity = "";
+    }
+  } else if (score > 0) {
+    if (dotOsint) dotOsint.className = "ctx-dot pending";
+    if (lblOsint) lblOsint.textContent = "OSINT — en cours";
+  }
+}
+
+function renderProgress() {
+  syncClearanceUI();
 }
 
 function showLabAccessPanel() {
   const panel = document.getElementById("labAccessPanel");
   if (window.OmegaLabAccess && panel) {
     OmegaLabAccess.renderAccessPanel(panel);
+    panel.hidden = false;
   }
 }
 
 function showValidatedSuccess(isBonusPortValid, alreadySaved) {
-  const prefix = alreadySaved ? "Validation OSINT deja enregistree" : "Validation OSINT reussie";
+  const prefix = alreadySaved ? "Validation OSINT déjà enregistrée" : "Validation OSINT réussie";
   if (isBonusPortValid) {
-    result.textContent = `${prefix} (8/8 + bonus port). Passage autorise vers Mail 2.`;
+    setResultMessage(
+      prefix + " (8/8 + bonus port). Passage autorisé vers Mail 2.",
+      "success",
+    );
   } else {
-    result.textContent = `${prefix} (8/8). Bonus port incorrect ou manquant.`;
+    setResultMessage(
+      prefix + " (8/8). Bonus port incorrect ou manquant.",
+      "success",
+    );
   }
-  nextStep.style.display = "block";
+  if (nextStep) nextStep.hidden = false;
   showLabAccessPanel();
+  syncClearanceUI();
 }
 
 function restoreSavedValidation() {
@@ -173,34 +253,59 @@ function restoreDraftAndValidation() {
   renderProgress();
 }
 
-form.addEventListener("submit", function (e) {
-  e.preventDefault();
-  persistDraft();
-  const { isCoreValidationValid, isBonusPortValid, missing } = evaluateAnswers();
+function initProgressSegments() {
+  const segsEl = document.getElementById("cfSegs");
+  if (!segsEl || segsEl.childElementCount > 0) return;
+  FIELD_ORDER.forEach(function (_, i) {
+    const s = document.createElement("span");
+    s.className = "cf-seg";
+    s.id = "seg-" + i;
+    segsEl.appendChild(s);
+  });
+  const bonus = document.createElement("span");
+  bonus.className = "cf-seg";
+  bonus.id = "seg-bonus";
+  segsEl.appendChild(bonus);
+}
 
-  if (isCoreValidationValid && isBonusPortValid) {
-    result.textContent =
-      "Validation OSINT reussie (8/8 + bonus port). Passage autorise vers Mail 2.";
-  } else if (isCoreValidationValid) {
-    result.textContent =
-      "Validation OSINT reussie (8/8). Bonus port incorrect ou manquant.";
-  } else {
-    result.textContent = `Validation incomplete. Champs a revoir: ${missing.join(", ")}.`;
-  }
+if (form) {
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    persistDraft();
+    const { isCoreValidationValid, isBonusPortValid, missing } = evaluateAnswers();
 
-  if (isCoreValidationValid) {
-    if (window.OmegaMissionState) {
-      OmegaMissionState.saveValidated(
-        isBonusPortValid,
-        OmegaMissionState.collectDraftFromForm(FORM_FIELDS),
+    if (isCoreValidationValid && isBonusPortValid) {
+      setResultMessage(
+        "Validation OSINT réussie (8/8 + bonus port). Passage autorisé vers Mail 2.",
+        "success",
+      );
+    } else if (isCoreValidationValid) {
+      setResultMessage(
+        "Validation OSINT réussie (8/8). Bonus port incorrect ou manquant.",
+        "success",
+      );
+    } else {
+      setResultMessage(
+        "Validation incomplète. Champs à revoir : " + missing.join(", ") + ".",
+        "error",
       );
     }
-    nextStep.style.display = "block";
-    renderProgress();
-  } else {
-    nextStep.style.display = "none";
-  }
-});
+
+    if (isCoreValidationValid) {
+      if (window.OmegaMissionState) {
+        OmegaMissionState.saveValidated(
+          isBonusPortValid,
+          OmegaMissionState.collectDraftFromForm(FORM_FIELDS),
+        );
+      }
+      if (nextStep) nextStep.hidden = false;
+      showLabAccessPanel();
+      renderProgress();
+    } else if (nextStep) {
+      nextStep.hidden = true;
+    }
+  });
+}
 
 Object.values(FORM_FIELDS).forEach(function (input) {
   if (!input) {
@@ -209,9 +314,14 @@ Object.values(FORM_FIELDS).forEach(function (input) {
   input.addEventListener("input", function () {
     persistDraft();
     renderProgress();
+    if (result && result.textContent) {
+      result.textContent = "";
+      result.className = "cf-result";
+    }
   });
 });
 
 window.addEventListener("pagehide", persistDraft);
 
+initProgressSegments();
 restoreDraftAndValidation();

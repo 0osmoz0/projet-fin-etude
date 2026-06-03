@@ -26,6 +26,8 @@ x-healthcheck-php: &healthcheck-php
 services:
   hub:
     build: ./services/hub
+    volumes:
+      - ./services/hub/site:/usr/share/nginx/html:ro
     ports:
       - "${HUB_PORT}:8080"
     networks:
