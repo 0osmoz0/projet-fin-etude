@@ -4,99 +4,623 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>OMEGA · Validation OSINT</title>
+  <title>OMEGA · ClearanceForm</title>
   <link rel="stylesheet" href="assets/css/hub.css">
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+
+    .cf-app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    /* ── en-tête compact ─────────────────────────────────────── */
+    .cf-header {
+      flex-shrink: 0;
+      padding: 0 18px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,.25);
+    }
+    .cf-header-icon {
+      width: 26px; height: 26px;
+      border-radius: 5px;
+      background: rgba(212,160,23,.15);
+      border: 1px solid rgba(212,160,23,.3);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .cf-header-icon svg {
+      width: 13px; height: 13px;
+      stroke: var(--alpha); fill: none; stroke-width: 1.8;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .cf-header-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      color: var(--text);
+    }
+    .cf-header-sub {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .cf-header-badge {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--alpha);
+      border: 1px solid rgba(212,160,23,.4);
+      border-radius: 3px;
+      padding: 1px 5px;
+      letter-spacing: .07em;
+    }
+
+    /* ── corps ────────────────────────────────────────────────── */
+    .cf-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* colonne formulaire */
+    .cf-form-col {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    /* colonne contexte */
+    .cf-ctx-col {
+      width: 240px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 14px 14px 20px;
+      background: rgba(0,0,0,.12);
+    }
+    @media (max-width: 680px) {
+      .cf-ctx-col { display: none; }
+      .cf-form-col { border-right: none; }
+    }
+
+    /* ── barre de progression ────────────────────────────────── */
+    .cf-progress-wrap {
+      margin-bottom: 14px;
+    }
+    .cf-progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+    .cf-progress-label span {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .cf-progress-label strong {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+    }
+    .cf-progress-track {
+      height: 4px;
+      background: rgba(255,255,255,.07);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .cf-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82c4, #2e7d52);
+      border-radius: 2px;
+      transition: width .3s ease;
+      width: 0%;
+    }
+    .cf-progress-segs {
+      display: flex;
+      gap: 3px;
+      margin-top: 5px;
+    }
+    .cf-seg {
+      height: 3px;
+      flex: 1;
+      border-radius: 2px;
+      background: rgba(255,255,255,.07);
+      transition: background .25s;
+    }
+    .cf-seg.done { background: var(--ok); }
+    .cf-seg.bonus { background: var(--alpha); }
+
+    /* ── sections formulaire ─────────────────────────────────── */
+    .cf-section-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 0 7px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      margin-top: 4px;
+    }
+
+    .cf-fields {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .cf-row {
+      display: grid;
+      gap: 3px;
+    }
+    .cf-row label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+    .cf-row label .cf-num {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 9px;
+      flex-shrink: 0;
+      color: var(--muted);
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .cf-row.valid .cf-num {
+      border-color: var(--ok);
+      color: var(--ok);
+      background: rgba(46,125,82,.12);
+    }
+    .cf-row.valid label { color: #4a9a6a; }
+
+    .cf-input-wrap {
+      position: relative;
+    }
+    .cf-row input {
+      width: 100%;
+      padding: 8px 34px 8px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.28);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .cf-row input:focus { border-color: rgba(59,130,196,.5); background: rgba(0,0,0,.35); }
+    .cf-row.valid input { border-color: rgba(46,125,82,.45); }
+    .cf-row.valid input:focus { border-color: rgba(46,125,82,.7); }
+
+    .cf-check {
+      position: absolute;
+      right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      opacity: 0;
+      transition: opacity .2s;
+      pointer-events: none;
+    }
+    .cf-check svg {
+      width: 16px; height: 16px;
+      stroke: var(--ok); fill: none; stroke-width: 2.5;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .cf-row.valid .cf-check { opacity: 1; }
+
+    /* ── submit ───────────────────────────────────────────────── */
+    .cf-submit-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .cf-btn-submit {
+      padding: 8px 18px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(59,130,196,.4);
+      background: rgba(59,130,196,.2);
+      color: #7db5ea;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .cf-btn-submit:hover { background: rgba(59,130,196,.3); border-color: rgba(59,130,196,.6); }
+    .cf-btn-submit.ready {
+      background: rgba(46,125,82,.22);
+      border-color: rgba(46,125,82,.5);
+      color: #4db87a;
+    }
+    .cf-btn-submit.ready:hover { background: rgba(46,125,82,.35); }
+
+    /* ── résultat ─────────────────────────────────────────────── */
+    .cf-result {
+      margin-top: 12px;
+      padding: 10px 13px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.2);
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      display: none;
+    }
+    .cf-result.success {
+      border-color: rgba(46,125,82,.45);
+      background: rgba(46,125,82,.08);
+      color: #4db87a;
+      display: block;
+    }
+    .cf-result.error {
+      border-color: rgba(185,64,64,.4);
+      background: rgba(185,64,64,.07);
+      color: #d07070;
+      display: block;
+    }
+
+    .cf-next {
+      margin-top: 12px;
+      display: none;
+    }
+    .cf-next-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(46,125,82,.45);
+      background: rgba(46,125,82,.15);
+      color: #4db87a;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      letter-spacing: .04em;
+    }
+    .cf-next-btn:hover { background: rgba(46,125,82,.25); text-decoration: none; }
+    .cf-next-btn svg {
+      width: 14px; height: 14px;
+      stroke: currentColor; fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    /* ── lab access panel ─────────────────────────────────────── */
+    #labAccessPanel {
+      margin-top: 12px;
+      padding: 12px 13px;
+      border: 1px solid rgba(59,130,196,.25);
+      border-radius: var(--radius);
+      background: rgba(59,130,196,.06);
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    /* ── colonne contexte ─────────────────────────────────────── */
+    .ctx-section {
+      margin-bottom: 18px;
+    }
+    .ctx-title {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ctx-obj {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      margin-bottom: 7px;
+      font-size: 11px;
+      color: #8ca3b8;
+      line-height: 1.5;
+    }
+    .ctx-obj-num {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .ctx-obj.done { color: #4a9a6a; }
+    .ctx-obj.done .ctx-obj-num { border-color: rgba(46,125,82,.4); color: var(--ok); background: rgba(46,125,82,.1); }
+
+    .ctx-status-box {
+      padding: 10px 11px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.2);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .ctx-status-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+    }
+    .ctx-status-row:last-child { margin-bottom: 0; }
+    .ctx-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+    .ctx-dot.ok { background: var(--ok); }
+    .ctx-dot.pending { background: var(--alpha); }
+    .ctx-note {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+  </style>
 </head>
 <body>
   <script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
 
-  <div class="classif-banner">INTERNE · OPÉRATION OMEGA · PRIORITÉ ALPHA · USAGE RESTREINT</div>
+  <div class="cf-app">
 
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="index.html">
-        <span class="brand-dot" aria-hidden="true"></span>
-        <span class="brand-label">SECUREMAIL OMEGA <span>/ Validation</span></span>
-      </a>
-      <nav class="nav" aria-label="Navigation principale">
-        <a href="mail-1.html">Mail 1</a>
-        <a href="osint.html">OSINT</a>
-        <a class="active" href="validation.html">Validation</a>
-        <a href="mail-2.html">Mail 2</a>
-        <a id="navConsolesAlarm" href="#" target="_blank" rel="noopener">Alarm</a>
-        <a id="navConsolesCctv" href="#" target="_blank" rel="noopener">CCTV</a>
-      </nav>
+    <!-- En-tête -->
+    <div class="cf-header">
+      <div class="cf-header-icon">
+        <svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+      </div>
+      <span class="cf-header-title">ClearanceForm</span>
+      <span class="cf-header-sub">— Validation OSINT Phase 1</span>
+      <span class="cf-header-badge">ALPHA</span>
     </div>
-  </header>
 
-  <main class="page">
-    <div class="card">
-      <span class="badge intern">Formulaire de validation</span>
-      <h1 style="margin:8px 0 4px;font-size:17px">Validation OSINT — Phase 1</h1>
-      <p class="muted" style="margin:0 0 16px;font-size:13px">
-        Saisissez les éléments collectés. La validation enregistre la progression sur ce navigateur et déverrouille le Mail 2.
-      </p>
+    <!-- Corps -->
+    <div class="cf-body">
 
-      <form>
-        <div class="form-grid">
-          <div class="form-row">
-            <label for="emailPattern">Format email interne</label>
-            <input id="emailPattern" type="text" placeholder="ex: prenom.nom@domaine.tld" autocomplete="off" />
+      <!-- Colonne formulaire -->
+      <div class="cf-form-col">
+
+        <!-- Progression -->
+        <div class="cf-progress-wrap">
+          <div class="cf-progress-label">
+            <span>Progression OSINT</span>
+            <strong id="cfScore">0 / 8</strong>
           </div>
-          <div class="form-row">
-            <label for="targetUser">Utilisateur cible</label>
-            <input id="targetUser" type="text" placeholder="ex: prenom.nom" autocomplete="off" />
+          <div class="cf-progress-track">
+            <div class="cf-progress-fill" id="cfFill"></div>
           </div>
-          <div class="form-row">
-            <label for="portalSubdomain">Sous-domaine / portail exposé</label>
-            <input id="portalSubdomain" type="text" placeholder="ex: /chemin/portail" autocomplete="off" />
+          <div class="cf-progress-segs" id="cfSegs"></div>
+        </div>
+
+        <form id="cfForm" autocomplete="off" spellcheck="false">
+
+          <div class="cf-section-label">Critères requis — 8 / 8</div>
+          <div class="cf-fields">
+
+            <div class="cf-row" id="row-emailPattern">
+              <label for="emailPattern">
+                <span class="cf-num">1</span>
+                Format email interne
+              </label>
+              <div class="cf-input-wrap">
+                <input id="emailPattern" type="text" placeholder="prenom.nom@domaine.tld" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
+            <div class="cf-row" id="row-targetUser">
+              <label for="targetUser">
+                <span class="cf-num">2</span>
+                Utilisateur cible
+              </label>
+              <div class="cf-input-wrap">
+                <input id="targetUser" type="text" placeholder="p.nom" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
+            <div class="cf-row" id="row-portalSubdomain">
+              <label for="portalSubdomain">
+                <span class="cf-num">3</span>
+                Chemin du portail exposé
+              </label>
+              <div class="cf-input-wrap">
+                <input id="portalSubdomain" type="text" placeholder="/chemin/portail" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
+            <div class="cf-row" id="row-portalStack">
+              <label for="portalStack">
+                <span class="cf-num">4</span>
+                Stack technique du portail
+              </label>
+              <div class="cf-input-wrap">
+                <input id="portalStack" type="text" placeholder="serveur + runtime" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
+            <div class="cf-row" id="row-videoProvider">
+              <label for="videoProvider">
+                <span class="cf-num">5</span>
+                Prestataire vidéosurveillance
+              </label>
+              <div class="cf-input-wrap">
+                <input id="videoProvider" type="text" placeholder="identifiant prestataire" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
+            <div class="cf-row" id="row-internalProject">
+              <label for="internalProject">
+                <span class="cf-num">6</span>
+                Nom du projet interne actif
+              </label>
+              <div class="cf-input-wrap">
+                <input id="internalProject" type="text" placeholder="nom-projet" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
+            <div class="cf-row" id="row-operationRef">
+              <label for="operationRef">
+                <span class="cf-num">7</span>
+                Référence opérationnelle (ticket / ID)
+              </label>
+              <div class="cf-input-wrap">
+                <input id="operationRef" type="text" placeholder="BT-XXXX-0000" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
+            <div class="cf-row" id="row-operationWindow">
+              <label for="operationWindow">
+                <span class="cf-num">8</span>
+                Fenêtre temporelle d'opération
+              </label>
+              <div class="cf-input-wrap">
+                <input id="operationWindow" type="text" placeholder="HH:MM-HH:MM UTC" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
+
           </div>
-          <div class="form-row">
-            <label for="portalStack">Stack technique du portail</label>
-            <input id="portalStack" type="text" placeholder="ex: nginx + php-fpm" autocomplete="off" />
+
+          <div class="cf-section-label">Élément bonus</div>
+          <div class="cf-fields">
+            <div class="cf-row" id="row-exposedPort">
+              <label for="exposedPort">
+                <span class="cf-num">+</span>
+                Port exposé du portail partenaire
+              </label>
+              <div class="cf-input-wrap">
+                <input id="exposedPort" type="text" placeholder="ex: 8080" />
+                <span class="cf-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </div>
+            </div>
           </div>
-          <div class="form-row">
-            <label for="videoProvider">Prestataire vidéosurveillance</label>
-            <input id="videoProvider" type="text" placeholder="ex: fournisseur" autocomplete="off" />
+
+          <div class="cf-submit-area">
+            <button class="cf-btn-submit" type="submit" id="cfSubmitBtn">Soumettre le rapport</button>
           </div>
-          <div class="form-row">
-            <label for="internalProject">Nom du projet interne actif</label>
-            <input id="internalProject" type="text" placeholder="ex: nom-de-projet" autocomplete="off" />
+
+          <div class="cf-result" id="result"></div>
+
+          <div class="cf-next" id="nextStep" hidden>
+            <a class="cf-next-btn" href="mail.html" target="_parent">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3,5 12,13 21,5"/></svg>
+              Accéder au Mail 2
+            </a>
           </div>
-          <div class="form-row">
-            <label for="operationRef">Référence opérationnelle (ticket/ID)</label>
-            <input id="operationRef" type="text" placeholder="ex: BT-XXXX-1234" autocomplete="off" />
+
+          <div id="labAccessPanel" hidden></div>
+
+        </form>
+      </div>
+
+      <!-- Colonne contexte -->
+      <div class="cf-ctx-col">
+
+        <div class="ctx-section">
+          <div class="ctx-title">Objectifs Phase 1</div>
+          <div class="ctx-obj" id="ctx-1">
+            <span class="ctx-obj-num">01</span>
+            <span>Format email interne</span>
           </div>
-          <div class="form-row">
-            <label for="operationWindow">Fenêtre temporelle d'opération</label>
-            <input id="operationWindow" type="text" placeholder="ex: 02:00-03:00 UTC" autocomplete="off" />
+          <div class="ctx-obj" id="ctx-2">
+            <span class="ctx-obj-num">02</span>
+            <span>Utilisateur cible crédible</span>
           </div>
-          <div class="form-row">
-            <label for="exposedPort">Port exposé du portail partenaire <span class="muted">(bonus)</span></label>
-            <input id="exposedPort" type="text" placeholder="ex: 8080" autocomplete="off" />
+          <div class="ctx-obj" id="ctx-3">
+            <span class="ctx-obj-num">03</span>
+            <span>Portail / sous-domaine exposé</span>
+          </div>
+          <div class="ctx-obj" id="ctx-4">
+            <span class="ctx-obj-num">04</span>
+            <span>Stack technique du portail</span>
+          </div>
+          <div class="ctx-obj" id="ctx-5">
+            <span class="ctx-obj-num">05</span>
+            <span>Prestataire vidéosurveillance</span>
+          </div>
+          <div class="ctx-obj" id="ctx-6">
+            <span class="ctx-obj-num">06</span>
+            <span>Projet interne actif</span>
+          </div>
+          <div class="ctx-obj" id="ctx-7">
+            <span class="ctx-obj-num">07</span>
+            <span>Référence opérationnelle</span>
+          </div>
+          <div class="ctx-obj" id="ctx-8">
+            <span class="ctx-obj-num">08</span>
+            <span>Fenêtre temporelle</span>
           </div>
         </div>
 
-        <div id="labAccessPanel" class="lab-access-panel" hidden></div>
-
-        <div class="form-submit" style="margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-          <button class="btn primary" type="submit">Valider</button>
-          <p class="progress-bar" id="progress" style="margin:0">Progression OSINT : 0/8</p>
+        <div class="ctx-section">
+          <div class="ctx-title">Statut mission</div>
+          <div class="ctx-status-box">
+            <div class="ctx-status-row">
+              <span class="ctx-dot ok"></span>
+              <span>Mail 1 — reçu</span>
+            </div>
+            <div class="ctx-status-row">
+              <span class="ctx-dot" id="ctxDotOsint"></span>
+              <span id="ctxLabelOsint">OSINT — en cours</span>
+            </div>
+            <div class="ctx-status-row">
+              <span class="ctx-dot" id="ctxDotMail2" style="opacity:.4"></span>
+              <span style="opacity:.4" id="ctxLabelMail2">Mail 2 — verrouillé</span>
+            </div>
+          </div>
         </div>
 
-        <p class="validation-result" id="result"></p>
-        <p id="nextStep" hidden style="margin-top:8px">
-          <a class="btn" href="mail-2.html">Accéder au Mail 2 →</a>
-        </p>
-      </form>
+        <div class="ctx-section">
+          <div class="ctx-title">Note opérationnelle</div>
+          <p class="ctx-note">
+            Chaque réponse doit être recoupée par au moins deux sources dans le dossier OSINT.<br><br>
+            La validation est locale — aucune donnée n'est transmise à l'extérieur du lab.
+          </p>
+        </div>
 
-      <p style="margin-top:16px;font-size:13px"><a href="osint.html">← Retour au workbench OSINT</a></p>
+      </div>
     </div>
-  </main>
+  </div>
 
   <script src="assets/js/mission-state.js" defer></script>
   <script src="assets/js/lab-access.js" defer></script>
-  <script src="assets/js/nav.js" defer></script>
   <script src="assets/js/validation.js" defer></script>
 </body>
 </html>

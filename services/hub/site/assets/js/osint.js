@@ -892,5 +892,6 @@ translateBtn.addEventListener("click", function () {
 });
 
 refreshTranslateButton();
+
 urlBar.focus();
 navigate("intel://start");
