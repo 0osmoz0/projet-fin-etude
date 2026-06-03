@@ -186,6 +186,9 @@ html, body {
   border-color: rgba(46,125,82,.35);
   box-shadow: 0 0 0 1px rgba(46,125,82,.12);
 }
+.desk-icon--shell-ready .icon-wrap {
+  border-color: rgba(59,130,196,.35);
+}
 
 /* Overlay déploiement consoles */
 .console-deploy-overlay {
