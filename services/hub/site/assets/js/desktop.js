@@ -35,6 +35,8 @@
     valid: '<svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/></svg>',
     alarm: '<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
     cctv:  '<svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+    liaison: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+    files: '<svg viewBox="0 0 24 24" style="fill:#c49a14;stroke:#9a7a0e"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
   };
 
   /* ---- focus ---- */
@@ -262,19 +264,10 @@
     if (!desktop || !taskbarApps) return;
     tick();
 
-    /* résolution des URLs consoles via OmegaLabAccess */
-    function resolveConsoles() {
-      var base = (window.OmegaLabAccess && OmegaLabAccess.pivotUrl)
-        ? OmegaLabAccess.pivotUrl()
-        : "http://" + location.hostname + ":18081/";
-      if (base.slice(-1) !== "/") base += "/";
-
-      var iconAlarm = document.getElementById("iconAlarm");
-      var iconCctv  = document.getElementById("iconCctv");
-      if (iconAlarm) iconAlarm.dataset.url = base + "internal/auth-gateway/v2/ops-alarm-panel.php";
-      if (iconCctv)  iconCctv.dataset.url  = base + "internal/auth-gateway/v2/ops-cctv-panel.php";
+    /* URLs Alarm/CCTV : uniquement après déploiement pivot (OmegaConsoleDeploy) */
+    if (window.OmegaConsoleDeploy) {
+      OmegaConsoleDeploy.applyDesktopState(false);
     }
-    resolveConsoles();
   }
 
   if (document.readyState === "loading") {

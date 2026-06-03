@@ -4,11 +4,15 @@
 (function (global) {
   const STORAGE_KEY = "omega-osint-validation-v1";
 
+  const CONSOLE_DEPLOY_TOKEN = "BT-OPS-TUNNEL-4421";
+
   function defaultState() {
     return {
       validated: false,
       bonusPort: false,
       validatedAt: null,
+      consolesDeployed: false,
+      consolesDeployedAt: null,
       draft: {},
     };
   }
@@ -23,6 +27,8 @@
       validated: data.validated === true,
       bonusPort: Boolean(data.bonusPort),
       validatedAt: data.validatedAt || null,
+      consolesDeployed: data.consolesDeployed === true,
+      consolesDeployedAt: data.consolesDeployedAt || null,
       draft,
     };
   }
@@ -58,6 +64,25 @@
 
   function isValidated() {
     return readState().validated;
+  }
+
+  function isConsolesDeployed() {
+    return readState().consolesDeployed;
+  }
+
+  function saveConsolesDeployed() {
+    const state = readState();
+    state.consolesDeployed = true;
+    state.consolesDeployedAt = new Date().toISOString();
+    writeState(state);
+  }
+
+  /** Réinitialise uniquement le déploiement Alarm/CCTV (garde la validation OSINT). */
+  function resetConsolesDeployed() {
+    const state = readState();
+    state.consolesDeployed = false;
+    state.consolesDeployedAt = null;
+    writeState(state);
   }
 
   function saveDraft(partialDraft) {
@@ -101,9 +126,13 @@
 
   global.OmegaMissionState = {
     STORAGE_KEY,
+    CONSOLE_DEPLOY_TOKEN,
     read,
     readState,
     isValidated,
+    isConsolesDeployed,
+    saveConsolesDeployed,
+    resetConsolesDeployed,
     saveDraft,
     saveValidated,
     applyDraftToForm,

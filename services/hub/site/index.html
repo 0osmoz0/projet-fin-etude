@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>OMEGA-OS · Poste opérateur sécurisé</title>
   <link rel="stylesheet" href="assets/css/hub.css">
-  <link rel="stylesheet" href="assets/css/desktop.css">
+  <link rel="stylesheet" href="assets/css/desktop.css?v=deploy2">
 </head>
 <body>
 
@@ -20,6 +20,17 @@
     <div class="boot-bottom">
       <span class="boot-brand">OMEGA-OS</span>
       <span class="boot-sub">CLASSIFICATION ALPHA · USAGE RESTREINT</span>
+    </div>
+  </div>
+
+  <!-- Overlay déploiement consoles (phase pivot) -->
+  <div class="console-deploy-overlay" id="consoleDeployOverlay" hidden aria-hidden="true">
+    <div class="console-deploy-panel">
+      <p class="console-deploy-title">Liaison pivot · déploiement</p>
+      <p class="console-deploy-msg" id="consoleDeployMsg">Initialisation…</p>
+      <div class="console-deploy-bar-wrap">
+        <div class="console-deploy-bar" id="consoleDeployBar"></div>
+      </div>
     </div>
   </div>
 
@@ -58,8 +69,19 @@
         <span class="icon-label">ClearanceForm</span>
       </div>
 
-      <!-- Alarm Console -->
-      <div class="desk-icon" role="listitem" tabindex="0"
+      <!-- Liaison pivot (après validation OSINT) -->
+      <div class="desk-icon desk-icon--hidden" role="listitem" tabindex="0"
+           id="iconLiaison"
+           aria-label="Liaison pivot"
+           ondblclick="OmegaDesktop.open('liaison','Liaison pivot','liaison.html',520,480)">
+        <div class="icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <span class="icon-label">Liaison<br>pivot</span>
+      </div>
+
+      <!-- Alarm Console (masqué jusqu'au jeton pivot) -->
+      <div class="desk-icon desk-icon--undeployed" hidden role="listitem" tabindex="-1"
            id="iconAlarm"
            aria-label="Alarm Console"
            data-url=""
@@ -70,8 +92,8 @@
         <span class="icon-label">Alarm</span>
       </div>
 
-      <!-- CCTV Console -->
-      <div class="desk-icon" role="listitem" tabindex="0"
+      <!-- CCTV Console (masqué jusqu'au jeton pivot) -->
+      <div class="desk-icon desk-icon--undeployed" hidden role="listitem" tabindex="-1"
            id="iconCctv"
            aria-label="CCTV Console"
            data-url=""
@@ -102,6 +124,8 @@
   </footer>
 
   <script src="assets/js/lab-access.js" defer></script>
+  <script src="assets/js/mission-state.js" defer></script>
+  <script src="assets/js/console-deploy.js?v=deploy2" defer></script>
   <script src="assets/js/desktop.js" defer></script>
 
   <!-- Thème clair/sombre -->
