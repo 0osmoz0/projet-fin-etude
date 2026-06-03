@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "feat/**", "fix/**"]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_NAME: pfe-escape-ci
+  HUB_PORT: "8080"
+  PIVOT_PORT: "8081"
+
+jobs:
+  lint:
+    name: Lint & validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Compose
+        run: docker compose config -q
+
+      - name: Install yamllint
+        run: pip install --quiet yamllint
+
+      - name: YAML lint
+        run: yamllint -c .yamllint.yml docker-compose.yml docker-compose.override.yml.example
+
+      - name: Hadolint (all Dockerfiles)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: services/hub/Dockerfile
+          config: .hadolint.yaml
+
+      - name: Hadolint pivot
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: services/pivot/Dockerfile
+          config: .hadolint.yaml
+
+      - name: Hadolint cctv
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: services/cctv/Dockerfile
+          config: .hadolint.yaml
+
+      - name: Hadolint gateway
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: services/blacktide-gateway/Dockerfile
+          config: .hadolint.yaml
+
+      - name: Shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          shellcheck -x scripts/*.sh scripts/lib/common.sh
+
+      - name: actionlint
+        run: |
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+  integration:
+    name: Build & smoke test
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for CI
+        run: |
+          cat > .env <<'EOF'
+          PROJECT_NAME=pfe-escape-ci
+          HUB_PORT=8080
+          PIVOT_PORT=8081
+          EOF
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build images
+        run: docker compose build --pull
+
+      - name: Start stack
+        run: docker compose up -d --wait --wait-timeout 240
+
+      - name: Compose status
+        run: docker compose ps -a
+
+      - name: Smoke tests
+        run: ./scripts/smoke-test.sh
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v --remove-orphans
+
+  security:
+    name: Trivy (IaC + images)
+    runs-on: ubuntu-latest
+    needs: lint
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan IaC (services/)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: "services"
+          scanners: misconfig
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Scan IaC (docker-compose.yml)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: "docker-compose.yml"
+          scanners: misconfig
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Build custom images for scan
+        run: |
+          cp .env.example .env
+          docker compose build hub pivot cctv vault alarm blacktide_gateway
+
+      - name: Scan images (services maison)
+        run: |
+          while read -r img; do
+            [[ -z "$img" || "$img" == "<none>" ]] && continue
+            echo "::group::Trivy $img"
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:0.69.3 image --severity CRITICAL,HIGH --exit-code 0 "$img"
+            echo "::endgroup::"
+          done < <(docker compose images --format '{{.Image}}' | sort -u | grep -v vulnerables || true)

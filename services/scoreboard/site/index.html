@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scoreboard OMEGA — ESIEE-IT</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --violet:#6b21d6; --cyan:#00b4d8; --vert:#16a34a; --rouge:#dc2626;
+  --jaune:#d97706;  --fond:#f0f2f5; --blanc:#fff;    --bord:#e2e6ec;
+  --gris:#9ca3af;   --texte:#1a1d23; --texte2:#4b5563;
+  --mono:'JetBrains Mono',monospace; --font:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--fond);color:var(--texte);font-family:var(--font);font-size:14px}
+
+/* Barre du haut */
+.topbar{background:var(--blanc);border-bottom:1px solid var(--bord);height:64px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.topbar-left{display:flex;align-items:center;gap:20px}
+.logo{height:36px}
+.sep{width:1px;height:30px;background:var(--bord)}
+.titre{font-family:var(--mono);font-size:14px;color:var(--violet)}
+.titre span{color:var(--cyan)}
+.ws-badge{display:flex;align-items:center;gap:6px;background:#f7f8fa;border:1px solid var(--bord);border-radius:20px;padding:4px 12px;font-size:11px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--rouge)}
+.dot.on{background:var(--vert);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Contenu */
+.page{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+
+/* Stats */
+.stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat{background:var(--blanc);border:1px solid var(--bord);border-radius:10px;padding:12px 18px;flex:1;min-width:120px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gris);margin-bottom:3px}
+.stat-val{font-size:24px;font-weight:700;color:var(--violet);font-family:var(--mono)}
+
+/* Grille */
+.grille{display:grid;grid-template-columns:1fr 330px;gap:18px;align-items:start}
+@media(max-width:760px){.grille{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:18px}
+
+/* Carte */
+.carte{background:var(--blanc);border:1px solid var(--bord);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.carte-head{padding:12px 18px;background:#f7f8fa;border-bottom:1px solid var(--bord);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--texte2);display:flex;align-items:center;gap:8px}
+.hdot{width:8px;height:8px;border-radius:50%;background:var(--violet)}
+.carte-body{padding:18px}
+
+/* Table classement */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gris);padding:7px 12px;border-bottom:1px solid var(--bord);background:#f7f8fa}
+td{padding:11px 12px;border-bottom:1px solid var(--bord);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover{background:#f7f8fa}
+.rang{font-family:var(--mono);font-weight:600;color:var(--gris);font-size:12px}
+.rang.p1{color:var(--jaune)}
+.nom{font-weight:600;font-size:15px}
+.score{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--violet);text-align:right}
+.score small{font-size:10px;color:var(--gris);font-family:var(--font)}
+.badges{display:flex;gap:4px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
+.badge.ok{background:#f3eeff;color:var(--violet);border:1px solid #d8c4f8}
+.badge.ko{background:#f7f8fa;color:var(--gris);border:1px solid var(--bord)}
+@keyframes flash{0%{background:#f3eeff}100%{background:transparent}}
+.flash{animation:flash .9s ease-out}
+
+/* Formulaire */
+.champ{margin-bottom:12px}
+label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--texte2);margin-bottom:4px}
+input{width:100%;background:#f7f8fa;border:1px solid var(--bord);border-radius:8px;color:var(--texte);font-family:var(--mono);font-size:13px;padding:8px 11px;outline:none;transition:border-color .15s}
+input:focus{border-color:var(--violet);box-shadow:0 0 0 3px rgba(107,33,214,.1)}
+input::placeholder{color:var(--gris)}
+.btn{width:100%;background:var(--violet);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:13px;font-weight:600;padding:9px;cursor:pointer;transition:background .15s}
+.btn:hover{background:#8b47e8}
+.btn:disabled{opacity:.5;cursor:default}
+#msg{margin-top:9px;font-size:12px;font-weight:500;min-height:16px;text-align:center}
+.ok{color:var(--vert)} .err{color:var(--rouge)} .dup{color:var(--jaune)}
+
+/* État flags */
+.flag-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bord);font-size:12px}
+.flag-row:last-child{border-bottom:none}
+.ficon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.ficon.ok{background:#dcfce7} .ficon.ko{background:#f7f8fa}
+.fid{font-family:var(--mono);font-weight:600;color:var(--violet);width:88px}
+.fpts{color:var(--jaune);font-weight:600;width:48px}
+.fwho{color:var(--gris);flex:1}
+.fwho.ok{color:var(--vert);font-weight:500}
+
+/* Journal */
+#journal{height:180px;overflow-y:auto;background:#f7f8fa;border-radius:8px;border:1px solid var(--bord);padding:9px 11px;font-family:var(--mono);font-size:11px}
+.ev{padding:2px 0;border-bottom:1px solid var(--bord)}
+.ev:last-child{border-bottom:none}
+.ev .ts{color:var(--gris)} .ev .team{color:var(--violet);font-weight:600} .ev .pts{color:var(--jaune);font-weight:600}
+#journal::-webkit-scrollbar{width:4px}
+#journal::-webkit-scrollbar-thumb{background:var(--bord);border-radius:4px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <img class="logo" src="images.png" alt="ESIEE-IT">
+    <div class="sep"></div>
+    <div class="titre">OMEGA <span>//</span> SCOREBOARD</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="ws-badge"><div class="dot" id="dot"></div><span id="ws-txt">Connexion…</span></div>
+    <span id="clock" style="font-family:var(--mono);font-size:11px;color:var(--gris)"></span>
+  </div>
+</div>
+
+<div class="page">
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Équipes</div><div class="stat-val" id="s-eq">0</div></div>
+    <div class="stat"><div class="stat-label">Captures</div><div class="stat-val" id="s-cap">0</div></div>
+    <div class="stat"><div class="stat-label">Flags</div><div class="stat-val" id="s-fl">0</div></div>
+    <div class="stat"><div class="stat-label">Leader</div><div class="stat-val" id="s-lead" style="font-size:16px;font-family:var(--font)">—</div></div>
+  </div>
+
+  <div class="grille">
+    <div class="col">
+      <div class="carte">
+        <div class="carte-head"><div class="hdot"></div>Classement</div>
+        <table><thead><tr><th>#</th><th>Équipe</th><th>Flags</th><th style="text-align:right">Score</th></tr></thead>
+        <tbody id="sb"><tr><td colspan="4" style="padding:20px;color:var(--gris);font-style:italic">En attente…</td></tr></tbody></table>
+      </div>
+      <div class="carte">
+        <div class="carte-head"><div class="hdot" style="background:var(--cyan)"></div>Journal</div>
+        <div class="carte-body" style="padding:12px">
+          <div id="journal"><span style="color:var(--gris);font-style:italic">Aucun événement…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="carte">
+        <div class="carte-head"><div class="hdot" style="background:var(--cyan)"></div>Soumettre un flag</div>
+        <div class="carte-body">
+          <div class="champ"><label>Nom d'équipe</label><input id="i-team" placeholder="TeamA" autocomplete="off"></div>
+          <div class="champ"><label>Valeur du flag</label><input id="i-flag" placeholder="FOOTHOLD: CASE-2194-A" autocomplete="off"></div>
+          <button class="btn" id="btn" onclick="submit()">Soumettre →</button>
+          <div id="msg"></div>
+        </div>
+      </div>
+      <div class="carte">
+        <div class="carte-head"><div class="hdot"></div>État des flags</div>
+        <div class="carte-body" style="padding:0 18px"><div id="fp"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WS  = `ws://${location.host}/ws`;
+const API = `${location.protocol}//${location.host}`;
+let flagsInfo = {}, premiers = {};
+
+setInterval(() => document.getElementById("clock").textContent = new Date().toLocaleTimeString("fr-FR"), 1000);
+
+function connect() {
+  const dot = document.getElementById("dot"), txt = document.getElementById("ws-txt");
+  const ws  = new WebSocket(WS);
+  ws.onopen  = () => { dot.classList.add("on"); txt.textContent = "Connecté – live"; };
+  ws.onclose = () => { dot.classList.remove("on"); txt.textContent = "Déconnecté…"; setTimeout(connect, 3000); };
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.type === "init") {
+      flagsInfo = m.flags_info || {};
+      document.getElementById("s-fl").textContent = m.total_flags || 0;
+      render(m.scoreboard); renderFlags(m.scoreboard);
+    } else if (m.type === "capture") {
+      render(m.scoreboard); renderFlags(m.scoreboard);
+      addEvent(m.capture); flash(m.capture.team);
+    }
+  };
+}
+
+function render(sb) {
+  const tbody = document.getElementById("sb");
+  if (!sb?.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;color:var(--gris);font-style:italic">Aucune équipe…</td></tr>';
+    ["s-eq","s-cap","s-lead"].forEach(id => document.getElementById(id).textContent = id === "s-lead" ? "—" : "0");
+    return;
+  }
+  const ids = Object.keys(flagsInfo); let caps = 0;
+  tbody.innerHTML = sb.map((e, i) => {
+    caps += e.captures.length;
+    const done = e.captures.map(c => c.flag_id);
+    const badges = ids.map(f => `<span class="badge ${done.includes(f)?"ok":"ko"}">${f}</span>`).join("");
+    const r = i + 1;
+    return `<tr id="r-${esc(e.team)}"><td class="rang${r===1?" p1":""}">${r===1?"★":r}</td><td class="nom">${h(e.team)}</td><td><div class="badges">${badges}</div></td><td class="score">${e.score}<small> pts</small></td></tr>`;
+  }).join("");
+  document.getElementById("s-eq").textContent   = sb.length;
+  document.getElementById("s-cap").textContent  = caps;
+  document.getElementById("s-lead").textContent = sb[0].team;
+}
+
+function renderFlags(sb) {
+  const c = document.getElementById("fp");
+  if (!Object.keys(flagsInfo).length) return;
+  premiers = {};
+  sb?.forEach(e => e.captures.forEach(cap => { if (!premiers[cap.flag_id]) premiers[cap.flag_id] = cap.team; }));
+  c.innerHTML = Object.entries(flagsInfo).map(([fid, m]) => {
+    const who = premiers[fid];
+    return `<div class="flag-row"><div class="ficon ${who?"ok":"ko"}">${who?"✓":"○"}</div><span class="fid">${fid}</span><span class="fpts">${m.points}pts</span><span class="fwho ${who?"ok":""}">${who?h(who):"non capturé"}</span></div>`;
+  }).join("");
+}
+
+function addEvent(c) {
+  const log = document.getElementById("journal");
+  if (log.querySelector("span")) log.innerHTML = "";
+  const ts = new Date(c.timestamp).toLocaleTimeString("fr-FR");
+  const b  = c.speed_bonus > 0 ? ` ⚡+${c.speed_bonus}` : "";
+  const div = document.createElement("div");
+  div.className = "ev";
+  div.innerHTML = `<span class="ts">[${ts}]</span> <span class="team">${h(c.team)}</span> → ${c.flag_id} <span class="pts">+${c.points+c.speed_bonus}pts${b}</span>`;
+  log.prepend(div);
+}
+
+function flash(team) {
+  const r = document.getElementById("r-" + esc(team));
+  if (!r) return; r.classList.remove("flash"); void r.offsetWidth; r.classList.add("flash");
+}
+
+async function submit() {
+  const team = document.getElementById("i-team").value.trim();
+  const flag = document.getElementById("i-flag").value.trim();
+  const msg  = document.getElementById("msg");
+  const btn  = document.getElementById("btn");
+  if (!team || !flag) { setMsg(msg, "Remplissez les deux champs.", "err"); return; }
+  btn.disabled = true; setMsg(msg, "Envoi…", "");
+  try {
+    const r = await fetch(API+"/capture", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({team,flag})});
+    const d = await r.json();
+    if (!r.ok)                        setMsg(msg, "Erreur : "+(d.detail||r.status), "err");
+    else if (d.status==="already_captured") setMsg(msg, "Déjà soumis par cette équipe.", "dup");
+    else { setMsg(msg, `✓ ${d.flag_id} — +${d.points_earned} pts${d.speed_bonus?" ⚡ speed bonus!":""}`, "ok"); document.getElementById("i-flag").value=""; }
+  } catch { setMsg(msg, "Serveur inaccessible.", "err"); }
+  btn.disabled = false;
+}
+
+document.getElementById("i-flag").addEventListener("keydown", e => { if(e.key==="Enter") submit(); });
+function setMsg(el, t, c) { el.textContent=t; el.className=c; }
+function esc(s) { return String(s).replace(/[^a-zA-Z0-9_-]/g,"_"); }
+function h(s)   { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+connect();
+</script>
+</body>
+</html>

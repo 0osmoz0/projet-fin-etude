@@ -1,0 +1,4 @@
+# Vault service account (post-clearance ops lane)
+vault_sa_token=OMEGA-VAULT-SA-4421
+dossier_api=/api/dossier.php?token=OMEGA-VAULT-SA-4421
+relay_probe=ops-relay.php?action=probe&target=vault&path=<urlencoded dossier_api>

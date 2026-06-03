@@ -1,0 +1,8 @@
+Brand guide (public)
+
+Primary palette:
+- Deep navy (#0d1117)
+- Steel (#30363d)
+- Accent blue (#58a6ff)
+
+Typography: system UI.

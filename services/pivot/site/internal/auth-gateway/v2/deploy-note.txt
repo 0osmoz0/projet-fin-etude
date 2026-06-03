@@ -1,0 +1,16 @@
+deploy window: 02:00-03:00 UTC
+rollback profile: legacy-mirror
+template input: tpl
+mode switch: legacy (compatibility reader)
+artifact channel: omega/proofs/foothold (mission proofs, .txt suffix)
+relay_console: /internal/auth-gateway/v2/ops-relay.php (session bind + clearance upgrade)
+legacy_upload: /internal/auth-gateway/v2/legacy-upload.php (staging partner drops)
+audit channel: omega/logs/audit (legacy tpl)
+runbook channel: omega/ops/runbook (legacy tpl)
+mesh channel: omega/ops/mesh (relay action=mesh after clearance 2)
+ssh_lane: ops@pivot:22 (relay action=ssh-bundle)
+approved by: n.morel
+post_clearance=cctv-token + vault-token + alarm-token channels (legacy tpl)
+alarm_lane=silence cam3 alerting before terrain plan export
+ops_consoles_browser=ops-alarm-panel.php + ops-cctv-panel.php (clearance 2, gateway)
+do not expose relay or clearance artifacts on public partner surface

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Black Tide — Field Alerting Console</title>
+  <link rel="stylesheet" href="/assets/bt-console.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>BLACK TIDE · Field Alerting</h1>
+    <span class="meta">internal_net · BT-FIELD-ALERT v2.1</span>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <a href="/" class="active">Vue d’ensemble</a>
+        <a href="#silencer">Silencer ops</a>
+      </nav>
+      <p class="hint" style="margin-top:1.5rem">Liaison terrain / CCTV cam-3</p>
+    </aside>
+    <main class="main">
+      <div class="grid">
+        <div class="card">
+          <h2>État alerting</h2>
+          <p id="status-stat" class="stat danger">—</p>
+          <span id="status-pill" class="pill pill-armed">ARMED</span>
+        </div>
+        <div class="card">
+          <h2>Fenêtre terrain</h2>
+          <p class="stat">cam-3</p>
+          <p class="hint">Zone loading-bay-north</p>
+        </div>
+        <div class="card">
+          <h2>Canal</h2>
+          <p class="stat" style="font-size:1rem">field-alerting</p>
+          <p class="hint">Gate export plan CCTV</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1rem">
+        <h2>Zones surveillées</h2>
+        <table>
+          <thead>
+            <tr><th>Zone</th><th>Capteur</th><th>État</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>loading-bay-north</td><td>PIR-03</td><td id="z1">—</td></tr>
+            <tr><td>perimeter-east</td><td>PIR-07</td><td>nominal</td></tr>
+            <tr><td>lobby-public</td><td>—</td><td>hors scope terrain</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:1rem" id="silencer">
+        <h2>Silencer — opérateur</h2>
+        <p class="hint">Confirmer l’angle mort terrain avant export plan cam-3 (CCTV).</p>
+        <form method="POST" action="/api/silence.php" class="inline">
+          <label>Token ops <input type="password" name="token" autocomplete="off" required></label>
+          <label>Fenêtre <input type="text" name="window" value="cam3" required></label>
+          <button type="submit">Confirmer silence alerting</button>
+        </form>
+        <p class="hint">Provisioning : pivot <code>omega/ops/alarm-token</code></p>
+      </div>
+
+      <div class="card" style="margin-top:1rem">
+        <h2>API</h2>
+        <pre id="status-raw">Chargement…</pre>
+        <p class="hint"><code>GET /api/status.php</code> · <code>POST /api/silence.php</code></p>
+      </div>
+    </main>
+  </div>
+  <script>
+    fetch('/api/status.php').then(r => r.text()).then(t => {
+      const raw = t.trim();
+      const silenced = raw.includes('armed=no');
+      document.getElementById('status-raw').textContent = raw;
+      document.getElementById('status-stat').textContent = silenced ? 'SILENCED' : 'ARMED';
+      document.getElementById('status-stat').className = 'stat ' + (silenced ? 'ok' : 'danger');
+      const pill = document.getElementById('status-pill');
+      pill.textContent = silenced ? 'CLEAR' : 'ARMED';
+      pill.className = 'pill ' + (silenced ? 'pill-clear' : 'pill-armed');
+      document.getElementById('z1').textContent = silenced ? 'angle mort actif' : 'alerte active';
+    });
+  </script>
+</body>
+</html>

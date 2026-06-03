@@ -1,0 +1,23 @@
+# Secrets & env local
+.env
+.env.local
+.env.*.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs & artefacts locaux
+*.log
+.docker/
+compose.override.yml
+
+# Pre-commit / outils locaux (cache uniquement)
+.cache/
+.mypy_cache/
+.ruff_cache/

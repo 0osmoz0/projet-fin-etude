@@ -1,0 +1,6 @@
+# Rollback bundle manifest — BT-AUTH-4421
+created=2026-04-24T01:55:00Z
+owner=n.morel
+components=auth-gateway-v2,partner-upload,relay-subsystem
+files=render.php,legacy-upload.php,ops-relay.php
+note=sudoers fragment backup stored separately (see omega/ops/sudoers-fragment tpl)

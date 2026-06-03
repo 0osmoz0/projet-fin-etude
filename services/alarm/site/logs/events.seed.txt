@@ -1,0 +1,3 @@
+2026-04-24T03:00:00Z zone=cam3 event=armed window=field-alerting
+2026-04-24T03:18:40Z zone=cam3 event=silence operator=ops token=valid
+2026-04-24T03:18:40Z terrain_lane=cleared

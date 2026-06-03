@@ -1,0 +1,6 @@
+export_id=cam3-floor-plan
+camera=cam-3
+zone=loading-bay-north
+blindspot_window=02:00-03:00 UTC
+artifact=schedule+floor-overlay
+TERRAIN: CAM3-PLAN-EXPORT-7F2A9C

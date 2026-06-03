@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Runbook infra
+    url: https://github.com/OWNER/REPO/blob/main/docs/runbook.md
+    about: Démarrage Docker Compose et dépannage

@@ -1,0 +1,4 @@
+debug endpoint profile: legacy-mirror
+accepted query keys: mirror, tpl
+note: tpl resolves server-side templates
+visibility: internal only

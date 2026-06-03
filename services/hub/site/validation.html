@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA · Validation OSINT</title>
+  <link rel="stylesheet" href="assets/css/hub.css">
+</head>
+<body>
+  <script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
+
+  <div class="classif-banner">INTERNE · OPÉRATION OMEGA · PRIORITÉ ALPHA · USAGE RESTREINT</div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span class="brand-label">SECUREMAIL OMEGA <span>/ Validation</span></span>
+      </a>
+      <nav class="nav" aria-label="Navigation principale">
+        <a href="mail-1.html">Mail 1</a>
+        <a href="osint.html">OSINT</a>
+        <a class="active" href="validation.html">Validation</a>
+        <a href="mail-2.html">Mail 2</a>
+        <a id="navConsolesAlarm" href="#" target="_blank" rel="noopener">Alarm</a>
+        <a id="navConsolesCctv" href="#" target="_blank" rel="noopener">CCTV</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="card">
+      <span class="badge intern">Formulaire de validation</span>
+      <h1 style="margin:8px 0 4px;font-size:17px">Validation OSINT — Phase 1</h1>
+      <p class="muted" style="margin:0 0 16px;font-size:13px">
+        Saisissez les éléments collectés. La validation enregistre la progression sur ce navigateur et déverrouille le Mail 2.
+      </p>
+
+      <form>
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="emailPattern">Format email interne</label>
+            <input id="emailPattern" type="text" placeholder="ex: prenom.nom@domaine.tld" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="targetUser">Utilisateur cible</label>
+            <input id="targetUser" type="text" placeholder="ex: prenom.nom" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="portalSubdomain">Sous-domaine / portail exposé</label>
+            <input id="portalSubdomain" type="text" placeholder="ex: /chemin/portail" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="portalStack">Stack technique du portail</label>
+            <input id="portalStack" type="text" placeholder="ex: nginx + php-fpm" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="videoProvider">Prestataire vidéosurveillance</label>
+            <input id="videoProvider" type="text" placeholder="ex: fournisseur" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="internalProject">Nom du projet interne actif</label>
+            <input id="internalProject" type="text" placeholder="ex: nom-de-projet" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="operationRef">Référence opérationnelle (ticket/ID)</label>
+            <input id="operationRef" type="text" placeholder="ex: BT-XXXX-1234" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="operationWindow">Fenêtre temporelle d'opération</label>
+            <input id="operationWindow" type="text" placeholder="ex: 02:00-03:00 UTC" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="exposedPort">Port exposé du portail partenaire <span class="muted">(bonus)</span></label>
+            <input id="exposedPort" type="text" placeholder="ex: 8080" autocomplete="off" />
+          </div>
+        </div>
+
+        <div id="labAccessPanel" class="lab-access-panel" hidden></div>
+
+        <div class="form-submit" style="margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <button class="btn primary" type="submit">Valider</button>
+          <p class="progress-bar" id="progress" style="margin:0">Progression OSINT : 0/8</p>
+        </div>
+
+        <p class="validation-result" id="result"></p>
+        <p id="nextStep" hidden style="margin-top:8px">
+          <a class="btn" href="mail-2.html">Accéder au Mail 2 →</a>
+        </p>
+      </form>
+
+      <p style="margin-top:16px;font-size:13px"><a href="osint.html">← Retour au workbench OSINT</a></p>
+    </div>
+  </main>
+
+  <script src="assets/js/mission-state.js" defer></script>
+  <script src="assets/js/lab-access.js" defer></script>
+  <script src="assets/js/nav.js" defer></script>
+  <script src="assets/js/validation.js" defer></script>
+</body>
+</html>

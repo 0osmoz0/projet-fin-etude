@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /internal/
+Disallow: /internal/auth-gateway/
+Disallow: /internal/auth-gateway/v2/

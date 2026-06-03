@@ -1,0 +1,155 @@
+name: ${PROJECT_NAME}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart: &default-restart
+  restart: unless-stopped
+
+x-healthcheck-nginx: &healthcheck-nginx
+  test: ["CMD-SHELL", "curl -fsSL -o /dev/null http://127.0.0.1:8080/ || exit 1"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 10s
+
+x-healthcheck-php: &healthcheck-php
+  test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 10s
+
+services:
+  hub:
+    build: ./services/hub
+    ports:
+      - "${HUB_PORT}:8080"
+    networks:
+      - public_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck: *healthcheck-nginx
+    labels:
+      - "com.pfe.service=hub"
+      - "com.pfe.tier=public"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  pivot:
+    build: ./services/pivot
+    ports:
+      - "${PIVOT_SSH_PORT:-2222}:22"
+    networks:
+      - public_net
+      - internal_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck: *healthcheck-php
+    labels:
+      - "com.pfe.service=pivot"
+      - "com.pfe.tier=pivot"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  cctv:
+    build: ./services/cctv
+    networks:
+      - internal_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck: *healthcheck-php
+    labels:
+      - "com.pfe.service=cctv"
+      - "com.pfe.tier=internal"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  vault:
+    build: ./services/vault
+    networks:
+      - internal_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck: *healthcheck-nginx
+    labels:
+      - "com.pfe.service=vault"
+      - "com.pfe.tier=internal"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  alarm:
+    build: ./services/alarm
+    networks:
+      - internal_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck: *healthcheck-nginx
+    labels:
+      - "com.pfe.service=alarm"
+      - "com.pfe.tier=internal"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  blacktide_vuln:
+    image: vulnerables/web-dvwa:latest
+    platform: linux/amd64
+    networks:
+      - public_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\",80)?0:1);'"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    labels:
+      - "com.pfe.service=blacktide-vuln"
+      - "com.pfe.tier=lab"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  blacktide_gateway:
+    build: ./services/blacktide-gateway
+    ports:
+      - "${PIVOT_PORT}:8080"
+    networks:
+      - public_net
+    <<: *default-restart
+    logging: *default-logging
+    depends_on:
+      pivot:
+        condition: service_healthy
+    healthcheck: *healthcheck-nginx
+    labels:
+      - "com.pfe.service=blacktide-gateway"
+      - "com.pfe.tier=public"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+networks:
+  public_net:
+    driver: bridge
+    name: ${PROJECT_NAME}_public
+  internal_net:
+    driver: bridge
+    internal: true
+    name: ${PROJECT_NAME}_internal

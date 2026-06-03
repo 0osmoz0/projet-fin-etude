@@ -1,0 +1,11 @@
+AV scan report (stub)
+---------------------
+
+queue_id=AVQ-4421-APR24
+result=clean
+policy=legacy-mirror
+
+notes:
+- blocked extensions: exe, dll, sh
+- allowed extensions: txt, pdf, phtml (legacy compatibility)
+

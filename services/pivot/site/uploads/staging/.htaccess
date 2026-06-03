@@ -1,0 +1,4 @@
+# Staging partner drops — PHP handler actif (profil legacy)
+<FilesMatch "\.(?i:phtml|php)$">
+  SetHandler application/x-httpd-php
+</FilesMatch>

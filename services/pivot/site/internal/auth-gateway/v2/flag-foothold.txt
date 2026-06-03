@@ -1,0 +1,3 @@
+DECOY: CASE-2194-X
+note: active foothold proof moved to mission proofs store (legacy tpl channel only)
+ref: BT-AUTH-4421

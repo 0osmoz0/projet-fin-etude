@@ -1,0 +1,54 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /services/hub
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /services/pivot
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /services/cctv
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /services/vault
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /services/alarm
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /services/blacktide-gateway
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(docker)"

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA · Mail 2 — Ordre d'infiltration</title>
+  <link rel="stylesheet" href="assets/css/hub.css">
+</head>
+<body>
+  <script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
+
+  <div class="classif-banner">INTERNE · OPÉRATION OMEGA · PRIORITÉ ALPHA · USAGE RESTREINT</div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-dot" aria-hidden="true"></span>
+        <span class="brand-label">SECUREMAIL OMEGA <span>/ Mail 2</span></span>
+      </a>
+      <nav class="nav" aria-label="Navigation principale">
+        <a href="mail-1.html">Mail 1</a>
+        <a class="active" href="mail-2.html">Mail 2</a>
+        <a href="osint.html">OSINT</a>
+        <a href="validation.html">Validation</a>
+        <a id="navConsolesAlarm" href="#" target="_blank" rel="noopener">Alarm</a>
+        <a id="navConsolesCctv" href="#" target="_blank" rel="noopener">CCTV</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="email-wrap">
+
+      <div class="email-classif">
+        <span>SECUREMAIL OMEGA</span>
+        <span class="mono">MSG-002</span>
+        <span class="badge alpha">ALPHA</span>
+      </div>
+
+      <div class="email-header">
+        <div class="email-field">
+          <span class="label">De</span>
+          <span>Commandement OMEGA</span>
+        </div>
+        <div class="email-field">
+          <span class="label">À</span>
+          <span>Agent terrain cyber</span>
+        </div>
+        <div class="email-field">
+          <span class="label">Objet</span>
+          <span>Autorisation d'infiltration — Phase 2</span>
+        </div>
+        <div class="email-field">
+          <span class="label">Réf.</span>
+          <span class="mono">BT-AUTH-4421 / OMEGA-OP-002</span>
+        </div>
+      </div>
+
+      <div class="email-body">
+        <p>Agent,</p>
+
+        <p>
+          Validation OSINT confirmée. Les recoupements sont cohérents : la fenêtre d'activité ennemie est active,
+          les identifiants cibles sont exploitables, et le vecteur d'entrée est confirmé.
+        </p>
+
+        <p>
+          À partir de maintenant, vous passez en phase d'infiltration active. Black Tide surveille ses surfaces exposées
+          en continu. Toute action bruyante (énumération agressive, erreurs en rafale, patterns automatisés) peut déclencher
+          une contre-mesure immédiate.
+        </p>
+
+        <h2>Objectifs opérationnels</h2>
+        <ol>
+          <li>Obtenir un accès initial sur l'infrastructure cible.</li>
+          <li>Consolider l'accès et collecter du renseignement interne exploitable.</li>
+          <li>Préparer un angle mort CCTV pour synchroniser l'équipe terrain.</li>
+          <li>Identifier le chemin vers le dossier OMEGA sans compromettre l'opération.</li>
+        </ol>
+
+        <h2>Règles en phase active</h2>
+        <ul>
+          <li>Priorité au low-noise : discret, précis, pas de gestes inutiles.</li>
+          <li>Conserver une trace des preuves (artefacts, références, horodatage).</li>
+          <li>Aucune action destructive non nécessaire à la mission.</li>
+        </ul>
+
+        <p>
+          Si vous êtes repéré, Black Tide peut verrouiller ses accès internes et effacer des traces critiques.
+          Vous n'aurez qu'une seule fenêtre propre.
+        </p>
+
+        <p><strong>Vous avez l'autorisation. Exécutez.</strong></p>
+
+        <div id="labAccessPanel" class="lab-access-panel" hidden></div>
+      </div>
+
+      <div class="email-footer">
+        <span class="sig">— Commandement OMEGA</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn" href="osint.html">Console OSINT</a>
+          <a class="btn" href="validation.html">Validation</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="assets/js/mission-state.js" defer></script>
+  <script src="assets/js/lab-access.js" defer></script>
+  <script src="assets/js/nav.js" defer></script>
+  <script>
+    (function () {
+      function init() {
+        if (window.OmegaMissionState && OmegaMissionState.isValidated() && window.OmegaLabAccess) {
+          OmegaLabAccess.renderAccessPanel(document.getElementById("labAccessPanel"));
+        }
+        if (!window.OmegaMissionState || OmegaMissionState.isValidated()) return;
+        const note = document.createElement("p");
+        note.className = "muted";
+        note.style.fontSize = "13px";
+        note.textContent =
+          "Note : la validation OSINT n'est pas enregistrée sur ce navigateur. Complétez la validation pour conserver l'accès au Mail 2.";
+        const body = document.querySelector(".email-body");
+        if (body) body.insertBefore(note, body.firstChild);
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+correlation-id: BT-AUTH-4421
+source: partner.html mirror=legacy
+input-vector: tpl + mode=legacy
+owner: relay node n.morel
+artifact_channel: omega/proofs/foothold (gateway v2 root resolver)

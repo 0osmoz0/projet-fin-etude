@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Black Tide — NVR Internal</title>
+  <link rel="stylesheet" href="/assets/bt-console.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>BLACK TIDE · NVR Internal</h1>
+    <span class="meta">internal_net · export gateway</span>
+  </header>
+  <div class="layout">
+    <aside class="sidebar">
+      <nav>
+        <a href="/" class="active">Accueil</a>
+        <a href="/console.php">Console opérateur</a>
+      </nav>
+    </aside>
+    <main class="main">
+      <div class="grid">
+        <div class="card">
+          <h2>Profil gateway</h2>
+          <p class="stat warn" style="color:var(--warn)">degraded</p>
+          <p class="hint">Compatibilité relay legacy active</p>
+        </div>
+        <div class="card">
+          <h2>Exports publics</h2>
+          <p class="hint"><code>pub-lobby</code> · <code>pub-loading-bay</code></p>
+        </div>
+        <div class="card">
+          <h2>Exports internes</h2>
+          <p class="hint">Rôle ops / admin · token pour plan terrain</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem">
+        <h2>Accès opérateur</h2>
+        <p>Console complète : plan cam-3, fenêtre offline, statut alerting.</p>
+        <a class="btn" href="/console.php">Ouvrir la console opérateur</a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

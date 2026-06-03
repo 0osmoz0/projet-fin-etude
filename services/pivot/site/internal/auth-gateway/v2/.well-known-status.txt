@@ -1,0 +1,4 @@
+service: auth-gateway-v2
+mode: degraded
+renderer: legacy-tpl
+ticket: BT-AUTH-4421

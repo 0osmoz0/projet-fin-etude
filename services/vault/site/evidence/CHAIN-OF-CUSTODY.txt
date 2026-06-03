@@ -1,0 +1,4 @@
+Chain of custody — DOSSIER-OMEGA
+sealed=2026-04-20
+storage=vault:8080 internal_net
+retrieval=ops lane post-clearance-2 only

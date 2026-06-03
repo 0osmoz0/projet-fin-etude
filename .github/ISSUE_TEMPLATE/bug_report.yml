@@ -1,0 +1,29 @@
+name: Bug
+description: Problème infra ou scénario bloquant
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Comportement observé
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportement attendu
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      placeholder: "make up && make smoke"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environnement
+      placeholder: "macOS + Docker Desktop 4.x"
