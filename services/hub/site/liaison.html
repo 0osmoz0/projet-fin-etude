@@ -131,10 +131,10 @@
 
     <div id="liaMain" class="lia-body" hidden>
       <ol class="lia-steps">
-        <li>Accès SSH <code>ops@pivot</code> (clé interne).</li>
-        <li>Exécuter : <code>bash ~/scripts/preflight-internal.sh --deploy-consoles</code></li>
+        <li>Via <strong>OMEGA Shell</strong> : <code>ssh ops@pivot</code> puis <code>bash ~/scripts/preflight-internal.sh --deploy-consoles</code></li>
+        <li>Ou SSH réel <code>ops@pivot</code> (port 2222) avec la même commande.</li>
         <li>Copier le jeton <code>OMEGA-CONSOLE-DEPLOY: …</code></li>
-        <li>Coller ci-dessous pour installer Alarm et CCTV sur le bureau.</li>
+        <li>Coller ci-dessous, ou dans le shell : <code>omega-deploy BT-OPS-TUNNEL-4421</code></li>
       </ol>
 
       <div class="lia-field">

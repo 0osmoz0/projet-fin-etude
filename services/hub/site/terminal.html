@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA · Shell</title>
+  <link rel="stylesheet" href="assets/css/hub.css">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #0a0e14;
+      color: #b8c5d4;
+    }
+    .sh-app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      font-family: var(--mono, ui-monospace, monospace);
+      font-size: 12px;
+    }
+    .sh-titlebar {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .sh-titlebar span {
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #7db5ea;
+    }
+    .sh-titlebar .sh-badge {
+      color: #94a3b8;
+      font-size: 10px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .sh-locked {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      line-height: 1.7;
+      color: #94a3b8;
+    }
+    .sh-locked[hidden] { display: none !important; }
+    .sh-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 10px 12px 8px;
+    }
+    .sh-body[hidden] { display: none !important; }
+    #shellOut {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 8px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .sh-line { margin: 0 0 2px; }
+    .sh-cmd { color: #e2e8f0; }
+    .sh-dim { color: #64748b; }
+    .sh-ok { color: #4db87a; }
+    .sh-warn { color: #d4a84b; }
+    .sh-err { color: #d07070; }
+    .sh-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding-top: 8px;
+    }
+    #shellPrompt {
+      color: #4ade80;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    #shellInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #e2e8f0;
+      font: inherit;
+      padding: 0 0 0 2px;
+      min-width: 0;
+    }
+  </style>
+</head>
+<body>
+  <script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
+
+  <div class="sh-app">
+    <div class="sh-titlebar">
+      <span>OMEGA Shell</span>
+      <span class="sh-badge">tty1 · bash 5.1 · LAN interne</span>
+    </div>
+
+    <div class="sh-body">
+      <div id="shellOut" aria-live="polite"></div>
+      <div class="sh-input-row">
+        <span id="shellPrompt">operator@omega-poste:~$&nbsp;</span>
+        <input id="shellInput" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Commande shell" />
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mission-state.js"></script>
+  <script src="assets/js/omega-shell.js?v=5"></script>
+</body>
+</html>

@@ -101,6 +101,15 @@
     } else {
       liaison.classList.remove("desk-icon--deployed");
     }
+
+    var shell = document.getElementById("iconShell");
+    if (shell) {
+      if (osintOk) {
+        shell.classList.add("desk-icon--shell-ready");
+      } else {
+        shell.classList.remove("desk-icon--shell-ready");
+      }
+    }
   }
 
   function playDeployAnimation(done) {
