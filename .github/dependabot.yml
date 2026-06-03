@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday
@@ -13,6 +14,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /services/hub
+    target-branch: develop
     schedule:
       interval: weekly
     commit-message:
@@ -20,6 +22,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /services/pivot
+    target-branch: develop
     schedule:
       interval: weekly
     commit-message:
@@ -27,6 +30,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /services/cctv
+    target-branch: develop
     schedule:
       interval: weekly
     commit-message:
@@ -34,6 +38,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /services/vault
+    target-branch: develop
     schedule:
       interval: weekly
     commit-message:
@@ -41,6 +46,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /services/alarm
+    target-branch: develop
     schedule:
       interval: weekly
     commit-message:
@@ -48,6 +54,7 @@ updates:
 
   - package-ecosystem: docker
     directory: /services/blacktide-gateway
+    target-branch: develop
     schedule:
       interval: weekly
     commit-message:
