@@ -20,7 +20,7 @@ jobs:
     name: Lint & validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Validate Compose
         run: docker compose config -q
@@ -32,25 +32,25 @@ jobs:
         run: yamllint -c .yamllint.yml docker-compose.yml docker-compose.override.yml.example
 
       - name: Hadolint (all Dockerfiles)
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: services/hub/Dockerfile
           config: .hadolint.yaml
 
       - name: Hadolint pivot
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: services/pivot/Dockerfile
           config: .hadolint.yaml
 
       - name: Hadolint cctv
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: services/cctv/Dockerfile
           config: .hadolint.yaml
 
       - name: Hadolint gateway
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: services/blacktide-gateway/Dockerfile
           config: .hadolint.yaml
@@ -72,7 +72,7 @@ jobs:
     needs: lint
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Create .env for CI
         run: |
@@ -83,7 +83,7 @@ jobs:
           EOF
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build images
         run: docker compose build --pull
@@ -112,7 +112,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Scan IaC (services/)
         uses: aquasecurity/trivy-action@v0.36.0
