@@ -40,10 +40,12 @@
 
       <!-- SecureMail -->
       <div class="desk-icon" role="listitem" tabindex="0"
+           id="iconMail"
            aria-label="SecureMail OMEGA"
-           ondblclick="OmegaDesktop.open('mail','SecureMail OMEGA','mail.html',900,580)">
+           ondblclick="OmegaDesktop.open('mail','SecureMail OMEGA','mail.html?v=notify1',900,580)">
         <div class="icon-wrap" aria-hidden="true">
           <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3,5 12,13 21,5"/></svg>
+          <span class="desk-icon-badge" id="mailDeskBadge" hidden aria-hidden="true">1</span>
         </div>
         <span class="icon-label">SecureMail</span>
       </div>
@@ -62,7 +64,7 @@
       <!-- ClearanceForm -->
       <div class="desk-icon" role="listitem" tabindex="0"
            aria-label="ClearanceForm"
-           ondblclick="OmegaDesktop.open('valid','ClearanceForm','validation.html?v=cf2',720,660)">
+           ondblclick="OmegaDesktop.open('valid','ClearanceForm','validation.html?v=mail2gate',720,660)">
         <div class="icon-wrap" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/></svg>
         </div>
@@ -135,7 +137,8 @@
   </footer>
 
   <script src="assets/js/lab-access.js" defer></script>
-  <script src="assets/js/mission-state.js" defer></script>
+  <script src="assets/js/mission-state.js?v=mail2gate" defer></script>
+  <script src="assets/js/mail-notify.js?v=4" defer></script>
   <script src="assets/js/console-deploy.js?v=deploy2" defer></script>
   <script src="assets/js/desktop.js" defer></script>
 

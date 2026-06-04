@@ -130,6 +130,7 @@ function persistDraft() {
   if (!window.OmegaMissionState) {
     return;
   }
+  enforceValidationGate();
   OmegaMissionState.saveDraft(OmegaMissionState.collectDraftFromForm(FORM_FIELDS));
 }
 
@@ -141,15 +142,34 @@ function setResultMessage(text, type) {
   else if (type === "error") result.classList.add("error");
 }
 
+function enforceValidationGate() {
+  if (!window.OmegaMissionState) return false;
+  const { isCoreValidationValid } = evaluateAnswers();
+  if (OmegaMissionState.isValidated() && !isCoreValidationValid) {
+    OmegaMissionState.revokeValidation();
+    if (nextStep) nextStep.hidden = true;
+    const panel = document.getElementById("labAccessPanel");
+    if (panel) panel.hidden = true;
+    if (window.parent && window.parent.OmegaMailNotify) {
+      window.parent.OmegaMailNotify.update();
+    }
+    return true;
+  }
+  return false;
+}
+
 function syncClearanceUI() {
   const scoreEl = document.getElementById("cfScore");
   const fillEl = document.getElementById("cfFill");
   const submitBtn = document.getElementById("cfSubmitBtn");
   if (!scoreEl) return;
 
-  const saved = window.OmegaMissionState && OmegaMissionState.read();
+  enforceValidationGate();
+
+  const osintValidated =
+    window.OmegaMissionState && OmegaMissionState.isValidated();
   const { coreScore, isBonusPortValid, fieldValid } = evaluateAnswers();
-  const score = saved ? 8 : coreScore;
+  const score = osintValidated ? 8 : coreScore;
   const pct = Math.round((score / 8) * 100);
 
   scoreEl.textContent = score + " / 8";
@@ -158,30 +178,40 @@ function syncClearanceUI() {
   FIELD_ORDER.forEach(function (fid, i) {
     const row = document.getElementById("row-" + fid);
     if (row) {
-      if (saved || fieldValid[fid]) row.classList.add("valid");
+      if (osintValidated || fieldValid[fid]) row.classList.add("valid");
       else row.classList.remove("valid");
     }
     const seg = document.getElementById("seg-" + i);
-    if (seg) seg.className = "cf-seg" + (saved || fieldValid[fid] ? " done" : "");
+    if (seg) seg.className = "cf-seg" + (osintValidated || fieldValid[fid] ? " done" : "");
     const ctx = document.getElementById("ctx-" + (i + 1));
     if (ctx) {
-      if (saved || fieldValid[fid]) ctx.classList.add("done");
+      if (osintValidated || fieldValid[fid]) ctx.classList.add("done");
       else ctx.classList.remove("done");
     }
   });
 
   const bonusSeg = document.getElementById("seg-bonus");
   if (bonusSeg) {
-    bonusSeg.className = "cf-seg" + ((saved && saved.bonusPort) || isBonusPortValid ? " bonus" : "");
+    bonusSeg.className =
+      "cf-seg" +
+      ((osintValidated && window.OmegaMissionState.readState().bonusPort) ||
+      isBonusPortValid
+        ? " bonus"
+        : "");
   }
   const bonusRow = document.getElementById("row-exposedPort");
   if (bonusRow) {
-    if ((saved && saved.bonusPort) || isBonusPortValid) bonusRow.classList.add("valid");
+    if (
+      (osintValidated && window.OmegaMissionState.readState().bonusPort) ||
+      isBonusPortValid
+    )
+      bonusRow.classList.add("valid");
     else bonusRow.classList.remove("valid");
   }
 
   if (submitBtn) {
-    if (score === 8) submitBtn.classList.add("ready");
+    if (coreScore === 8 && !osintValidated) submitBtn.classList.add("ready");
+    else if (osintValidated) submitBtn.classList.add("ready");
     else submitBtn.classList.remove("ready");
   }
 
@@ -190,7 +220,7 @@ function syncClearanceUI() {
   const dotMail2 = document.getElementById("ctxDotMail2");
   const lblMail2 = document.getElementById("ctxLabelMail2");
 
-  if (window.OmegaMissionState && OmegaMissionState.isValidated()) {
+  if (osintValidated) {
     if (dotOsint) dotOsint.className = "ctx-dot ok";
     if (lblOsint) lblOsint.textContent = "OSINT — validé";
     if (dotMail2) {
@@ -201,9 +231,22 @@ function syncClearanceUI() {
       lblMail2.textContent = "Mail 2 — déverrouillé";
       lblMail2.style.opacity = "";
     }
-  } else if (score > 0) {
-    if (dotOsint) dotOsint.className = "ctx-dot pending";
-    if (lblOsint) lblOsint.textContent = "OSINT — en cours";
+  } else {
+    if (dotMail2) {
+      dotMail2.className = "ctx-dot";
+      dotMail2.style.opacity = "0.35";
+    }
+    if (lblMail2) {
+      lblMail2.textContent = "Mail 2 — après soumission 8/8";
+      lblMail2.style.opacity = "0.5";
+    }
+    if (score > 0) {
+      if (dotOsint) dotOsint.className = "ctx-dot pending";
+      if (lblOsint) lblOsint.textContent = "OSINT — en cours (" + score + "/8)";
+    } else {
+      if (dotOsint) dotOsint.className = "ctx-dot";
+      if (lblOsint) lblOsint.textContent = "OSINT — en attente";
+    }
   }
 }
 
@@ -238,8 +281,10 @@ function showValidatedSuccess(isBonusPortValid, alreadySaved) {
 }
 
 function restoreSavedValidation() {
+  enforceValidationGate();
+  const { isCoreValidationValid } = evaluateAnswers();
   const saved = window.OmegaMissionState && OmegaMissionState.read();
-  if (!saved) {
+  if (!saved || !isCoreValidationValid) {
     return;
   }
   showValidatedSuccess(saved.bonusPort, true);
@@ -297,6 +342,9 @@ if (form) {
           isBonusPortValid,
           OmegaMissionState.collectDraftFromForm(FORM_FIELDS),
         );
+        if (window.parent && window.parent.OmegaMailNotify) {
+          window.parent.OmegaMailNotify.checkArrivals();
+        }
       }
       if (nextStep) nextStep.hidden = false;
       showLabAccessPanel();
