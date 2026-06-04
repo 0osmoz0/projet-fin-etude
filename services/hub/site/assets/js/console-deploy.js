@@ -87,6 +87,24 @@
     });
   }
 
+  function updateGatewayIcon() {
+    var gw = document.getElementById("iconGateway");
+    if (!gw) return;
+    var osintOk = global.OmegaMissionState && OmegaMissionState.isValidated();
+    if (osintOk) {
+      gw.classList.remove("desk-icon--hidden");
+      gw.classList.add("desk-icon--gateway-ready");
+      if (gw.dataset.gatewayRevealed !== "1") {
+        gw.classList.add("desk-icon--gateway-reveal");
+        gw.dataset.gatewayRevealed = "1";
+      }
+    } else {
+      gw.classList.add("desk-icon--hidden");
+      gw.classList.remove("desk-icon--gateway-ready", "desk-icon--gateway-reveal");
+      delete gw.dataset.gatewayRevealed;
+    }
+  }
+
   function updateLiaisonIcon() {
     var liaison = document.getElementById("iconLiaison");
     if (!liaison) return;
@@ -110,6 +128,8 @@
         shell.classList.remove("desk-icon--shell-ready");
       }
     }
+
+    updateGatewayIcon();
   }
 
   function playDeployAnimation(done) {

@@ -345,6 +345,9 @@ if (form) {
         if (window.parent && window.parent.OmegaMailNotify) {
           window.parent.OmegaMailNotify.checkArrivals();
         }
+        if (window.parent && window.parent.OmegaConsoleDeploy) {
+          window.parent.OmegaConsoleDeploy.applyDesktopState(false);
+        }
       }
       if (nextStep) nextStep.hidden = false;
       showLabAccessPanel();

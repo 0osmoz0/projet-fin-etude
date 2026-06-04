@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA · Kali GUI</title>
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; background: #0a0e14; }
+    .kv-wrap { height: 100%; display: flex; flex-direction: column; }
+    .kv-bar {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      font: 11px ui-monospace, monospace;
+      color: #94a3b8;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .kv-bar strong { color: #7ee787; }
+    .kv-hint {
+      color: #d4a84b;
+      font-size: 10px;
+    }
+    .kv-frame-wrap {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      background: #000;
+    }
+    .kv-frame {
+      border: none;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+    }
+    .kv-frame-wrap:focus-within {
+      outline: 2px solid #3b82c4;
+      outline-offset: -2px;
+    }
+    .kv-err {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #f85149;
+      font: 13px sans-serif;
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="kv-wrap" id="kvWrap">
+    <div class="kv-bar" id="kvBar">
+      <span>Bureau Kali (noVNC)</span>
+      <span class="kv-hint" id="kvHint">Cliquez dans l’écran ci-dessous, puis tapez au clavier</span>
+      <span id="kvStatus">Connexion…</span>
+    </div>
+    <div class="kv-frame-wrap" id="kvFrameWrap" hidden>
+      <iframe
+        class="kv-frame"
+        id="kvFrame"
+        title="Bureau Kali noVNC"
+        tabindex="0"
+        allow="clipboard-read; clipboard-write"
+      ></iframe>
+    </div>
+    <div class="kv-err" id="kvErr" hidden></div>
+  </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var tool = (params.get("tool") || "nmap").toLowerCase();
+      var origin = location.origin;
+      var apiBase = origin + "/workstation-api";
+      var vncBase = origin + "/workstation-vnc";
+      var bar = document.getElementById("kvBar");
+      var status = document.getElementById("kvStatus");
+      var frame = document.getElementById("kvFrame");
+      var frameWrap = document.getElementById("kvFrameWrap");
+      var err = document.getElementById("kvErr");
+
+      function focusVnc() {
+        try {
+          frame.focus();
+          frame.contentWindow && frame.contentWindow.focus();
+        } catch (e) {}
+      }
+
+      frameWrap.addEventListener("mousedown", function () {
+        setTimeout(focusVnc, 50);
+      });
+
+      function showError(msg) {
+        frameWrap.hidden = true;
+        err.hidden = false;
+        err.textContent = msg;
+        status.textContent = "indisponible";
+      }
+
+      fetch(apiBase + "/api/health")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (health) {
+          if (!health || !health.gui_ready) {
+            showError(
+              "Bureau graphique Kali non démarré.\n\n" +
+              "docker compose up -d workstation\n" +
+              "docker compose build workstation hub"
+            );
+            return;
+          }
+          status.textContent = "Lancement " + tool + "…";
+          return fetch(apiBase + "/api/v1/gui/launch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tool: tool }),
+          });
+        })
+        .then(function (r) {
+          if (!r) return;
+          if (!r.ok) {
+            return r.json().then(function (d) {
+              throw new Error(d.detail || "launch failed");
+            });
+          }
+          return r.json();
+        })
+        .then(function (launch) {
+          if (!launch) return;
+          bar.querySelector("span").textContent = "Bureau Kali · " + tool;
+          status.textContent = "Connecté";
+          frame.src =
+            vncBase +
+            "/vnc.html?autoconnect=1&resize=scale&reconnect=1&show_dot=1&view_only=0&path=workstation-vnc/websockify";
+          frameWrap.hidden = false;
+          err.hidden = true;
+          frame.addEventListener("load", function onLoad() {
+            frame.removeEventListener("load", onLoad);
+            setTimeout(focusVnc, 400);
+          });
+        })
+        .catch(function (e) {
+          showError(String(e.message || e));
+        });
+    })();
+  </script>
+</body>
+</html>
