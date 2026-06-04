@@ -5,121 +5,550 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>OMEGA · Shell</title>
-  <link rel="stylesheet" href="assets/css/hub.css">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     html, body {
       height: 100%;
-      margin: 0;
       overflow: hidden;
-      background: #0a0e14;
-      color: #b8c5d4;
+      background: #0f0f0f;
+      font-family: "DejaVu Sans Mono", "Liberation Mono", "Courier New", ui-monospace, monospace;
     }
-    .sh-app {
+
+    /* ── Fenêtre Terminator ── */
+    .term-window {
       height: 100%;
       display: flex;
       flex-direction: column;
-      font-family: var(--mono, ui-monospace, monospace);
-      font-size: 12px;
+      border: 1px solid #2a2a2a;
     }
-    .sh-titlebar {
+
+    /* Barre de titre */
+    .term-titlebar {
       flex-shrink: 0;
-      padding: 8px 12px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
+      height: 30px;
+      padding: 0 8px;
+      background: linear-gradient(180deg, #3d3d3d 0%, #2a2a2a 100%);
+      border-bottom: 1px solid #111;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .sh-titlebar span {
-      font-size: 10px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: #7db5ea;
-    }
-    .sh-titlebar .sh-badge {
-      color: #94a3b8;
-      font-size: 10px;
-      text-transform: none;
-      letter-spacing: 0;
-    }
-    .sh-locked {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      text-align: center;
-      line-height: 1.7;
-      color: #94a3b8;
-    }
-    .sh-locked[hidden] { display: none !important; }
-    .sh-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      padding: 10px 12px 8px;
-    }
-    .sh-body[hidden] { display: none !important; }
-    #shellOut {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 8px;
-      line-height: 1.55;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .sh-line { margin: 0 0 2px; }
-    .sh-cmd { color: #e2e8f0; }
-    .sh-dim { color: #64748b; }
-    .sh-ok { color: #4db87a; }
-    .sh-warn { color: #d4a84b; }
-    .sh-err { color: #d07070; }
-    .sh-input-row {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      flex-shrink: 0;
-      border-top: 1px solid rgba(255,255,255,.06);
-      padding-top: 8px;
-    }
-    #shellPrompt {
-      color: #4ade80;
-      flex-shrink: 0;
+      gap: 8px;
       user-select: none;
     }
-    #shellInput {
+
+    /* Traffic lights */
+    .term-lights { display: flex; gap: 6px; align-items: center; }
+    .term-light {
+      width: 13px; height: 13px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px; color: transparent; font-weight: bold;
+    }
+    .term-lights:hover .term-light { color: rgba(0,0,0,.5); }
+    .term-light-close  { background: #ff5f57; border: 1px solid #e0443e; }
+    .term-light-min    { background: #ffbd2e; border: 1px solid #dea123; }
+    .term-light-max    { background: #28c840; border: 1px solid #1aab29; }
+
+    /* Boutons split */
+    .term-actions { display: flex; gap: 4px; }
+    .term-action-btn {
+      height: 20px;
+      padding: 0 8px;
+      background: #3a3a3a;
+      border: 1px solid #555;
+      border-radius: 3px;
+      color: #ccc;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .term-action-btn:hover { background: #4a4a4a; border-color: #777; }
+    .term-action-btn svg { width: 11px; height: 11px; }
+
+    /* Titre centré */
+    .term-title {
       flex: 1;
+      text-align: center;
+      font-size: 11px;
+      color: #ccc;
+      letter-spacing: .03em;
+    }
+
+    /* Raccourcis affichés */
+    .term-shortcuts {
+      font-size: 9px;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    /* Zone de travail */
+    .term-workspace {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #0f0f0f;
+    }
+
+    /* Conteneur de split */
+    .term-split {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    .term-split--v { flex-direction: row; }
+    .term-split--h { flex-direction: column; }
+
+    /* Panneau terminal */
+    .term-pane {
+      position: relative;
+      overflow: hidden;
+      min-width: 80px;
+      min-height: 60px;
+    }
+    .term-pane iframe {
+      width: 100%;
+      height: 100%;
       border: none;
-      outline: none;
-      background: transparent;
-      color: #e2e8f0;
-      font: inherit;
-      padding: 0 0 0 2px;
-      min-width: 0;
+      display: block;
+    }
+    .term-pane::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border: 1px solid #2a2a2a;
+      transition: border-color .1s;
+    }
+    .term-pane.active::after { border-color: #55ff55; }
+
+    /* Poignée de redimensionnement */
+    .term-handle {
+      flex-shrink: 0;
+      background: #1e1e1e;
+      transition: background .15s;
+      position: relative;
+      z-index: 10;
+    }
+    .term-handle--v {
+      width: 4px;
+      cursor: col-resize;
+    }
+    .term-handle--h {
+      height: 4px;
+      cursor: row-resize;
+    }
+    .term-handle:hover,
+    .term-handle.dragging { background: #55ff55; }
+
+    /* Zoom: un panneau pleine taille */
+    .term-pane.zoomed {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
-  <script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
+<script>if(window!==window.top)document.documentElement.classList.add('in-frame')</script>
 
-  <div class="sh-app">
-    <div class="sh-titlebar">
-      <span>OMEGA Shell</span>
-      <span class="sh-badge">tty1 · bash 5.1 · LAN interne</span>
+<div class="term-window">
+  <div class="term-titlebar">
+    <div class="term-lights">
+      <div class="term-light term-light-close"  title="Fermer panneau (Ctrl+Shift+W)">✕</div>
+      <div class="term-light term-light-min"    title="Nouveau panneau">–</div>
+      <div class="term-light term-light-max"    title="Zoom (Ctrl+Shift+X)">+</div>
     </div>
 
-    <div class="sh-body">
-      <div id="shellOut" aria-live="polite"></div>
-      <div class="sh-input-row">
-        <span id="shellPrompt">operator@omega-poste:~$&nbsp;</span>
-        <input id="shellInput" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Commande shell" />
-      </div>
+    <div class="term-actions">
+      <button class="term-action-btn" id="btnSplitV" title="Split vertical (Ctrl+Shift+E)">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="10" height="10" rx="1"/>
+          <line x1="6" y1="1" x2="6" y2="11"/>
+        </svg>
+        Split ↕
+      </button>
+      <button class="term-action-btn" id="btnSplitH" title="Split horizontal (Ctrl+Shift+O)">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="10" height="10" rx="1"/>
+          <line x1="1" y1="6" x2="11" y2="6"/>
+        </svg>
+        Split ↔
+      </button>
+      <button class="term-action-btn" id="btnClose" title="Fermer (Ctrl+Shift+W)">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="2" y1="2" x2="10" y2="10"/>
+          <line x1="10" y1="2" x2="2" y2="10"/>
+        </svg>
+        Fermer
+      </button>
     </div>
+
+    <span class="term-title" id="termTitle">operator@kali: ~</span>
+
+    <span class="term-shortcuts">^⇧E split│^⇧O split│^⇧W close│^⇧X zoom│Alt+↑↓←→ nav</span>
   </div>
 
-  <script src="assets/js/mission-state.js"></script>
-  <script src="assets/js/omega-shell.js?v=5"></script>
+  <div class="term-workspace" id="termWorkspace"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ── Gestion de l'arbre de panneaux ── */
+
+  var uid = 0;
+  function nextId() { return "p" + (++uid); }
+
+  var root = null;          // nœud racine de l'arbre
+  var focusedId = null;     // id du panneau actif
+  var zoomedId = null;      // id du panneau en zoom
+  var workspace = document.getElementById("termWorkspace");
+
+  /* ──── Nœuds ──── */
+
+  function makeLeaf() {
+    return { type: "leaf", id: nextId(), el: null };
+  }
+
+  function makeSplit(dir, a, b) {
+    return { type: "split", id: nextId(), dir: dir, ratio: 0.5, a: a, b: b, el: null };
+  }
+
+  /* ──── Rendu ──── */
+
+  function createIframe(paneId) {
+    var iframe = document.createElement("iframe");
+    iframe.src = "terminal-pane.html?v=ws2";
+    iframe.title = "Terminal " + paneId;
+    iframe.setAttribute("allowfullscreen", "");
+    return iframe;
+  }
+
+  function createPaneEl(node) {
+    var div = document.createElement("div");
+    div.className = "term-pane";
+    div.dataset.paneId = node.id;
+    var iframe = createIframe(node.id);
+    div.appendChild(iframe);
+    node.el = div;
+    return div;
+  }
+
+  function createHandle(dir, splitNode) {
+    var h = document.createElement("div");
+    h.className = "term-handle term-handle--" + dir;
+    setupResize(h, splitNode);
+    return h;
+  }
+
+  function renderNode(node) {
+    if (node.type === "leaf") {
+      return createPaneEl(node);
+    }
+    var container = document.createElement("div");
+    container.className = "term-split term-split--" + node.dir;
+    node.el = container;
+
+    var aEl = renderNode(node.a);
+    var handle = createHandle(node.dir, node);
+    var bEl = renderNode(node.b);
+
+    applyRatio(node);
+    container.appendChild(aEl);
+    container.appendChild(handle);
+    container.appendChild(bEl);
+    return container;
+  }
+
+  function applyRatio(splitNode) {
+    var r = splitNode.ratio;
+    var aEl = getLeafOrSplitEl(splitNode.a);
+    var bEl = getLeafOrSplitEl(splitNode.b);
+    if (splitNode.dir === "v") {
+      aEl.style.width  = (r * 100) + "%";
+      aEl.style.height = "";
+      bEl.style.width  = ((1 - r) * 100) + "%";
+      bEl.style.height = "";
+    } else {
+      aEl.style.height = (r * 100) + "%";
+      aEl.style.width  = "";
+      bEl.style.height = ((1 - r) * 100) + "%";
+      bEl.style.width  = "";
+    }
+  }
+
+  function getLeafOrSplitEl(node) {
+    return node.el;
+  }
+
+  function rebuild() {
+    workspace.innerHTML = "";
+    if (!root) return;
+    var el = renderNode(root);
+    el.style.width = "100%";
+    el.style.height = "100%";
+    workspace.appendChild(el);
+    setFocus(focusedId || firstLeafId(root));
+  }
+
+  /* ──── Recherche dans l'arbre ──── */
+
+  function findNode(node, id) {
+    if (node.id === id) return node;
+    if (node.type === "split") {
+      return findNode(node.a, id) || findNode(node.b, id);
+    }
+    return null;
+  }
+
+  function findParent(node, id, parent) {
+    if (node.id === id) return parent;
+    if (node.type === "split") {
+      return findParent(node.a, id, node) || findParent(node.b, id, node);
+    }
+    return null;
+  }
+
+  function firstLeafId(node) {
+    if (node.type === "leaf") return node.id;
+    return firstLeafId(node.a);
+  }
+
+  function allLeafIds(node, acc) {
+    acc = acc || [];
+    if (node.type === "leaf") { acc.push(node.id); return acc; }
+    allLeafIds(node.a, acc);
+    allLeafIds(node.b, acc);
+    return acc;
+  }
+
+  /* ──── Split ──── */
+
+  function splitActive(dir) {
+    if (!focusedId || !root) return;
+    var target = findNode(root, focusedId);
+    if (!target || target.type !== "leaf") return;
+
+    var newLeaf = makeLeaf();
+    var newSplit = makeSplit(dir, target, newLeaf);
+    newSplit.id = target.id; // réutilise l'id pour le parent dans l'arbre
+
+    if (root.id === target.id) {
+      root = newSplit;
+    } else {
+      var parent = findParent(root, target.id, null);
+      if (parent) {
+        if (parent.a === target) parent.a = newSplit;
+        else parent.b = newSplit;
+      }
+    }
+    target.id = nextId(); // nouveau id pour la feuille existante
+    newSplit.id = nextId();
+
+    rebuild();
+    setFocus(newLeaf.id);
+  }
+
+  /* ──── Fermer un panneau ──── */
+
+  function closePane(id) {
+    if (!root) return;
+    if (root.type === "leaf") return; // dernier panneau, ne pas fermer
+
+    var parent = findParent(root, id, null);
+    if (!parent) return;
+
+    var sibling = parent.a.id === id ? parent.b : parent.a;
+
+    if (root === parent) {
+      root = sibling;
+    } else {
+      var grandParent = findParent(root, parent.id, null);
+      if (grandParent) {
+        if (grandParent.a === parent) grandParent.a = sibling;
+        else grandParent.b = sibling;
+      }
+    }
+
+    var ids = allLeafIds(root);
+    var nextFocus = ids.includes(focusedId) ? focusedId : ids[0];
+    focusedId = null;
+    rebuild();
+    setFocus(nextFocus);
+  }
+
+  /* ──── Focus ──── */
+
+  function setFocus(id) {
+    focusedId = id;
+    workspace.querySelectorAll(".term-pane").forEach(function (el) {
+      el.classList.toggle("active", el.dataset.paneId === id);
+    });
+    // focus l'iframe
+    var el = workspace.querySelector("[data-pane-id='" + id + "']");
+    if (el) {
+      var iframe = el.querySelector("iframe");
+      if (iframe) {
+        try { iframe.focus(); } catch (_) {}
+      }
+    }
+    updateTitle(id);
+  }
+
+  function updateTitle(id) {
+    var ids = allLeafIds(root);
+    var n = ids.length;
+    document.getElementById("termTitle").textContent =
+      "operator@kali: ~ " + (n > 1 ? "(" + n + " panneaux)" : "");
+  }
+
+  /* ──── Zoom ──── */
+
+  function toggleZoom() {
+    if (!focusedId) return;
+    var paneEl = workspace.querySelector("[data-pane-id='" + focusedId + "']");
+    if (!paneEl) return;
+    if (zoomedId === focusedId) {
+      paneEl.classList.remove("zoomed");
+      zoomedId = null;
+    } else {
+      if (zoomedId) {
+        var old = workspace.querySelector("[data-pane-id='" + zoomedId + "']");
+        if (old) old.classList.remove("zoomed");
+      }
+      paneEl.classList.add("zoomed");
+      zoomedId = focusedId;
+    }
+  }
+
+  /* ──── Navigation Alt+Arrow ──── */
+
+  function navDir(dir) {
+    var ids = allLeafIds(root);
+    var idx = ids.indexOf(focusedId);
+    if (idx === -1) return;
+    var next;
+    if (dir === "ArrowLeft" || dir === "ArrowUp") {
+      next = ids[(idx - 1 + ids.length) % ids.length];
+    } else {
+      next = ids[(idx + 1) % ids.length];
+    }
+    setFocus(next);
+    var paneEl = workspace.querySelector("[data-pane-id='" + next + "']");
+    if (paneEl) {
+      var iframe = paneEl.querySelector("iframe");
+      if (iframe) {
+        try { iframe.contentWindow.document.getElementById("shellInput").focus(); } catch (_) {}
+      }
+    }
+  }
+
+  /* ──── Poignées de redimensionnement ──── */
+
+  function setupResize(handle, splitNode) {
+    handle.addEventListener("mousedown", function (e) {
+      e.preventDefault();
+      handle.classList.add("dragging");
+      var rect = workspace.getBoundingClientRect();
+      var startRatio = splitNode.ratio;
+
+      function onMove(ev) {
+        var r;
+        if (splitNode.dir === "v") {
+          var aEl = getLeafOrSplitEl(splitNode.a);
+          var w = aEl.parentElement ? aEl.parentElement.offsetWidth : workspace.offsetWidth;
+          var containerLeft = aEl.parentElement ? aEl.parentElement.getBoundingClientRect().left : rect.left;
+          r = (ev.clientX - containerLeft) / (w || 1);
+        } else {
+          var aEl2 = getLeafOrSplitEl(splitNode.a);
+          var h = aEl2.parentElement ? aEl2.parentElement.offsetHeight : workspace.offsetHeight;
+          var containerTop = aEl2.parentElement ? aEl2.parentElement.getBoundingClientRect().top : rect.top;
+          r = (ev.clientY - containerTop) / (h || 1);
+        }
+        splitNode.ratio = Math.max(0.1, Math.min(0.9, r));
+        applyRatio(splitNode);
+      }
+
+      function onUp() {
+        handle.classList.remove("dragging");
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+      }
+
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+  }
+
+  /* ──── Messages depuis les panneaux ──── */
+
+  window.addEventListener("message", function (e) {
+    var d = e.data;
+    if (!d || typeof d !== "object") return;
+
+    if (d.type === "term-focus") {
+      // identifier quel iframe a envoyé le message
+      workspace.querySelectorAll(".term-pane").forEach(function (pane) {
+        var iframe = pane.querySelector("iframe");
+        if (iframe && iframe.contentWindow === e.source) {
+          setFocus(pane.dataset.paneId);
+        }
+      });
+    }
+
+    if (d.type === "term-shortcut") {
+      var k = d.key;
+      if (k === "E") splitActive("v");
+      else if (k === "O") splitActive("h");
+      else if (k === "W") closePane(focusedId);
+      else if (k === "X") toggleZoom();
+      else if (k === "T") splitActive("v");
+    }
+
+    if (d.type === "term-nav") {
+      navDir(d.dir);
+    }
+  });
+
+  /* ──── Raccourcis clavier au niveau du gestionnaire ──── */
+
+  document.addEventListener("keydown", function (e) {
+    if (e.ctrlKey && e.shiftKey) {
+      if (e.key === "E") { e.preventDefault(); splitActive("v"); }
+      else if (e.key === "O") { e.preventDefault(); splitActive("h"); }
+      else if (e.key === "W") { e.preventDefault(); closePane(focusedId); }
+      else if (e.key === "X") { e.preventDefault(); toggleZoom(); }
+    }
+  });
+
+  /* ──── Boutons titlebar ──── */
+
+  document.getElementById("btnSplitV").addEventListener("click", function () { splitActive("v"); });
+  document.getElementById("btnSplitH").addEventListener("click", function () { splitActive("h"); });
+  document.getElementById("btnClose").addEventListener("click", function () {
+    if (root && root.type === "leaf") return; // dernier pane, ne pas fermer
+    closePane(focusedId);
+  });
+
+  document.querySelector(".term-light-close").addEventListener("click", function () {
+    if (root && root.type === "leaf") return;
+    closePane(focusedId);
+  });
+  document.querySelector(".term-light-min").addEventListener("click", function () { splitActive("v"); });
+  document.querySelector(".term-light-max").addEventListener("click", function () { toggleZoom(); });
+
+  /* ──── Init ──── */
+
+  root = makeLeaf();
+  focusedId = root.id;
+  rebuild();
+
+})();
+</script>
 </body>
 </html>

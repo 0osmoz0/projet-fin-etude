@@ -37,7 +37,8 @@
     cctv:  '<svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
     liaison: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
     shell: '<svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
-    files: '<svg viewBox="0 0 24 24" style="fill:#c49a14;stroke:#9a7a0e"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+    files:   '<svg viewBox="0 0 24 24" style="fill:#c49a14;stroke:#9a7a0e"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+    browser: '<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 9h18M3 15h18"/></svg>',
   };
 
   /* ---- focus ---- */
@@ -277,6 +278,18 @@
     init();
   }
 
-  global.OmegaDesktop = { open: openWin, close: closeWin, focus: focusWin };
+  function openShellPreset(cmd, title) {
+    try {
+      sessionStorage.setItem("omegaShellRun", cmd || "kali-tools");
+    } catch (e) {}
+    openWin("shell", title || "Terminal", "terminal.html?v=kali3", 820, 520);
+  }
+
+  global.OmegaDesktop = {
+    open: openWin,
+    close: closeWin,
+    focus: focusWin,
+    openShellPreset: openShellPreset,
+  };
 
 })(window);

@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>OMEGA-OS · Poste opérateur sécurisé</title>
   <link rel="stylesheet" href="assets/css/hub.css">
-  <link rel="stylesheet" href="assets/css/desktop.css?v=deploy2">
+  <link rel="stylesheet" href="assets/css/desktop.css?v=kali2">
 </head>
 <body>
 
@@ -36,7 +36,7 @@
 
   <!-- Bureau -->
   <div id="desktop" class="desktop">
-    <div class="desktop-icons" role="list" aria-label="Applications">
+    <div class="desktop-icons desktop-icons--mission" role="list" aria-label="Applications mission">
 
       <!-- SecureMail -->
       <div class="desk-icon" role="listitem" tabindex="0"
@@ -71,11 +71,21 @@
         <span class="icon-label">ClearanceForm</span>
       </div>
 
+      <!-- TorBridge Browser -->
+      <div class="desk-icon" role="listitem" tabindex="0"
+           aria-label="TorBridge Browser"
+           ondblclick="OmegaDesktop.open('browser','TorBridge Browser','browser.html',1020,660)">
+        <div class="icon-wrap" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 9h18M3 15h18"/></svg>
+        </div>
+        <span class="icon-label">TorBridge<br>Browser</span>
+      </div>
+
       <!-- OMEGA Shell (terminal simulé — pivot après clearance) -->
       <div class="desk-icon" role="listitem" tabindex="0"
            id="iconShell"
            aria-label="OMEGA Shell"
-           ondblclick="OmegaDesktop.open('shell','OMEGA Shell','terminal.html',720,440)">
+           ondblclick="OmegaDesktop.open('shell','Terminal','terminal.html?v=kali3',820,520)">
         <div class="icon-wrap" aria-hidden="true">
           <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         </div>
@@ -118,6 +128,7 @@
       </div>
 
     </div>
+
   </div>
 
   <!-- Taskbar -->
@@ -136,11 +147,15 @@
     </div>
   </footer>
 
+  <script>
+    window.OMEGA_WORKSTATION_PORT = "18083";
+    window.OMEGA_WORKSTATION_VNC_PORT = "18084";
+  </script>
   <script src="assets/js/lab-access.js" defer></script>
   <script src="assets/js/mission-state.js?v=mail2gate" defer></script>
   <script src="assets/js/mail-notify.js?v=4" defer></script>
   <script src="assets/js/console-deploy.js?v=deploy2" defer></script>
-  <script src="assets/js/desktop.js" defer></script>
+  <script src="assets/js/desktop.js?v=gui1" defer></script>
 
   <!-- Thème clair/sombre -->
   <script>

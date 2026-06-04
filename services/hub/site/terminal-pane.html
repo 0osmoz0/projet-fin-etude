@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pane</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #0f0f0f;
+      color: #ccffcc;
+      font-family: "DejaVu Sans Mono", "Liberation Mono", "Courier New", ui-monospace, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    .sh-body {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 6px 10px 5px;
+    }
+
+    #shellOut {
+      flex: 1;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      scrollbar-width: thin;
+      scrollbar-color: #2d2d2d transparent;
+      margin-bottom: 3px;
+    }
+    #shellOut::-webkit-scrollbar { width: 5px; }
+    #shellOut::-webkit-scrollbar-thumb { background: #2d2d2d; border-radius: 3px; }
+
+    .sh-line  { margin: 0; }
+    .sh-cmd   { color: #ffffff; }
+    .sh-dim   { color: #555; }
+    .sh-ok    { color: #55ff55; }
+    .sh-warn  { color: #ffff55; }
+    .sh-err   { color: #ff5555; }
+
+    .sh-input-row {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      border-top: 1px solid #1e1e1e;
+      padding-top: 4px;
+    }
+
+    #shellPrompt {
+      color: #55ff55;
+      flex-shrink: 0;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    #shellInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #ccffcc;
+      font: inherit;
+      padding: 0 0 0 4px;
+      min-width: 0;
+      caret-color: #55ff55;
+    }
+    #shellInput::selection { background: #55ff55; color: #000; }
+  </style>
+</head>
+<body>
+  <div class="sh-body">
+    <div id="shellOut" aria-live="polite"></div>
+    <div class="sh-input-row">
+      <span id="shellPrompt">operator@kali:~$&nbsp;</span>
+      <input id="shellInput" type="text" spellcheck="false"
+             autocomplete="off" autocapitalize="off" aria-label="Commande shell" />
+    </div>
+  </div>
+
+  <script>
+    /* Transmet les raccourcis Terminator au gestionnaire parent */
+    document.addEventListener("keydown", function (e) {
+      if (e.ctrlKey && e.shiftKey) {
+        var k = e.key.toUpperCase();
+        if (["E","O","W","X","T"].includes(k)) {
+          e.preventDefault();
+          e.stopPropagation();
+          try { window.parent.postMessage({ type: "term-shortcut", key: k }, "*"); } catch (_) {}
+        }
+      }
+      if (e.altKey && ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+        try { window.parent.postMessage({ type: "term-nav", dir: e.key }, "*"); } catch (_) {}
+      }
+    });
+
+    /* Notifie le parent quand ce panneau prend le focus */
+    document.addEventListener("focusin", function () {
+      try { window.parent.postMessage({ type: "term-focus" }, "*"); } catch (_) {}
+    });
+  </script>
+
+  <script src="/assets/js/kali-fs.js?v=ws2"></script>
+  <script src="/assets/js/mission-state.js?v=mail2gate"></script>
+  <script src="/assets/js/omega-shell.js?v=ws2"></script>
+</body>
+</html>

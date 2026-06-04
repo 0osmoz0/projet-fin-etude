@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA · Outil Kali</title>
+  <link rel="stylesheet" href="assets/css/kali-tool-gui.css?v=1">
+</head>
+<body>
+  <script src="assets/js/kali-fs.js?v=gui1"></script>
+  <script src="assets/js/kali-tool-gui.js?v=1"></script>
+  <script>
+    (function () {
+      var tool = (new URLSearchParams(location.search).get("tool") || "nmap").toLowerCase();
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () {
+          KaliToolGui.mount(tool);
+        });
+      } else {
+        KaliToolGui.mount(tool);
+      }
+    })();
+  </script>
+</body>
+</html>
