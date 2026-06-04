@@ -26,6 +26,8 @@ x-healthcheck-php: &healthcheck-php
 services:
   hub:
     build: ./services/hub
+    volumes:
+      - ./services/hub/site:/usr/share/nginx/html:ro
     ports:
       - "${HUB_PORT}:8080"
     networks:
@@ -40,6 +42,28 @@ services:
       resources:
         limits:
           memory: 128M
+
+  platform:
+    build: ./services/platform
+    ports:
+      - "${PLATFORM_PORT:-18082}:8000"
+    networks:
+      - public_net
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/state')\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    labels:
+      - "com.pfe.service=platform"
+      - "com.pfe.tier=public"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   pivot:
     build: ./services/pivot
@@ -124,6 +148,34 @@ services:
       resources:
         limits:
           memory: 512M
+
+  workstation:
+    build: ./services/workstation
+    ports:
+      - "${WORKSTATION_PORT:-18083}:8000"
+    networks:
+      - public_net
+      - internal_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    <<: *default-restart
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 8s
+      retries: 12
+      start_period: 180s
+    labels:
+      - "com.pfe.service=workstation"
+      - "com.pfe.tier=workstation"
+    deploy:
+      resources:
+        limits:
+          memory: 3G
 
   blacktide_gateway:
     build: ./services/blacktide-gateway

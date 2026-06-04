@@ -18,7 +18,9 @@ check_url() {
 
 log "Smoke tests — $PROJECT_NAME"
 
+WORKSTATION_PORT="${WORKSTATION_PORT:-18083}"
 check_url "Hub" "http://127.0.0.1:${HUB_PORT}/"
+check_url "Workstation API" "http://127.0.0.1:${WORKSTATION_PORT}/api/health"
 check_url "Pivot (gateway)" "http://127.0.0.1:${PIVOT_PORT}/"
 check_url "Pivot partner" "http://127.0.0.1:${PIVOT_PORT}/partner.html"
 check_url "Pivot auth-gateway health" "http://127.0.0.1:${PIVOT_PORT}/internal/auth-gateway/v2/health.php"
