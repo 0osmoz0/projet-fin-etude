@@ -92,17 +92,17 @@ html, body {
   inset: 0;
   bottom: var(--taskbar-h);
   overflow: hidden;
-  /* fond sobre : scan-lines discrètes + légère vignette latérale */
+  /* fond sombre laissant apparaître le canvas Matrix en dessous */
   background:
-    radial-gradient(ellipse 200% 60% at 50% 130%, rgba(37,99,168,.08) 0%, transparent 55%),
+    radial-gradient(ellipse 200% 60% at 50% 130%, rgba(37,99,168,.06) 0%, transparent 55%),
     repeating-linear-gradient(
       0deg,
       transparent,
       transparent 2px,
-      rgba(0,0,0,.06) 2px,
-      rgba(0,0,0,.06) 3px
+      rgba(0,0,0,.12) 2px,
+      rgba(0,0,0,.12) 3px
     ),
-    var(--os-bg);
+    #06090f;
 }
 
 /* ============================================================
@@ -111,10 +111,12 @@ html, body {
 
 .desktop-icons {
   display: flex; flex-direction: column; gap: 4px;
+  position: relative; z-index: 1;
 }
 .desktop-icons--mission {
   position: absolute;
   top: 20px; left: 16px;
+  z-index: 1;
 }
 
 .desk-icon {

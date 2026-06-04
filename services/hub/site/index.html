@@ -36,6 +36,12 @@
 
   <!-- Bureau -->
   <div id="desktop" class="desktop">
+    <!-- Fond Matrix animé -->
+    <canvas id="matrixCanvas" aria-hidden="true" style="
+      position:absolute;inset:0;width:100%;height:100%;
+      pointer-events:none;z-index:0;opacity:.42;
+      mix-blend-mode:screen;
+    "></canvas>
     <div class="desktop-icons desktop-icons--mission" role="list" aria-label="Applications mission">
 
       <!-- SecureMail -->
@@ -156,6 +162,256 @@
   <script src="assets/js/mail-notify.js?v=4" defer></script>
   <script src="assets/js/console-deploy.js?v=deploy2" defer></script>
   <script src="assets/js/desktop.js?v=gui1" defer></script>
+
+  <!-- Fond Matrix animé — crâne ASCII art -->
+  <script>
+    (function () {
+      var canvas = document.getElementById("matrixCanvas");
+      if (!canvas) return;
+      var ctx = canvas.getContext("2d");
+
+      var RAIN = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン" +
+                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*<>{}[]|=+?~^";
+
+      var FS = 13;
+
+      /* ═══════════════════════════════════════════════════════════
+         SKULL ASCII ART — 50 lignes × ~62 colonnes
+         Chaque char non-espace est un pixel du crâne.
+         Les chars denses (M,H,B,S,X…) = zones brillantes (os).
+         Les chars légers (.,:-"'…)   = zones d'ombre (profondeur).
+         ═══════════════════════════════════════════════════════════ */
+      var SL = [
+        "                          ...----....                          ",
+        "                    ..-:\"''         ''\"-..                    ",
+        "                 .-'                      '-.                  ",
+        "               .'              .     .       '.                ",
+        "             .'   .          .    .      .    .''              ",
+        "           .'  .    .       .   .   .     .   . ..:.           ",
+        "         .' .   . .  .       .   .   ..  .   . ....::.        ",
+        "        ..   .   .      .  .    .     .  ..  . ....:IA.       ",
+        "       .:  .   .    .    .  .  .    .. .  .. .. ....:IA.      ",
+        "      .: .   .   ..   .    .     . . .. . ... ....:.:VHA.     ",
+        "      '..  .  .. .   .       .  . .. . .. . .....:.::IHHB.    ",
+        "     .:. .  . .  . .   .  .  . . . ...:.:... .......:HIHMM.   ",
+        "    .:.... .   . .\"::'.. .   .  . .:.:.:II;,. .. ..:IHIMMA    ",
+        "    ':.:..  ..::IHHHHHI::. . .  ...:.::::.,,,. . ....VIMMHM   ",
+        "   .:::I. .AHHHHHHHHHHAI::. .:...,:IIHHHHHHMMMHHL:. . VMMMM   ",
+        "  .:.:V.:IVHHHHHHHMHMHHH::..:'  .:HIHHHHHHHHHHHHHMHHA. .VMMM. ",
+        "  :..V.:IVHHHHHMMHHHHHHHB... . .:VPHHMHHHMMHHHHHHHHHAI.:VMMI  ",
+        "  ::V..:VIHHHHHHMMMHHHHHH. .   .I':IIMHHMMHHHHHHHHHHHAPI:WMM  ",
+        "  ::''. .:.HHHHHHHHMMHHHHHI.  . .:..I:MHMMHHHHHHHHHMHV:':H:WM ",
+        "  :: . :.::IIHHHHHHMMHHHHV  .ABA.:.:IMHMHMMMHMHHHHV:'. .IHWW  ",
+        "  '.  ..:..:.:IHHHHHMMHV'  .AVMHMA.:.'VHMMMMHHHHHV:' .  :IHWV",
+        "   :.  .:...:'.:.TPP'    .AVMMHMMA.:. 'VMMHHHP.:... .. :IVAI  ",
+        "  .:.   '... .:'    .   ..HMMMHMMMA::. .'VHHI:::....  .:IHW'  ",
+        "  ...  .  . ..:IIPPIH: ..HMMMI.MMMV:I:.  .:ILLH:.. ...:I:IM  ",
+        ": .   .'.' .:.V'.. ..    :HMMM:IMMMI::I. ..:HHIIPPHI::'.P:HM. ",
+        ":.  .  .  .. ..:.. .    :AMMM IMMMM..:...:IV':T::I::.'.:IHIMA ",
+        "'V:.. .. . .. .  .  .   'VMMV..VMMV :....:V:.:..:....::IHHHMH ",
+        "  'IHH:.II:.. .:. .  . . .   :HB''  . . ..PI:.::.:::..:IHHMMV'",
+        "   :IP''HHII:.  .  .    . . .'V:. . . ..:IH:.:.::IHIHHMMMMM'  ",
+        "   :V:. VIMA:I..  .     .  . .. . .  .:.I:I:..:IHHHHMMHHMMM   ",
+        "   :'VI:.VWMA::. .:      .   .. .:. ..:.I::.:IVHHHMMMHMMMMI    ",
+        "   :.'VIIHHMMA:.  .   .   .:  .:.. . .:.II:I:AMMMMMMHMMMMMI   ",
+        "   :..VIHIHMMMI...::.,:.,:.'I:.'I.'I.'V:AI:VAMMMMMMHMMMMMM'   ",
+        "   ':.:HIHIMHHA:'..I.:AXXXVVXXXXXXXA:.'HPHIMMMMHHMHMMMMMV      ",
+        "     V:H:I:MA:W'I :AXXXIXII:IIIISSSSSSXXA.I.VMMMHMHMMMMMM     ",
+        "       'I::IVA ASSSSXSSSSBBSBMBSSSSSSBBMMMBS.VVMMHIMM'''       ",
+        "        I:: VPAIMSSSSSSSSSBSSSMMBSSSBBMMMMXXI:MMHIMMI          ",
+        "       .I::. 'H:XIIXBBMMMMMMMMMMMMMMMMMBXIXXMMPHIIMM'          ",
+        "       :::I.  ':XSSXXIIIIXSSBMBSSXXXIIIXXSMMAMI:.IMM           ",
+        "       :::I:.  .VSSSSSISISISSSBII:ISSSSBMMB:MI:..:MM           ",
+        "       ::.I:.  '.'SSSSSSSISISSXIIXSSSSBMMB:AHI:..MMM.         ",
+        "       ::.I:. . ..'BBSSSSSSSSSSSSBBBMMMB:AHHI::.HMMI          ",
+        "       :..::.  . ..::':BBBBBSSBBBMMMB:MMMMHHII::IHHMI         ",
+        "       ':.I:... ....:IHHHHHMMMMMMMMMMMMMMMHHIIIIHMMV'          ",
+        "         'V:. ..:...:.IHHHMMMMMMMMMMMMMMMMHHHMHHMHP'           ",
+        "          ':. .:::.:.::III::IHHHHMMMMMHMHMMHHHHM'              ",
+        "            '::....::.:::..:..::IIIIIHHHHMMMHHMV'              ",
+        "              '::.::.....  ...:::IIHHMMMMHMV'                  ",
+        "                'V::... . .I::IHHMMV''                         ",
+        "                  ''VHVHHHAHHHHMMV:''                          ",
+      ];
+
+      /* ─── Poids lumineux de chaque caractère ─── */
+      /* Les chars denses dans l'art ASCII = zones brillantes (os).  */
+      /* Les chars fins = zones sombres (profondeur/ombres).           */
+      var HEAVY  = "MHBSXWQA@#&%84";  /* os brillants  → poids 1.0  */
+      var MEDIUM = "AVIPLTRNK0123679"; /* demi-tons     → poids 0.70 */
+      /* tout autre char non-espace  → poids 0.38 (ombres/contours)  */
+
+      function charW(c) {
+        if (c === ' ') return 0;
+        if (HEAVY.indexOf(c)  >= 0) return 1.00;
+        if (MEDIUM.indexOf(c) >= 0) return 0.70;
+        return 0.38;
+      }
+
+      /* ─── Précalcul pixels du crâne ─── */
+      var SK_H       = SL.length; /* 50 */
+      var skullPixels = [];       /* {ac, ar, ch, w} */
+      var skullSet    = {};       /* "col,row" → poids, pour la pluie */
+      var cols, drops, speeds, skullCol0, skullRow0;
+      var frame = 0;
+
+      function buildSkull() {
+        skullPixels = [];
+        skullSet    = {};
+        for (var r = 0; r < SK_H; r++) {
+          var line = SL[r] || "";
+          for (var c = 0; c < line.length; c++) {
+            var ch = line[c];
+            var w  = charW(ch);
+            if (w === 0) continue;
+            var ac = skullCol0 + c;
+            var ar = skullRow0 + r;
+            skullPixels.push({ ac:ac, ar:ar, ch:ch, w:w });
+            skullSet[ac + ',' + ar] = w;
+          }
+        }
+      }
+
+      function resize() {
+        canvas.width  = canvas.offsetWidth  || 900;
+        canvas.height = canvas.offsetHeight || 620;
+        cols = Math.ceil(canvas.width / FS);
+        /* centrer le crâne sur la zone disponible (droite des icônes) */
+        var maxW = 0;
+        for (var li = 0; li < SK_H; li++) { if ((SL[li]||"").length > maxW) maxW = SL[li].length; }
+        var ctr = Math.max(9, ((canvas.width / FS - maxW) / 2) | 0);
+        skullCol0 = ctr;
+        skullRow0 = 0;
+        buildSkull();
+        drops  = [];
+        speeds = [];
+        for (var i = 0; i < cols; i++) {
+          drops[i]  = (Math.random() * -120) | 0;
+          speeds[i] = 0.22 + Math.random() * 0.78;
+        }
+      }
+
+      /* ─── Glow yeux (zone ~row 15-18 du crâne, estimée) ─── */
+      function eyeGlow(cx, cy, intensity) {
+        var r  = FS * 5;
+        var g  = ctx.createRadialGradient(cx, cy, 1, cx, cy, r);
+        g.addColorStop(0,   "rgba(255,45,0,"  + (0.32 * intensity) + ")");
+        g.addColorStop(0.45,"rgba(160,20,0,"  + (0.16 * intensity) + ")");
+        g.addColorStop(1,   "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+      }
+
+      /* ─── Boucle de rendu ─── */
+      var lastTs = 0;
+
+      function draw(ts) {
+        requestAnimationFrame(draw);
+        if (ts - lastTs < 40) return; /* ~25 fps */
+        lastTs = ts;
+        frame++;
+
+        var W = canvas.width, H = canvas.height;
+        var t = ts * 0.001;
+
+        /* ① Fondu */
+        ctx.shadowBlur  = 0;
+        ctx.shadowColor = "transparent";
+        ctx.fillStyle   = "rgba(4,7,12,.22)";
+        ctx.fillRect(0, 0, W, H);
+        ctx.font = FS + "px ui-monospace,monospace";
+
+        /* ② Pluie */
+        for (var c = 0; c < cols; c++) {
+          var row = drops[c] | 0;
+          var y   = row * FS;
+          var x   = c * FS;
+
+          ctx.fillStyle = "rgba(220,255,210,.38)";
+          ctx.fillText(RAIN[(Math.random() * RAIN.length) | 0], x, y);
+
+          for (var k = 1; k <= 8; k++) {
+            var ky = y - k * FS;
+            var kr = row - k;
+            if (ky < 0) continue;
+            var a  = (1 - k / 9) * 0.72;
+            var sw = skullSet[c + ',' + kr];
+            if (sw) {
+              ctx.fillStyle = k <= 2
+                ? "rgba(100,255,130," + (a * (0.6 + sw * 0.4)) + ")"
+                : "rgba(0,200,65,"    + (a * (0.5 + sw * 0.3)) + ")";
+            } else {
+              ctx.fillStyle = "rgba(0,130,42," + (a * 0.65) + ")";
+            }
+            ctx.fillText(RAIN[(Math.random() * RAIN.length) | 0], x, ky);
+          }
+
+          drops[c] += speeds[c];
+          if (drops[c] * FS > H && Math.random() > 0.974) {
+            drops[c]  = (Math.random() * -80) | 0;
+            speeds[c] = 0.22 + Math.random() * 0.78;
+          }
+        }
+
+        /* ③ Yeux : rougeoiement pulsant (~row 16, ~col 20 et 42 du crâne) */
+        var pulse  = (Math.sin(t * 2.0) + 1) * 0.5;
+        var eyeRow = 16;
+        var eyeY   = (skullRow0 + eyeRow) * FS + FS / 2;
+        eyeGlow((skullCol0 + 19) * FS, eyeY, 0.65 + 0.35 * pulse);
+        eyeGlow((skullCol0 + 43) * FS, eyeY, 0.65 + 0.35 * pulse);
+
+        /* ④ Crâne — rendu avec ombrage basé sur le poids du char */
+        var breath = 0.60 + 0.40 * Math.sin(t * 0.95);
+        ctx.shadowBlur  = 12 + 7 * pulse;
+        ctx.shadowColor = "rgba(0,255,65,.85)";
+
+        for (var pi = 0; pi < skullPixels.length; pi++) {
+          var p  = skullPixels[pi];
+          var w  = p.w;
+          var px = p.ac * FS;
+          var py = (p.ar + 1) * FS;
+
+          /* conserver le VRAI caractère du crâne (l'art original) */
+          /* très rarement, un glitch matrix remplace le char        */
+          var ch = Math.random() > 0.998
+            ? RAIN[(Math.random() * RAIN.length) | 0]
+            : p.ch;
+
+          var a = w * breath;
+          if      (w >= 0.95) ctx.fillStyle = "rgba(230,255,225," + (a * 0.96) + ")"; /* os brillant   */
+          else if (w >= 0.60) ctx.fillStyle = "rgba(0,235,80,"    + (a * 1.05) + ")"; /* demi-ton      */
+          else                ctx.fillStyle = "rgba(0,150,48,"    + (a * 1.20) + ")"; /* ombre/contour */
+
+          ctx.fillText(ch, px, py);
+        }
+
+        /* ⑤ Flash blanc ~toutes les 4 s */
+        if (frame % 108 < 3) {
+          ctx.shadowBlur  = 32;
+          ctx.shadowColor = "rgba(180,255,180,.7)";
+          ctx.fillStyle   = "rgba(240,255,235,.52)";
+          for (var qi = 0; qi < skullPixels.length; qi++) {
+            var qp = skullPixels[qi];
+            ctx.fillText(qp.ch, qp.ac * FS, (qp.ar + 1) * FS);
+          }
+        }
+
+        ctx.shadowBlur  = 0;
+        ctx.shadowColor = "transparent";
+      }
+
+      function init() {
+        resize();
+        ctx.fillStyle = "#04070c";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener("resize", function () { resize(); });
+      if (document.readyState === "complete") { init(); }
+      else { window.addEventListener("load", init); }
+    })();
+  </script>
 
   <!-- Thème clair/sombre -->
   <script>
