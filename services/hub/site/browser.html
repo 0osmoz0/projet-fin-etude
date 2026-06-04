@@ -801,6 +801,10 @@
           <div class="clr-desc">TorBridge ne route pas le trafic clearnet (<code>http://</code> / <code>https://</code>).<br>
           Seules les adresses <code>.onion</code> sont autorisées sur ce réseau.<br><br>
           Votre anonymat aurait pu être compromis si la requête avait abouti.</div>
+          <div class="clr-desc" id="clrPartnerHint" hidden style="margin-top:14px;padding:12px;border:1px solid rgba(59,130,246,.35);border-radius:8px;background:rgba(37,99,168,.12);color:#93c5fd">
+            Cible partenaire (<code>:18081</code> / <code>:8081</code>) : phase <strong>infiltration</strong>.<br>
+            Sur le bureau OMEGA, ouvrez <strong>Canal opérationnel</strong> (Partner Gateway), pas TorBridge.
+          </div>
         </div>
       </div>
     </div>
@@ -1427,7 +1431,15 @@
     if (!res) return;
     if (res.type === "page")     { navigate(res.key); }
     else if (res.type === "search")  { doSearch(res.q); }
-    else if (res.type === "clearnet"){ document.getElementById("clrUrl").textContent = res.url; navigate("clearnet"); }
+    else if (res.type === "clearnet"){
+      document.getElementById("clrUrl").textContent = res.url;
+      var hint = document.getElementById("clrPartnerHint");
+      if (hint) {
+        var partner = /:18081\b|:8081\b|127\.0\.0\.1|localhost/i.test(res.url);
+        hint.hidden = !partner;
+      }
+      navigate("clearnet");
+    }
     else if (res.type === "dynamic") {
       /* show loading then generate */
       if (!active) return;
