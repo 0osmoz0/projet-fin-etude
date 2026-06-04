@@ -116,22 +116,6 @@ html, body {
   position: absolute;
   top: 20px; left: 16px;
 }
-.desktop-icons--kali {
-  position: absolute;
-  top: 20px; right: 16px;
-  max-height: calc(100vh - var(--taskbar-h) - 48px);
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding-right: 4px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(94,196,184,.35) transparent;
-}
-.desktop-icons--kali .desk-icon .icon-wrap {
-  border-color: rgba(94,196,184,.22);
-  background: rgba(94,196,184,.06);
-}
-.desktop-icons--kali .desk-icon svg { stroke: #5ec4b8; }
-.desktop-icons--kali .icon-label { font-size: 10px; line-height: 1.2; }
 
 .desk-icon {
   display: flex; flex-direction: column; align-items: center; gap: 5px;

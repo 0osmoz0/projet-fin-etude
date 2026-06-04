@@ -7,7 +7,7 @@ ENV_FILE ?= .env
 
 .DEFAULT_GOAL := help
 
-.PHONY: help env-check ports-check config lint lint-docker lint-yaml lint-shell lint-workflows build up down restart ps logs smoke smoke-ssh wait clean reset-hard pre-commit-install
+.PHONY: help env-check ports-check config lint lint-docker lint-yaml lint-shell lint-workflows build up down restart ps logs smoke smoke-ssh test-tools wait clean reset-hard pre-commit-install
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z0-9_-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -70,6 +70,9 @@ smoke: env-check ## Tests HTTP de fumée (hub + pivot + CCTV relay)
 
 smoke-ssh: env-check ## Tests voie SSH ops → CCTV (stack déjà up)
 	./scripts/smoke-ssh.sh
+
+test-tools: env-check ## Audit 151 outils kali-fs → API workstation (rapport /tmp)
+	./scripts/test-workstation-tools.sh
 
 test: up wait smoke ## Pipeline locale complète (up → health → smoke)
 

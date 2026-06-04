@@ -26,7 +26,7 @@
     exploit: {
       label: "Exploitation Tools",
       tools: [
-        "msfconsole", "msfvenom", "searchsploit", "exploitdb", "setoolkit", "set", "msfdb",
+        "msfvenom", "searchsploit", "exploitdb", "setoolkit", "set", "msfdb",
         "impacket-psexec", "impacket-secretsdump", "impacket-wmiexec", "evil-winrm", "psexec.py",
         "secretsdump.py", "kerberos-userenum", "bloodhound-python", "bloodhound", "pwncat",
       ],
@@ -171,6 +171,14 @@
 
   function workstationBase() {
     if (wsBase) return wsBase;
+    if (
+      typeof global.location !== "undefined" &&
+      global.location.origin &&
+      global.OMEGA_WORKSTATION_DIRECT !== true
+    ) {
+      wsBase = global.location.origin + "/workstation-api";
+      return wsBase;
+    }
     var host =
       typeof global.location !== "undefined" && global.location.hostname
         ? global.location.hostname
@@ -299,20 +307,6 @@
           "+ Start Time:         " + nowStamp(),
           "+ Server: nginx/1.27",
           "+ /partner.html: Link found",
-        ],
-        exit: 0,
-      };
-    }
-
-    if (name === "msfconsole") {
-      return {
-        lines: [
-          "=[ metasploit v6.4.0-dev                          ]=",
-          "+ -- --=[ 2408 exploits - 1489 auxiliary - 432 payloads  ]",
-          "+ -- --=[ 12 evasion - 1015 post - 437 nops            ]",
-          "msf6 > ",
-          "msf6 > help",
-          "Core Commands: help, search, use, exploit, sessions, exit",
         ],
         exit: 0,
       };
@@ -526,7 +520,7 @@
     );
     addFile(
       "/usr/share/metasploit-framework/README",
-      "Metasploit Framework — /usr/bin/msfconsole\n",
+      "Metasploit Framework — /usr/bin/msfvenom, searchsploit\n",
       root
     );
 

@@ -54,7 +54,6 @@
     ffuf: 1,
     dirb: 1,
     burpsuite: 1,
-    msfconsole: 1,
     msfvenom: 1,
     john: 1,
     hashcat: 1,
@@ -557,7 +556,7 @@
     var kaliLaunchers = [
       ["nmap.desktop", "Nmap", "nmap --help"],
       ["burpsuite.desktop", "Burp Suite", "burpsuite --help"],
-      ["metasploit.desktop", "Metasploit", "msfconsole --help"],
+      ["metasploit.desktop", "Metasploit", "searchsploit apache"],
       ["wireshark.desktop", "Wireshark", "wireshark --help"],
       ["sqlmap.desktop", "SQLmap", "sqlmap --help"],
       ["john.desktop", "John", "john --help"],
@@ -1449,7 +1448,6 @@
         "preflight-internal.sh": "preflight-internal.sh — Black Tide mesh preflight\n  bash ~/scripts/preflight-internal.sh [--deploy-consoles]",
         nmap: "NMAP(1) — Network exploration tool\n  nmap [options] target\n  Lab : pivot / port 18081",
         sqlmap: "SQLMAP(1) — automatic SQL injection\n  sqlmap -u URL --batch",
-        msfconsole: "MSFCONSOLE(1) — Metasploit Framework console\n  Canal mission : render.php legacy tpl",
         john: "JOHN(1) — password cracker\n  Wordlists : /usr/share/wordlists/",
       };
       var page = pages[args[0]] || ("man: pas de page de manuel pour \"" + (args[0] || "") + "\"");
@@ -1531,7 +1529,8 @@
     var toolCount = global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : Object.keys(SHELL_KALI_FALLBACK).length;
     printLines(out, [
       "Linux kali 6.6.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux",
-      "",
+    ], "sh-ok");
+    printLines(out, [
       "The programs included with the Kali GNU/Linux system are free software;",
       "the exact distribution terms for each program are described in the",
       "individual files in /usr/share/doc/*/copyright.",

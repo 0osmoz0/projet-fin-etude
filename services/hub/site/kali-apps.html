@@ -85,14 +85,14 @@
       </svg>
       <div>
         <h1>Kali GNU/Linux — outillage</h1>
-        <span class="sub">Kali GNU/Linux · double-clic → terminal</span>
+        <span class="sub">Kali GNU/Linux · clic → interface graphique</span>
       </div>
     </header>
     <main class="ka-body" id="kaBody"></main>
     <p class="ka-foot" style="padding: 0 16px 14px;">
       Shell : <code>ls /usr/bin</code> · <code>dpkg -l | grep kali</code> ·
       <code>cat /usr/share/kali-tools-index.txt</code><br>
-      Exemples : <code>nmap pivot</code> · <code>gobuster dir -u http://127.0.0.1:18081/</code>
+      Terminal avancé : icône <strong>OMEGA Shell</strong> sur le bureau.
     </p>
   </div>
   <script>
@@ -100,7 +100,7 @@
       var CATS = [
         { title: "Information Gathering", tools: ["nmap","masscan","rustscan","theharvester","dnsrecon","enum4linux","crackmapexec","responder","netcat"] },
         { title: "Web Application", tools: ["burpsuite","nikto","sqlmap","gobuster","ffuf","wpscan","dirsearch","nuclei","whatweb"] },
-        { title: "Exploitation", tools: ["msfconsole","msfvenom","searchsploit","setoolkit","evil-winrm","impacket-secretsdump"] },
+        { title: "Exploitation", tools: ["msfvenom","searchsploit","setoolkit","evil-winrm","impacket-secretsdump"] },
         { title: "Password Attacks", tools: ["john","hashcat","hydra","medusa","crunch","cewl"] },
         { title: "Sniffing & MITM", tools: ["wireshark","tcpdump","ettercap","bettercap","mitmproxy","sslscan"] },
         { title: "Wireless", tools: ["aircrack-ng","wifite","reaver","airodump-ng","kismet"] },
@@ -108,15 +108,14 @@
         { title: "Post-Exploitation", tools: ["proxychains4","chisel","ligolo-ng","bloodhound-python","pwncat"] },
       ];
       var body = document.getElementById("kaBody");
-      function run(cmd) {
-        try { sessionStorage.setItem("omegaShellRun", cmd); } catch (e) {}
+      function run(tool) {
         try {
-          if (window.parent && window.parent.OmegaDesktop) {
-            window.parent.OmegaDesktop.open("shell", "Terminal", "terminal.html?v=kali3", 820, 520);
+          if (window.parent && window.parent.OmegaDesktop && window.parent.OmegaDesktop.openKaliTool) {
+            window.parent.OmegaDesktop.openKaliTool(tool, tool);
             return;
           }
         } catch (e2) {}
-        window.location.href = "terminal.html?v=kali2";
+        window.location.href = "kali-tool.html?tool=" + encodeURIComponent(tool);
       }
       CATS.forEach(function (cat) {
         var sec = document.createElement("section");
@@ -131,8 +130,8 @@
           b.type = "button";
           b.className = "ka-btn";
           b.textContent = t;
-          b.title = t + " --help";
-          b.addEventListener("click", function () { run(t + " --help"); });
+          b.title = "Ouvrir " + t;
+          b.addEventListener("click", function () { run(t); });
           grid.appendChild(b);
         });
         sec.appendChild(grid);

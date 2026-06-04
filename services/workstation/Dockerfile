@@ -1,4 +1,4 @@
-# Image Kali complète — exécution des binaires réels du menu outils
+# Kali — binaires réels exécutés via API (OMEGA Shell)
 FROM kalilinux/kali-rolling:latest
 
 ENV DEBIAN_FRONTEND=noninteractive

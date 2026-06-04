@@ -51,7 +51,9 @@ BLOCKED_TOOLS = frozenset(
 TOOL_ALIASES: dict[str, str] = {
     "nc": "nc",
     "netcat": "nc",
-    "ncat": "ncat",
+    "ncat": "nc",
+    "psexec.py": "impacket-psexec",
+    "secretsdump.py": "impacket-secretsdump",
     "set": "setoolkit",
     "zap": "zaproxy",
     "beef": "beef-xss",
@@ -64,7 +66,6 @@ TOOL_ALIASES: dict[str, str] = {
 
 # Outils GUI / interactifs : variante batch headless
 HEADLESS_ARGS: dict[str, list[str]] = {
-    "msfconsole": ["-q", "-x", "version; help; exit -y"],
     "msfvenom": ["-h"],
     "burpsuite": ["--help"],
     "wireshark": ["-v"],
