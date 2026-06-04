@@ -277,6 +277,18 @@
     init();
   }
 
-  global.OmegaDesktop = { open: openWin, close: closeWin, focus: focusWin };
+  function openShellPreset(cmd, title) {
+    try {
+      sessionStorage.setItem("omegaShellRun", cmd || "kali-tools");
+    } catch (e) {}
+    openWin("shell", title || "Terminal", "terminal.html?v=kali3", 820, 520);
+  }
+
+  global.OmegaDesktop = {
+    open: openWin,
+    close: closeWin,
+    focus: focusWin,
+    openShellPreset: openShellPreset,
+  };
 
 })(window);

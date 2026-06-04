@@ -24,7 +24,7 @@
     TERM: "xterm-256color",
     LANG: "fr_FR.UTF-8",
     PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-    HOSTNAME: "omega-poste",
+    HOSTNAME: "kali",
     MAIL: "/var/mail/operator",
     SSH_AUTH_SOCK: "/run/user/1000/ssh-agent.sock",
   };
@@ -43,6 +43,96 @@
 
   /** @type {Record<string, {type:'dir'|'file', mode:string, owner:string, group:string, size:number, mtime:string, content?:string}>} */
   var VFS = {};
+
+  /** Secours si kali-fs.js absent du cache navigateur */
+  var SHELL_KALI_FALLBACK = {
+    nmap: 1,
+    masscan: 1,
+    sqlmap: 1,
+    nikto: 1,
+    gobuster: 1,
+    ffuf: 1,
+    dirb: 1,
+    burpsuite: 1,
+    msfconsole: 1,
+    msfvenom: 1,
+    john: 1,
+    hashcat: 1,
+    hydra: 1,
+    "aircrack-ng": 1,
+    wireshark: 1,
+    tcpdump: 1,
+    netcat: 1,
+    nc: 1,
+    searchsploit: 1,
+    enum4linux: 1,
+    crackmapexec: 1,
+    theharvester: 1,
+    responder: 1,
+    setoolkit: 1,
+  };
+
+  function toolBaseName(cmd) {
+    var c = String(cmd || "").trim();
+    var i = c.lastIndexOf("/");
+    return i === -1 ? c : c.slice(i + 1);
+  }
+
+  function isToolCommand(cmd) {
+    var name = toolBaseName(cmd);
+    if (global.OmegaKaliFs && OmegaKaliFs.isKaliBin(name)) return true;
+    if (SHELL_KALI_FALLBACK[name]) return true;
+    var node = vfsNode("/usr/bin/" + name) || vfsNode("/usr/sbin/" + name);
+    return !!(node && (node.type === "file" || node.type === "symlink"));
+  }
+
+  function countVfsBins() {
+    var n = 0;
+    Object.keys(VFS).forEach(function (k) {
+      if (k.indexOf("/usr/bin/") === 0 && VFS[k].type === "file") n += 1;
+    });
+    return n || (global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : 150);
+  }
+
+  function dispatchKaliTool(cmd, args, out, onComplete) {
+    if (!isToolCommand(cmd)) return false;
+    var name = toolBaseName(cmd);
+
+    function finish(res) {
+      printLines(out, res.lines);
+      setExit(res.exit);
+    }
+
+    if (
+      global.OmegaKaliFs &&
+      typeof OmegaKaliFs.execToolRemote === "function" &&
+      OmegaKaliFs.canRunRemote(name)
+    ) {
+      printLines(out, ["[*] Exécution distante (workstation)…"], "sh-dim");
+      OmegaKaliFs.execToolRemote(name, args, session, function (res) {
+        finish(res);
+        if (onComplete) onComplete();
+      });
+      return "async";
+    }
+
+    var res;
+    if (global.OmegaKaliFs && typeof OmegaKaliFs.execTool === "function") {
+      res = OmegaKaliFs.execTool(name, args, session);
+    } else if (global.OmegaKaliFs && OmegaKaliFs.kaliStubResponse) {
+      res = OmegaKaliFs.kaliStubResponse(name, args);
+    } else {
+      res = {
+        lines: [
+          name + ": erreur de chargement des outils Kali.",
+          "Rechargez la page (Ctrl+Shift+R) ou videz le cache du navigateur.",
+        ],
+        exit: 127,
+      };
+    }
+    finish(res);
+    return true;
+  }
 
   function pad2(n) {
     return n < 10 ? "0" + n : String(n);
@@ -132,6 +222,8 @@
         "alias la='ls -la'\n" +
         "alias l='ls -CF'\n" +
         "alias mission='cd ~/Documents/DOSSIER_OMEGA && ls'\n" +
+        "alias kali='ls /usr/bin | head -40'\n" +
+        "alias tools='cat /usr/share/kali-tools-index.txt | less'\n" +
         "PS1='\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n",
       { mtime: mt2, size: 3526 }
     );
@@ -211,7 +303,12 @@
         "  SecureMail.desktop   — messagerie interne chiffrée\n" +
         "  DOSSIER_OMEGA/       — dossier de mission (incidents, memos, ops…)\n" +
         "  ClearanceForm.desktop — validation clearance terrain\n" +
-        "  OMEGA-Shell.desktop  — terminal mesh pivot (phase 2)\n\n" +
+        "  OMEGA-Shell.desktop  — terminal mesh pivot (phase 2)\n" +
+        "  Kali-Tools/          — raccourcis Nmap, Burp, Metasploit, …\n\n" +
+        "Système : Kali GNU/Linux Rolling 2026.1\n" +
+        "Outils : /usr/bin (" +
+        (global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : "150+") +
+        ") · /usr/share/kali-tools-index.txt\n\n" +
         "Données mission : ~/Documents/DOSSIER_OMEGA\n" +
         "Clé SSH pivot   : ~/keys/id_ops.leak (ou ~/.ssh/id_ops)\n",
       { size: 380 }
@@ -434,9 +531,72 @@
         "[preflight] done\n",
       { owner: "ops", group: "ops", size: 148 }
     );
+
+    if (global.OmegaKaliFs && OmegaKaliFs.installKaliVfs) {
+      OmegaKaliFs.installKaliVfs(addDir, addFile, addSymlink, { mtime: mt, mtime2: mt2 });
+    } else {
+      Object.keys(SHELL_KALI_FALLBACK).forEach(function (name) {
+        addFile("/usr/bin/" + name, "#!/bin/sh\n", {
+          mode: "-rwxr-xr-x",
+          owner: "root",
+          group: "root",
+          mtime: mt2,
+          size: 16,
+        });
+      });
+      addFile("/etc/os-release", 'PRETTY_NAME="Kali GNU/Linux Rolling"\nID=kali\n', {
+        owner: "root",
+        group: "root",
+        mtime: mt2,
+      });
+    }
+
+    /* Bureau — raccourcis outils Kali (immersion) */
+    var kaliDesk = desk + "/Kali-Tools";
+    addDir(kaliDesk, op);
+    var kaliLaunchers = [
+      ["nmap.desktop", "Nmap", "nmap --help"],
+      ["burpsuite.desktop", "Burp Suite", "burpsuite --help"],
+      ["metasploit.desktop", "Metasploit", "msfconsole --help"],
+      ["wireshark.desktop", "Wireshark", "wireshark --help"],
+      ["sqlmap.desktop", "SQLmap", "sqlmap --help"],
+      ["john.desktop", "John", "john --help"],
+      ["hashcat.desktop", "Hashcat", "hashcat --help"],
+      ["hydra.desktop", "Hydra", "hydra --help"],
+      ["aircrack-ng.desktop", "Aircrack-ng", "aircrack-ng --help"],
+      ["gobuster.desktop", "Gobuster", "gobuster --help"],
+      ["nikto.desktop", "Nikto", "nikto --help"],
+      ["maltego.desktop", "Maltego", "maltego --help"],
+      ["setoolkit.desktop", "SET", "setoolkit --help"],
+      ["ettercap.desktop", "Ettercap", "ettercap --help"],
+      ["ffuf.desktop", "FFuf", "ffuf --help"],
+    ];
+    kaliLaunchers.forEach(function (entry) {
+      addFile(
+        kaliDesk + "/" + entry[0],
+        "[Desktop Entry]\nType=Application\nName=" +
+          entry[1] +
+          "\nComment=Kali GNU/Linux\nExec=omega-shell-run " +
+          entry[2] +
+          "\nIcon=kali-security\nTerminal=true\nCategories=Security;\n",
+        { mode: "-rwxr-xr-x", size: 140 }
+      );
+    });
+    addFile(
+      desk + "/Kali-Tools.desktop",
+      "[Desktop Entry]\nType=Application\nName=Kali Tools\nComment=Index outillage sécurité offensive\nExec=omega-browser kali-apps.html\nIcon=kali-logo\nTerminal=false\nCategories=System;Security;\n",
+      { mode: "-rwxr-xr-x", size: 160 }
+    );
+    addSymlink(desk + "/kali-tools", "Kali-Tools", op);
   }
 
   buildVfs();
+
+  if (global.OmegaKaliFs && OmegaKaliFs.ALL_BINS) {
+    OmegaKaliFs.ALL_BINS.forEach(function (b) {
+      SHELL_KALI_FALLBACK[b] = 1;
+    });
+  }
 
   function homeDir() {
     return session === SESSION_PIVOT ? "/home/ops" : "/home/operator";
@@ -720,10 +880,16 @@
     return parts;
   }
 
-  function runCommand(line, out) {
+  function runCommand(line, out, onComplete) {
     setExit(0);
     var trimmed = line.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    var asyncPending = false;
+    try {
 
     if (trimmed === "!!") {
       err(out, "bash: !!: event not found");
@@ -799,7 +965,9 @@
       var a = args.indexOf("-a") !== -1 || args.indexOf("-all") !== -1;
       if (a) {
         printLines(out, [
-          "Linux " + env().HOSTNAME + " 5.15.0-omega #1 SMP x86_64 GNU/Linux",
+          "Linux " +
+            env().HOSTNAME +
+            " 6.6.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux",
         ]);
       } else {
         printLines(out, ["Linux"]);
@@ -831,12 +999,24 @@
     }
 
     if (cmd === "which") {
-      var bins = { ssh: "/usr/bin/ssh", bash: "/usr/bin/bash", cat: "/bin/cat", curl: "/usr/bin/curl", ls: "/bin/ls" };
+      var bins = {
+        ssh: "/usr/bin/ssh",
+        bash: "/usr/bin/bash",
+        cat: "/bin/cat",
+        curl: "/usr/bin/curl",
+        ls: "/bin/ls",
+        grep: "/bin/grep",
+        find: "/usr/bin/find",
+        nmap: "/usr/bin/nmap",
+        python3: "/usr/bin/python3",
+      };
       if (!args[0]) {
         setExit(1);
         return;
       }
-      if (bins[args[0]]) printLines(out, [bins[args[0]]]);
+      var wn = args[0];
+      if (bins[wn]) printLines(out, [bins[wn]]);
+      else if (isToolCommand(wn)) printLines(out, ["/usr/bin/" + toolBaseName(wn)]);
       else setExit(1);
       return;
     }
@@ -848,6 +1028,8 @@
       }
       if (args[0] === "omega-deploy") {
         printLines(out, ["omega-deploy is a shell function"], "sh-dim");
+      } else if (isToolCommand(args[0])) {
+        printLines(out, [args[0] + " is hashed (/usr/bin/" + toolBaseName(args[0]) + ")"], "sh-dim");
       } else {
         printLines(out, [args[0] + " is /usr/bin/" + args[0]], "sh-dim");
       }
@@ -857,9 +1039,51 @@
 
     if (cmd === "help") {
       printLines(out, [
-        "GNU bash, version 5.1.16(1)-release (x86_64-pc-linux-gnu)",
+        "GNU bash, version 5.2.15(1)-release (x86_64-pc-linux-gnu)",
         "Shell built-in commands: cd, pwd, echo, exit, help, history",
-        "Voir aussi: man bash",
+        "Kali Rolling — " + (global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : "150+") + " outils sous /usr/bin",
+        "Index : cat /usr/share/kali-tools-index.txt · dpkg -l | grep kali-tools",
+        "Voir aussi: man bash, man nmap",
+      ]);
+      setExit(0);
+      return;
+    }
+
+    if (cmd === "dpkg") {
+      if (args[0] === "-l" || args[0] === "--list" || !args[0]) {
+        printLines(
+          out,
+          global.OmegaKaliFs ? OmegaKaliFs.dpkgListLines() : ["ii  kali-defaults 2026.1.0 amd64"],
+          "sh-dim"
+        );
+        setExit(0);
+        return;
+      }
+      if (args[0] === "-s" && args[1]) {
+        printLines(out, ["Package: kali-tools-" + args[1], "Status: install ok installed", "Architecture: amd64"]);
+        setExit(0);
+        return;
+      }
+      err(out, "dpkg: operation not supported (try: dpkg -l)");
+      return;
+    }
+
+    if (cmd === "apt" || cmd === "apt-get" || cmd === "apt-cache") {
+      printLines(out, [
+        "Reading package lists... Done",
+        "kali-linux-default is already the newest version (2026.1.0).",
+        "0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.",
+      ]);
+      setExit(0);
+      return;
+    }
+
+    if (cmd === "kali-tools" || cmd === "kat") {
+      printLines(out, [
+        "Kali Tools — " + countVfsBins() + " packages installed",
+        "Categories: Information Gathering, Web App, Exploitation, Password, Wireless, Forensics",
+        "ls /usr/bin | wc -l",
+        "cat /usr/share/kali-tools-index.txt",
       ]);
       setExit(0);
       return;
@@ -1223,6 +1447,10 @@
         grep: "GREP(1) — print lines matching a pattern\n  grep [options] PATTERN [FILE...]\n  -r : recursif   -i : insensible à la casse",
         find: "FIND(1) — search for files\n  find [path] [-name glob] [-type f|d]",
         "preflight-internal.sh": "preflight-internal.sh — Black Tide mesh preflight\n  bash ~/scripts/preflight-internal.sh [--deploy-consoles]",
+        nmap: "NMAP(1) — Network exploration tool\n  nmap [options] target\n  Lab : pivot / port 18081",
+        sqlmap: "SQLMAP(1) — automatic SQL injection\n  sqlmap -u URL --batch",
+        msfconsole: "MSFCONSOLE(1) — Metasploit Framework console\n  Canal mission : render.php legacy tpl",
+        john: "JOHN(1) — password cracker\n  Wordlists : /usr/share/wordlists/",
       };
       var page = pages[args[0]] || ("man: pas de page de manuel pour \"" + (args[0] || "") + "\"");
       printLines(out, page.split("\n"), args[0] && pages[args[0]] ? "" : "sh-err");
@@ -1280,22 +1508,36 @@
         "alias ll='ls -alF'",
         "alias l='ls -CF'",
         "alias mission='cd ~/Documents/DOSSIER_OMEGA && ls'",
+        "alias kali='ls /usr/bin | head -40'",
+        "alias tools='cat /usr/share/kali-tools-index.txt | less'",
       ]);
       setExit(0);
       return;
     }
 
+    if (dispatchKaliTool(cmd, args, out, onComplete) === "async") {
+      asyncPending = true;
+      return;
+    }
+
     err(out, "bash: " + cmd + ": command not found");
     setExit(127);
+    } finally {
+      if (!asyncPending && onComplete) onComplete();
+    }
   }
 
   function motd(out) {
+    var toolCount = global.OmegaKaliFs ? OmegaKaliFs.ALL_BINS.length : Object.keys(SHELL_KALI_FALLBACK).length;
     printLines(out, [
-      "Linux omega-poste 5.15.0-omega #1 SMP x86_64 GNU/Linux",
+      "Linux kali 6.6.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux",
       "",
-      "Dernière connexion : " + new Date().toLocaleString("fr-FR") + " sur tty1",
-      "Répertoire personnel : Desktop, Documents, Downloads, …",
-      "Mission : ~/Documents/DOSSIER_OMEGA",
+      "The programs included with the Kali GNU/Linux system are free software;",
+      "the exact distribution terms for each program are described in the",
+      "individual files in /usr/share/doc/*/copyright.",
+      "",
+      "Kali GNU/Linux Rolling 2026.1 comes with " + toolCount + " security tools (/usr/bin).",
+      "Last login: " + new Date().toLocaleString("en-US") + " on tty1",
       "",
     ], "sh-dim");
   }
@@ -1313,6 +1555,41 @@
     function startup() {
       out.innerHTML = "";
       motd(out);
+      if (global.OmegaKaliFs && OmegaKaliFs.probeWorkstation) {
+        OmegaKaliFs.probeWorkstation(function (ok, data) {
+          if (ok && data && data.mode === "kali-dynamic") {
+            printLines(
+              out,
+              [
+                "Workstation Kali active — binaires réels (PATH dynamique, " +
+                  (data.bins_in_path || "?") +
+                  " exécutables).",
+              ],
+              "sh-ok"
+            );
+          } else if (ok && data && data.real_tools) {
+            printLines(
+              out,
+              [
+                "Workstation active — exécution réelle : " +
+                  data.real_tools.slice(0, 8).join(", ") +
+                  (data.real_tools.length > 8 ? ", …" : ""),
+              ],
+              "sh-ok"
+            );
+          } else {
+            printLines(
+              out,
+              [
+                "Workstation hors ligne — démarrez : docker compose up -d workstation",
+                "Outils en mode local jusqu'à connexion (port 18083).",
+              ],
+              "sh-warn"
+            );
+          }
+          out.scrollTop = out.scrollHeight;
+        });
+      }
       if (!isOsintOk()) {
         printLines(out, [
           "*** ACCÈS PIVOT VERROUILLÉ — valider ClearanceForm (ssh ops@pivot) ***",
@@ -1322,6 +1599,16 @@
     }
 
     startup();
+
+    var preset = "";
+    try {
+      preset = sessionStorage.getItem("omegaShellRun") || "";
+      if (preset) sessionStorage.removeItem("omegaShellRun");
+    } catch (e) {}
+    if (preset) {
+      runCommand(preset, out);
+      syncPrompt();
+    }
 
     function submitLine() {
       var line = input.value;
@@ -1353,10 +1640,14 @@
       echo.textContent = prompt() + line;
       out.appendChild(echo);
 
-      runCommand(line, out);
-      syncPrompt();
-      out.scrollTop = out.scrollHeight;
-      input.focus();
+      input.disabled = true;
+      function done() {
+        input.disabled = false;
+        syncPrompt();
+        out.scrollTop = out.scrollHeight;
+        input.focus();
+      }
+      runCommand(line, out, done);
     }
 
     input.addEventListener("keydown", function (e) {

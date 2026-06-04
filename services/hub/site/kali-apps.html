@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OMEGA · Kali Tools</title>
+  <link rel="stylesheet" href="assets/css/hub.css">
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--text); }
+    .ka-app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+    }
+    .ka-head {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,.25);
+    }
+    .ka-head h1 {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .ka-head .sub { color: var(--muted); font-size: 10px; font-family: var(--mono); }
+    .ka-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px 20px;
+    }
+    .ka-cat {
+      margin-bottom: 14px;
+    }
+    .ka-cat h2 {
+      margin: 0 0 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: #7db5ea;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .ka-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .ka-btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(125,181,234,.25);
+      background: rgba(37,99,168,.12);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .ka-btn:hover {
+      background: rgba(37,99,168,.28);
+      border-color: rgba(125,181,234,.45);
+    }
+    .ka-foot {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.6;
+    }
+    .ka-foot code { color: #7db5ea; }
+  </style>
+</head>
+<body>
+  <div class="ka-app">
+    <header class="ka-head">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7db5ea" stroke-width="1.6">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+      <div>
+        <h1>Kali GNU/Linux — outillage</h1>
+        <span class="sub">Kali GNU/Linux · double-clic → terminal</span>
+      </div>
+    </header>
+    <main class="ka-body" id="kaBody"></main>
+    <p class="ka-foot" style="padding: 0 16px 14px;">
+      Shell : <code>ls /usr/bin</code> · <code>dpkg -l | grep kali</code> ·
+      <code>cat /usr/share/kali-tools-index.txt</code><br>
+      Exemples : <code>nmap pivot</code> · <code>gobuster dir -u http://127.0.0.1:18081/</code>
+    </p>
+  </div>
+  <script>
+    (function () {
+      var CATS = [
+        { title: "Information Gathering", tools: ["nmap","masscan","rustscan","theharvester","dnsrecon","enum4linux","crackmapexec","responder","netcat"] },
+        { title: "Web Application", tools: ["burpsuite","nikto","sqlmap","gobuster","ffuf","wpscan","dirsearch","nuclei","whatweb"] },
+        { title: "Exploitation", tools: ["msfconsole","msfvenom","searchsploit","setoolkit","evil-winrm","impacket-secretsdump"] },
+        { title: "Password Attacks", tools: ["john","hashcat","hydra","medusa","crunch","cewl"] },
+        { title: "Sniffing & MITM", tools: ["wireshark","tcpdump","ettercap","bettercap","mitmproxy","sslscan"] },
+        { title: "Wireless", tools: ["aircrack-ng","wifite","reaver","airodump-ng","kismet"] },
+        { title: "Forensics", tools: ["binwalk","volatility","steghide","exiftool","radare2","strings"] },
+        { title: "Post-Exploitation", tools: ["proxychains4","chisel","ligolo-ng","bloodhound-python","pwncat"] },
+      ];
+      var body = document.getElementById("kaBody");
+      function run(cmd) {
+        try { sessionStorage.setItem("omegaShellRun", cmd); } catch (e) {}
+        try {
+          if (window.parent && window.parent.OmegaDesktop) {
+            window.parent.OmegaDesktop.open("shell", "Terminal", "terminal.html?v=kali3", 820, 520);
+            return;
+          }
+        } catch (e2) {}
+        window.location.href = "terminal.html?v=kali2";
+      }
+      CATS.forEach(function (cat) {
+        var sec = document.createElement("section");
+        sec.className = "ka-cat";
+        var h = document.createElement("h2");
+        h.textContent = cat.title;
+        sec.appendChild(h);
+        var grid = document.createElement("div");
+        grid.className = "ka-grid";
+        cat.tools.forEach(function (t) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "ka-btn";
+          b.textContent = t;
+          b.title = t + " --help";
+          b.addEventListener("click", function () { run(t + " --help"); });
+          grid.appendChild(b);
+        });
+        sec.appendChild(grid);
+        body.appendChild(sec);
+      });
+    })();
+  </script>
+</body>
+</html>
