@@ -255,6 +255,15 @@ html, body {
 .desk-icon--shell-ready .icon-wrap {
   border-color: rgba(59,130,196,.35);
 }
+.desk-icon--gateway-ready .icon-wrap {
+  border-color: rgba(59,130,196,.45);
+  box-shadow: 0 0 12px rgba(59,130,246,.15);
+}
+.desk-icon--gateway-ready svg { stroke: #60a5fa; }
+.desk-icon--gateway-reveal {
+  display: flex !important;
+  animation: deskIconReveal .5s ease-out;
+}
 
 /* Overlay déploiement consoles */
 .console-deploy-overlay {

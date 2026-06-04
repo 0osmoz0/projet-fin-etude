@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partner Gateway</title>
+  <style>
+    :root {
+      --bg: #0c1220;
+      --chrome: #141c2e;
+      --chrome2: #1a2540;
+      --border: #2a3f66;
+      --text: #d8e4f4;
+      --muted: #7a92b8;
+      --accent: #3b82f6;
+      --accent-dim: #2563a8;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --lock-bg: rgba(8, 14, 28, 0.94);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; }
+
+    .gw-app { display: flex; flex-direction: column; height: 100%; }
+
+    .gw-toolbar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; background: linear-gradient(180deg, var(--chrome2), var(--chrome));
+      border-bottom: 1px solid var(--border);
+    }
+    .gw-brand {
+      display: flex; align-items: center; gap: 8px; padding-right: 10px;
+      border-right: 1px solid var(--border); margin-right: 4px; flex-shrink: 0;
+    }
+    .gw-brand svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+    .gw-brand span { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #93c5fd; text-transform: uppercase; }
+
+    .gw-nav { display: flex; gap: 2px; }
+    .gw-nav button {
+      background: transparent; border: 1px solid transparent; color: var(--muted);
+      width: 28px; height: 26px; border-radius: 4px; cursor: pointer; font-size: 14px;
+    }
+    .gw-nav button:hover:not(:disabled) { background: rgba(59,130,246,.12); color: var(--text); border-color: var(--border); }
+    .gw-nav button:disabled { opacity: 0.35; cursor: default; }
+
+    .gw-urlrow { flex: 1; display: flex; align-items: center; gap: 0; min-width: 0; }
+    .gw-lock {
+      display: flex; align-items: center; gap: 4px; padding: 0 8px; height: 28px;
+      background: #0f1729; border: 1px solid var(--border); border-right: none;
+      border-radius: 6px 0 0 6px; color: var(--ok); font-size: 10px; font-weight: 600;
+    }
+    .gw-lock svg { width: 12px; height: 12px; stroke: currentColor; fill: none; }
+    #urlInput {
+      flex: 1; min-width: 0; height: 28px; padding: 0 10px;
+      background: #0f1729; border: 1px solid var(--border); border-left: none;
+      color: #e2e8f0; font-family: ui-monospace, monospace; font-size: 12px;
+    }
+    #urlInput:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px rgba(59,130,246,.25); }
+    .gw-go {
+      height: 28px; padding: 0 12px; margin-left: 4px;
+      background: var(--accent-dim); border: 1px solid #3b6ea8; border-radius: 6px;
+      color: #fff; font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+    .gw-go:hover { background: var(--accent); }
+
+    .gw-bookmarks {
+      display: flex; flex-wrap: wrap; gap: 4px; padding: 5px 10px;
+      background: var(--chrome); border-bottom: 1px solid var(--border);
+    }
+    .gw-bookmarks button {
+      background: rgba(59,130,246,.08); border: 1px solid var(--border);
+      color: #93c5fd; padding: 3px 10px; border-radius: 12px; font-size: 10px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .gw-bookmarks button:hover { background: rgba(59,130,246,.18); color: #dbeafe; }
+
+    .gw-phase {
+      padding: 6px 12px; background: linear-gradient(90deg, rgba(37,99,168,.35), transparent);
+      border-bottom: 1px solid rgba(59,130,246,.25);
+      font-size: 11px; color: #bfdbfe;
+    }
+    .gw-phase strong { color: #60a5fa; }
+
+    .gw-viewport { flex: 1; position: relative; min-height: 0; background: #fff; }
+    #gwFrame { width: 100%; height: 100%; border: 0; display: block; background: #f8fafc; }
+
+    .gw-status {
+      display: flex; gap: 14px; padding: 4px 12px; font-size: 10px; color: var(--muted);
+      background: var(--chrome); border-top: 1px solid var(--border);
+    }
+    .gw-status .trace { color: #64748b; font-family: ui-monospace, monospace; }
+
+    .gw-lock-overlay {
+      position: absolute; inset: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--lock-bg); backdrop-filter: blur(6px);
+    }
+    .gw-lock-overlay[hidden] { display: none !important; }
+    .gw-lock-card {
+      max-width: 420px; padding: 28px 32px; text-align: center;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--chrome2); box-shadow: 0 12px 40px rgba(0,0,0,.45);
+    }
+    .gw-lock-card h2 { font-size: 15px; margin-bottom: 10px; color: #93c5fd; }
+    .gw-lock-card p { font-size: 12px; line-height: 1.55; color: var(--muted); }
+    .gw-lock-card code { color: #7dd3fc; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="gw-app" id="gwApp">
+    <div class="gw-toolbar">
+      <div class="gw-brand" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span>Partner Gateway</span>
+      </div>
+      <div class="gw-nav">
+        <button type="button" id="btnBack" title="Précédent" disabled>←</button>
+        <button type="button" id="btnFwd" title="Suivant" disabled>→</button>
+        <button type="button" id="btnReload" title="Actualiser">↻</button>
+        <button type="button" id="btnHome" title="Accueil canal">⌂</button>
+      </div>
+      <div class="gw-urlrow">
+        <span class="gw-lock" id="urlLock" title="Canal TLS interne">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          SEC
+        </span>
+        <input type="text" id="urlInput" spellcheck="false" autocomplete="off" aria-label="Adresse canal partenaire" />
+        <button type="button" class="gw-go" id="btnGo">Aller</button>
+      </div>
+    </div>
+
+    <div class="gw-bookmarks" role="navigation" aria-label="Raccourcis mission">
+      <button type="button" data-path="/">Canal officiel</button>
+      <button type="button" data-path="/partner.html">Partner Portal</button>
+      <button type="button" data-path="/partner.html?mirror=legacy">Legacy mirror</button>
+      <button type="button" data-path="/internal/auth-gateway/v2/">Auth Gateway v2</button>
+      <button type="button" data-path="/internal/auth-gateway/v2/render.php?mode=legacy&amp;tpl=diag">Template diag</button>
+    </div>
+
+    <div class="gw-phase" id="phaseBanner" hidden>
+      <strong>Phase 2 — Infiltration</strong> · Canal opérationnel ouvert · cible locale
+      <code>http://127.0.0.1:18081</code> (hors réseau Tor / OSINT terminé)
+    </div>
+
+    <div class="gw-viewport">
+      <iframe id="gwFrame" title="Portail partenaire Black Tide" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+      <div class="gw-lock-overlay" id="lockOverlay" hidden>
+        <div class="gw-lock-card">
+          <h2>Canal opérationnel verrouillé</h2>
+          <p>
+            Le navigateur partenaire n'est disponible qu'après validation OSINT complète (ClearanceForm 8/8).<br><br>
+            Phase actuelle : <strong>renseignement</strong> via TorBridge et DOSSIER_OMEGA.<br>
+            Phase suivante : infiltration via <code>OMEGA Shell</code> et ce canal.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="gw-status">
+      <span id="statusMsg">Prêt</span>
+      <span class="trace" id="statusTrace">X-BT-Trace: partner-relay · zone: DMZ</span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var PIVOT_HOST = "127.0.0.1";
+      var PIVOT_PORT = "18081";
+
+      function pivotBase() {
+        try {
+          if (window.parent && window.parent.OmegaLabAccess && window.parent.OmegaLabAccess.pivotUrl) {
+            var u = window.parent.OmegaLabAccess.pivotUrl();
+            if (u) return u.charAt(u.length - 1) === "/" ? u : u + "/";
+          }
+        } catch (e) { /* cross-origin unlikely */ }
+        return "http://" + PIVOT_HOST + ":" + PIVOT_PORT + "/";
+      }
+
+      function displayBase() {
+        return "http://" + PIVOT_HOST + ":" + PIVOT_PORT + "/";
+      }
+
+      function isUnlocked() {
+        try {
+          return !!(window.parent && window.parent.OmegaMissionState &&
+            window.parent.OmegaMissionState.isValidated());
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function joinUrl(path) {
+        var base = pivotBase();
+        if (!path || path === "/") return base;
+        if (/^https?:\/\//i.test(path)) {
+          if (path.indexOf("127.0.0.1:" + PIVOT_PORT) !== -1 ||
+              path.indexOf("localhost:" + PIVOT_PORT) !== -1) {
+            return path;
+          }
+          return null;
+        }
+        if (path.charAt(0) !== "/") path = "/" + path;
+        return base.replace(/\/$/, "") + path;
+      }
+
+      function toDisplayUrl(abs) {
+        if (!abs) return displayBase();
+        return abs.replace(/^http:\/\/[^/]+/, "http://" + PIVOT_HOST + ":" + PIVOT_PORT);
+      }
+
+      var frame = document.getElementById("gwFrame");
+      var urlInput = document.getElementById("urlInput");
+      var lockOverlay = document.getElementById("lockOverlay");
+      var phaseBanner = document.getElementById("phaseBanner");
+      var statusMsg = document.getElementById("statusMsg");
+      var currentAbs = displayBase();
+
+      function setLocked(locked) {
+        lockOverlay.hidden = !locked;
+        frame.style.visibility = locked ? "hidden" : "visible";
+        urlInput.disabled = locked;
+        document.getElementById("btnGo").disabled = locked;
+        document.querySelectorAll(".gw-bookmarks button").forEach(function (b) {
+          b.disabled = locked;
+        });
+        phaseBanner.hidden = locked || !isUnlocked();
+      }
+
+      function loadUrl(abs, pushHistory) {
+        if (!isUnlocked()) {
+          setLocked(true);
+          return;
+        }
+        if (!abs) {
+          statusMsg.textContent = "URL hors canal partenaire — utilisez 127.0.0.1:18081";
+          return;
+        }
+        setLocked(false);
+        currentAbs = abs;
+        urlInput.value = toDisplayUrl(abs);
+        frame.src = abs;
+        statusMsg.textContent = "Chargement…";
+        if (pushHistory !== false && window.history && window.history.pushState) {
+          window.history.pushState({ url: abs }, "", "#" + encodeURIComponent(toDisplayUrl(abs)));
+        }
+      }
+
+      function navigatePath(path) {
+        loadUrl(joinUrl(path));
+      }
+
+      document.getElementById("btnGo").addEventListener("click", function () {
+        var raw = urlInput.value.trim();
+        if (!raw) return;
+        if (/^https?:\/\//i.test(raw)) {
+          loadUrl(joinUrl(raw));
+        } else {
+          loadUrl(joinUrl(raw.indexOf("/") === 0 ? raw : "/" + raw));
+        }
+      });
+      urlInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") document.getElementById("btnGo").click();
+      });
+
+      document.getElementById("btnHome").addEventListener("click", function () { navigatePath("/"); });
+      document.getElementById("btnReload").addEventListener("click", function () {
+        if (!isUnlocked()) return;
+        frame.src = currentAbs;
+        statusMsg.textContent = "Actualisation…";
+      });
+
+      document.querySelectorAll(".gw-bookmarks button").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          navigatePath(btn.getAttribute("data-path"));
+        });
+      });
+
+      frame.addEventListener("load", function () {
+        statusMsg.textContent = "Document chargé · " + toDisplayUrl(currentAbs);
+      });
+
+      window.addEventListener("popstate", function (e) {
+        if (e.state && e.state.url) loadUrl(e.state.url, false);
+      });
+
+      function refreshLockState() {
+        var ok = isUnlocked();
+        setLocked(!ok);
+        if (ok) {
+          if (!frame.getAttribute("src")) loadUrl(pivotBase(), false);
+          phaseBanner.hidden = false;
+        }
+      }
+
+      refreshLockState();
+      try {
+        window.parent.addEventListener("storage", function (e) {
+          if (e.key === "omega-osint-validation-v1") refreshLockState();
+        });
+      } catch (e) { /* ignore */ }
+
+    })();
+  </script>
+</body>
+</html>
