@@ -1,64 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Partner Portal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partner Portal — Black Tide</title>
+  <link rel="stylesheet" href="assets/bt.css" />
 </head>
 <body>
-    <h1>Black Tide Partner Portal</h1>
-    <p>Authentication failed. Incident reference: BT-AUTH-4421</p>
-    <!-- BT-AUTH-4421 linked to gateway fallback: /internal/auth-gateway/v2 -->
-    <p><small>Support note: if issue persists, contact relay node "n.morel".</small></p>
-    <!-- temp note: partner-auth fallback user format = first.last -->
-    <p>Access restricted to accredited operators.</p>
-    <p><small>Legacy mirror mode enabled when <code>mirror=legacy</code> is set.</small></p>
-    <form method="GET" action="partner.html">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <button type="submit">Login</button>
-    </form>
-    <p id="mirrorStatus" hidden><small></small></p>
-    <!-- debug: mirror=legacy uses tpl from query string -->
-    <p><a href="index.html">← Back to official channel</a></p>
-    <p><small>
-      <a href="/internal/auth-gateway/v2/">gateway health check</a>
-      · <a href="/internal/auth-gateway/v2/render.php?mode=legacy&amp;tpl=diag">legacy template check</a>
-    </small></p>
-    <!-- legacy file drop: /internal/auth-gateway/v2/legacy-upload.php (field artifact, ext phtml) -->
-    <!-- stack: nginx/1.27 + php-fpm (legacy partner module) -->
-    <script>
-        (function () {
-            const params = new URLSearchParams(window.location.search);
-            const mirror = params.get("mirror");
-            const tpl = params.get("tpl");
-            if (mirror !== "legacy") return;
 
-            const status = document.getElementById("mirrorStatus");
-            if (!status) return;
+  <div class="classif">Restricted access · Black Tide Partner Network · Accredited operators only</div>
 
-            const statusText = status.firstElementChild;
-            if (!statusText) return;
+  <!-- BT-AUTH-4421 linked to gateway fallback: /internal/auth-gateway/v2 -->
+  <!-- temp note: partner-auth fallback user format = first.last -->
+  <!-- legacy file drop: /internal/auth-gateway/v2/legacy-upload.php (field artifact, ext phtml) -->
+  <!-- stack: nginx/1.27 + php-fpm (legacy partner module) -->
+  <!-- debug: mirror=legacy uses tpl from query string -->
 
-            status.hidden = false;
-            const tplNormalized = tpl && tpl.trim() ? tpl.trim().toLowerCase() : "default";
-            const isPolicyBlocked = tplNormalized.includes("../") || tplNormalized.includes("%2e%2e");
+  <div class="bt-form-wrap">
+    <div class="bt-form-card">
 
-            const sidInput = `${mirror}:${tplNormalized}`;
-            const sid = `m${sidInput.length}-${sidInput.replace(/[^a-z0-9]/g, "").slice(0, 8)}`;
+      <div class="bt-form-head">
+        <div class="bt-form-head-logo">
+          <div class="bt-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="14" height="14"><path d="M12 2L4 6v6c0 5.5 3.6 10.7 8 11 4.4-.3 8-5.5 8-11V6l-8-4z"/></svg>
+          </div>
+          <span>Black Tide</span>
+        </div>
+        <h1>Partner Portal</h1>
+        <p>Authentication required · Accredited operators only</p>
+      </div>
 
-            const policy = isPolicyBlocked ? "BLOCK" : "ALLOW";
+      <div class="bt-form-body">
 
-            const ts = new Date().toISOString();
+        <div class="bt-form-alert warn" id="authAlert">
+          <strong>Authentication failed.</strong> Incident reference: <code style="font-size:11px">BT-AUTH-4421</code><br>
+          <span style="font-size:11px;opacity:.8">If issue persists, contact relay node <strong>n.morel</strong>.</span>
+        </div>
 
-            const message = isPolicyBlocked
-            ? `Legacy mirror profile active. tpl rejected by policy. [LEGACY-BLOCK] | sid=${sid} | policy=${policy} | ts=${ts} | src=partner-ui`
-            : `Legacy mirror profile active. tpl=${tplNormalized} [LEGACY-OK] | sid=${sid} | policy=${policy} | ts=${ts} | src=partner-ui`;
+        <div class="bt-form-alert info" id="mirrorAlert" style="display:none">
+          <strong>Legacy mirror mode active.</strong><br>
+          <span id="mirrorMsg" style="font-size:11px"></span>
+        </div>
 
-            statusText.textContent = message;
-        })();
-    </script>
+        <form method="GET" action="partner.html" id="partnerForm">
+          <div class="bt-field">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required placeholder="first.last" autocomplete="username" />
+          </div>
+          <div class="bt-field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="••••••••••" autocomplete="current-password" />
+          </div>
+          <button type="submit" class="bt-form-submit">Authenticate</button>
+        </form>
+
+        <div class="bt-form-notice">
+          Access restricted to accredited operators.<br>
+          <a href="index.html">← Back to official channel</a>
+          &nbsp;·&nbsp;
+          <a href="/internal/auth-gateway/v2/">Gateway status</a>
+        </div>
+        <div class="bt-form-notice" style="margin-top:8px">
+          <small style="color:#2e3d58">
+            <a href="/internal/auth-gateway/v2/render.php?mode=legacy&amp;tpl=diag" style="color:#2e3d58">legacy template check</a>
+          </small>
+        </div>
+
+      </div>
+
+      <div class="bt-form-foot">
+        <div class="bt-form-meta">
+          stack: nginx/1.27 + php-fpm<br>
+          fallback: /internal/auth-gateway/v2<br>
+          legacy-mirror: enabled when mirror=legacy<br>
+          operator contact: n.morel
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p id="mirrorStatus" hidden><small></small></p>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const mirror = params.get("mirror");
+      const tpl = params.get("tpl");
+      const urlUser = params.get("username");
+      if (!urlUser) {
+        var alert = document.getElementById("authAlert");
+        if (alert) alert.style.display = "none";
+      }
+      if (mirror !== "legacy") return;
+      const tplNormalized = tpl && tpl.trim() ? tpl.trim().toLowerCase() : "default";
+      const isPolicyBlocked = tplNormalized.includes("../") || tplNormalized.includes("%2e%2e");
+      const sidInput = `${mirror}:${tplNormalized}`;
+      const sid = `m${sidInput.length}-${sidInput.replace(/[^a-z0-9]/g, "").slice(0, 8)}`;
+      const policy = isPolicyBlocked ? "BLOCK" : "ALLOW";
+      const ts = new Date().toISOString();
+      const message = isPolicyBlocked
+        ? `Legacy mirror profile active. tpl rejected by policy. [LEGACY-BLOCK] | sid=${sid} | policy=${policy} | ts=${ts} | src=partner-ui`
+        : `Legacy mirror profile active. tpl=${tplNormalized} [LEGACY-OK] | sid=${sid} | policy=${policy} | ts=${ts} | src=partner-ui`;
+      const status = document.getElementById("mirrorStatus");
+      if (status) { const st = status.firstElementChild; if (st) st.textContent = message; status.hidden = false; }
+      var mirrorAlert = document.getElementById("mirrorAlert");
+      var mirrorMsg   = document.getElementById("mirrorMsg");
+      if (mirrorAlert && mirrorMsg) { mirrorMsg.textContent = message; mirrorAlert.style.display = "block"; }
+    })();
+  </script>
 </body>
 </html>
