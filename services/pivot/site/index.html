@@ -1,29 +1,193 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Black Tide - Official Channel</title>
+  <title>Black Tide — Official Channel</title>
+  <link rel="stylesheet" href="assets/bt.css" />
+  <style>
+    .bt-statement {
+      display: flex; align-items: flex-start; gap: 20px;
+      padding: 24px 0; border-bottom: 1px solid var(--bt-border);
+    }
+    .bt-statement:last-child { border-bottom: 0; }
+    .bt-statement-num {
+      font-family: var(--bt-mono); font-size: 11px; color: var(--bt-muted);
+      flex-shrink: 0; padding-top: 2px; width: 36px;
+    }
+    .bt-statement h3 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .bt-statement p  { font-size: 13px; color: var(--bt-muted); line-height: 1.6; }
+    .bt-statement-meta { margin-top: 10px; font-size: 11px; color: #2e3d58; font-family: var(--bt-mono); }
+    .bt-dl-card {
+      display: flex; align-items: center; gap: 18px;
+      padding: 20px 22px; background: var(--bt-bg1);
+      border: 1px solid var(--bt-border); border-radius: var(--bt-r);
+      text-decoration: none; transition: border-color .2s; max-width: 480px;
+    }
+    .bt-dl-card:hover { border-color: var(--bt-accent); }
+    .bt-dl-icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      background: var(--bt-bg2); border: 1px solid var(--bt-border2);
+      border-radius: var(--bt-r); display: flex; align-items: center; justify-content: center;
+    }
+    .bt-dl-icon svg { width: 20px; height: 20px; stroke: var(--bt-muted); fill: none; stroke-width: 1.5; }
+    .bt-dl-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .bt-dl-sub   { font-size: 12px; color: var(--bt-muted); }
+    .bt-dl-arrow { margin-left: auto; color: var(--bt-accent); }
+    .bt-dl-arrow svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+    .bt-partner-block {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center;
+    }
+    @media (max-width: 640px) { .bt-partner-block { grid-template-columns: 1fr; } }
+    .bt-partner-body h2 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+    .bt-partner-body p  { font-size: 13.5px; color: var(--bt-muted); margin-bottom: 18px; line-height: 1.7; }
+    .bt-partner-info {
+      background: var(--bt-bg1); border: 1px solid var(--bt-border);
+      border-radius: var(--bt-r); padding: 20px 22px;
+    }
+    .bt-info-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--bt-border); font-size: 12px;
+    }
+    .bt-info-row:last-child { border-bottom: 0; }
+    .bt-info-row svg { width: 14px; height: 14px; stroke: var(--bt-muted); fill: none; stroke-width: 1.5; flex-shrink: 0; }
+    .bt-info-row span { color: var(--bt-muted); flex: 1; }
+    .bt-info-row strong { color: var(--bt-text); }
+  </style>
 </head>
 <body>
-  <h1>Black Tide Official Channel</h1>
-  <p>Strategic communications portal - restricted publications</p>
-  <section>
-    <h2>Public Statements</h2>
-    <article>
-        <h3>Statement #27</h3>
-            <p>Operational continuity comfirmed. External pressure remains ineffective.</p>
-    </article>
+
+  <div class="classif">Restricted publication · Black Tide Strategic Communications · Authorized distribution only</div>
+
+  <header class="bt-header">
+    <div class="bt-header-inner">
+      <a class="bt-logo" href="index.html">
+        <div class="bt-logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5.5 3.6 10.7 8 11 4.4-.3 8-5.5 8-11V6l-8-4z"/></svg>
+        </div>
+        <span class="bt-logo-name">Black<span>&nbsp;Tide</span></span>
+      </a>
+      <nav>
+        <ul class="bt-nav">
+          <li><a href="index.html" class="active">Official Channel</a></li>
+          <li><a href="partner.html">Partner Access</a></li>
+          <li><a href="press-pack.zip">Media Kit</a></li>
+        </ul>
+      </nav>
+      <div class="bt-header-cta">
+        <a class="bt-btn bt-btn-outline" href="partner.html">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Partner Login
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="bt-ticker" aria-hidden="true">
+    <span class="bt-ticker-inner">
+      <span>Statement #27 — Operational continuity confirmed</span>
+      <span>·</span>
+      <span>External pressure remains ineffective</span>
+      <span>·</span>
+      <span>Strategic communications portal — restricted publications</span>
+      <span>·</span>
+      <span>Partner access — accredited operators only</span>
+      <span>·</span>
+      <span>Statement #27 — Operational continuity confirmed</span>
+      <span>·</span>
+      <span>External pressure remains ineffective</span>
+    </span>
+  </div>
+
+  <div class="bt-hero">
+    <div class="bt-hero-content">
+      <div class="bt-hero-tag">Official Channel · Restricted</div>
+      <h1>Strategic operations.<br><span>Uninterrupted.</span></h1>
+      <p>Black Tide maintains full operational continuity across all sectors. This channel provides authorized communications for accredited partners and approved press contacts.</p>
+      <div class="bt-hero-actions">
+        <a class="bt-btn bt-btn-primary" href="partner.html">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Partner Portal
+        </a>
+        <a class="bt-btn bt-btn-outline" href="press-pack.zip">Download Media Kit</a>
+      </div>
+    </div>
+    <div class="bt-hero-visual">
+      <div class="bt-hero-stat"><span class="bt-hero-stat-dot ok"></span><span class="bt-hero-stat-label">Core infrastructure</span><span class="bt-hero-stat-val">OPERATIONAL</span></div>
+      <div class="bt-hero-stat"><span class="bt-hero-stat-dot ok"></span><span class="bt-hero-stat-label">Partner relay</span><span class="bt-hero-stat-val">ACTIVE</span></div>
+      <div class="bt-hero-stat"><span class="bt-hero-stat-dot warn"></span><span class="bt-hero-stat-label">Auth gateway v2</span><span class="bt-hero-stat-val">DEGRADED</span></div>
+      <div class="bt-hero-stat"><span class="bt-hero-stat-dot ok"></span><span class="bt-hero-stat-label">Press channel</span><span class="bt-hero-stat-val">ACTIVE</span></div>
+      <div class="bt-hero-stat"><span class="bt-hero-stat-dot bad"></span><span class="bt-hero-stat-label">Incident ref</span><span class="bt-hero-stat-val">BT-AUTH-4421</span></div>
+    </div>
+  </div>
+
+  <section class="bt-section">
+    <div class="bt-section-hd"><h2>Public Statements</h2><span class="bt-tag">Official Record</span></div>
+    <div class="bt-statement">
+      <div class="bt-statement-num">#27</div>
+      <div>
+        <h3>Operational Continuity Statement</h3>
+        <p>Operational continuity confirmed across all sectors. External pressure from third-party actors remains ineffective. Black Tide maintains uninterrupted strategic operations and continues to fulfill its commitments to all accredited partners.</p>
+        <div class="bt-statement-meta">Published · 2026-04-24 · ref: BT-PRESS-27 · distribution: authorized</div>
+      </div>
+    </div>
+    <div class="bt-statement">
+      <div class="bt-statement-num">#26</div>
+      <div>
+        <h3>Partner Network Integrity Notice</h3>
+        <p>All partner relay channels remain secure. Accredited operators should ensure authentication via the designated portal only. Unofficial access attempts are monitored and logged for incident correlation.</p>
+        <div class="bt-statement-meta">Published · 2026-03-15 · ref: BT-PRESS-26 · distribution: authorized</div>
+      </div>
+    </div>
+    <div class="bt-statement">
+      <div class="bt-statement-num">#25</div>
+      <div>
+        <h3>Infrastructure Resilience Update</h3>
+        <p>Following the Q1 infrastructure review, all primary relay nodes have been reinforced. Legacy compatibility profiles remain active for partner onboarding continuity. No service interruption anticipated.</p>
+        <div class="bt-statement-meta">Published · 2026-02-01 · ref: BT-PRESS-25 · distribution: restricted</div>
+      </div>
+    </div>
   </section>
-  <section>
-    <h2>Media Kit</h2>
-    <p>Authorized press assets and statements package.</p>
-    <a href="press-pack.zip">Download press-pack.zip</a>
+
+  <section class="bt-section">
+    <div class="bt-section-hd"><h2>Media Kit</h2><span class="bt-tag">Press Assets</span></div>
+    <p style="font-size:13px;color:var(--bt-muted);margin-bottom:20px;max-width:640px;line-height:1.7">Authorized press assets, brand guidelines, and official statements are available to accredited media contacts only. Unauthorized distribution is prohibited.</p>
+    <a class="bt-dl-card" href="press-pack.zip">
+      <div class="bt-dl-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <div><div class="bt-dl-title">press-pack.zip</div><div class="bt-dl-sub">Brand guide · statements · media index · legal</div></div>
+      <span class="bt-dl-arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg></span>
+    </a>
   </section>
-  <section>
-    <h2>Partner Access</h2>
-    <p>Accredited operators can access the partner portal.</p>
-    <a href="partner.html">Open partner portal</a>
+
+  <section class="bt-section">
+    <div class="bt-partner-block">
+      <div class="bt-partner-body">
+        <h2>Partner Access</h2>
+        <p>Accredited operators access the partner portal for relay coordination, operational briefings and authentication services. Access is restricted to operators on the approved registry.</p>
+        <a class="bt-btn bt-btn-primary" href="partner.html">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Open Partner Portal
+        </a>
+      </div>
+      <div class="bt-partner-info">
+        <div class="bt-info-row"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Contact</span><strong>n.morel</strong></div>
+        <div class="bt-info-row"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Operation window</span><strong>02:00 – 03:00 UTC</strong></div>
+        <div class="bt-info-row"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><span>Active incident</span><strong style="color:#f87171">BT-AUTH-4421</strong></div>
+        <div class="bt-info-row"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>Fallback</span><strong>/internal/auth-gateway/v2</strong></div>
+      </div>
+    </div>
   </section>
+
+  <footer class="bt-footer">
+    <div class="bt-footer-inner">
+      <span class="bt-footer-copy">© 2026 Black Tide. All rights reserved. Unauthorized access is monitored.</span>
+      <nav class="bt-footer-links">
+        <a href="partner.html">Partner Portal</a>
+        <a href="press-pack.zip">Media Kit</a>
+        <a href="/internal/auth-gateway/v2/">Gateway Status</a>
+      </nav>
+    </div>
+  </footer>
+
 </body>
 </html>

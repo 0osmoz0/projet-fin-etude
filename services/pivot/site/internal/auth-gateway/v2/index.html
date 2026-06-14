@@ -1,13 +1,52 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Auth Gateway v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auth Gateway v2 — Status</title>
+  <link rel="stylesheet" href="/assets/bt.css" />
+  <style>
+    .row { display: flex; gap: 12px; margin-bottom: 4px; }
+    .row .key { min-width: 160px; }
+  </style>
 </head>
 <body>
-  <h1>Auth Gateway v2</h1>
-  <p>Status: degraded</p>
-  <p>Reference: BT-AUTH-4421</p>
-  <p>Template renderer: legacy (tpl)</p>
+
+  <div class="classif">Internal · Auth Gateway v2 · Operator access only</div>
+
+  <div class="bt-status-wrap">
+
+    <div class="bt-status-icon">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+
+    <div style="text-align:center;margin-bottom:24px">
+      <h1>Auth Gateway v2</h1>
+      <p>Service status: <span style="color:#f87171;font-weight:700">DEGRADED</span></p>
+      <p>Reference: <code style="font-size:13px;color:#93c5fd">BT-AUTH-4421</code></p>
+    </div>
+
+    <div class="bt-status-ref">
+      <div class="row"><span class="key">module</span><span class="val">auth-gateway / v2</span></div>
+      <div class="row"><span class="key">status</span><span class="val bad">degraded</span></div>
+      <div class="row"><span class="key">incident_ref</span><span class="val bad">BT-AUTH-4421</span></div>
+      <div class="row"><span class="key">template_renderer</span><span class="val">legacy (tpl)</span></div>
+      <div class="row"><span class="key">fallback_profile</span><span class="val">legacy-mirror · ENABLED</span></div>
+      <div class="row"><span class="key">operator_contact</span><span class="val">n.morel</span></div>
+      <div class="row"><span class="key">uptime</span><span class="val ok">core: operational</span></div>
+    </div>
+
+    <div class="bt-status-actions">
+      <a class="bt-btn bt-btn-outline" href="/partner.html">← Partner Portal</a>
+      <a class="bt-btn bt-btn-outline" href="health.php">Health check</a>
+      <a class="bt-btn bt-btn-outline" href="render.php?mode=legacy&amp;tpl=diag">Legacy diag</a>
+    </div>
+
+    <p style="margin-top:24px;font-size:11px;color:#2e3d58;font-family:var(--bt-mono)">
+      nginx/1.27 + php-fpm · partner module · legacy compatibility enabled
+    </p>
+
+  </div>
+
 </body>
 </html>
