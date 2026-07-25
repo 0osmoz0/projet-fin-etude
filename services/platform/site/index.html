@@ -1,370 +1,537 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OMEGA Platform</title>
-  <style>
-    :root {
-      --bg:      #141d2b;
-      --surface: #1a2332;
-      --surface2:#111927;
-      --border:  #253047;
-      --text:    #a4b1cd;
-      --muted:   #4b5a72;
-      --green:   #9fef00;
-      --red:     #ff5f57;
-      --yellow:  #febc2e;
-      --mono:    "SF Mono","Fira Code",ui-monospace,monospace;
-      --sans:    ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMEGA Platform</title>
+<style>
+:root {
+  --bg:        #0e1421;
+  --bg1:       #131d2e;
+  --bg2:       #0a0f1a;
+  --surface:   #19243a;
+  --surface2:  #1f2d47;
+  --border:    #1e2d45;
+  --border2:   #243554;
+  --text:      #8899b4;
+  --text2:     #c5d0e6;
+  --white:     #e8eef8;
+  --muted:     #3d5070;
+  --green:     #9fef00;
+  --green-dim: rgba(159,239,0,.08);
+  --green-glow:rgba(159,239,0,.25);
+  --red:       #ff5f57;
+  --yellow:    #febc2e;
+  --orange:    #ff9f43;
+  --blue:      #5eaef8;
+  --purple:    #bd9cf7;
+  --mono:      "SF Mono","Fira Code",ui-monospace,monospace;
+  --sans:      ui-sans-serif,system-ui,-apple-system,sans-serif;
+}
+*,::before,::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
 
-    /* Topbar */
-    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; }
-    .topbar-brand { font-family: var(--mono); font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .04em; }
-    .topbar-brand span { color: var(--green); }
-    .topbar-right { display: flex; align-items: center; gap: 16px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
-    .topbar-links a { color: var(--muted); text-decoration: none; font-size: 12px; margin-left: 12px; }
-    .topbar-links a:hover { color: var(--green); }
+/* ── Topbar ── */
+.nav{
+  height:54px;padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.nav-left{display:flex;align-items:center;gap:20px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-icon{
+  width:30px;height:30px;border-radius:6px;
+  background:linear-gradient(135deg,rgba(159,239,0,.2),rgba(159,239,0,.05));
+  border:1px solid rgba(159,239,0,.3);
+  display:flex;align-items:center;justify-content:center;
+}
+.nav-logo-icon svg{width:16px;height:16px;stroke:var(--green);fill:none;stroke-width:2}
+.nav-brand{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--white)}
+.nav-brand em{color:var(--green);font-style:normal}
+.nav-sep{width:1px;height:20px;background:var(--border2)}
+.nav-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:20px;
+  border:1px solid var(--border2);background:var(--bg1);
+  font-family:var(--mono);font-size:10px;color:var(--muted);
+}
+.nav-pill-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-clock{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.nav-btn{
+  padding:5px 14px;border-radius:5px;font-size:11px;font-weight:600;
+  text-decoration:none;color:var(--text2);
+  border:1px solid var(--border2);background:var(--bg1);
+  transition:all .15s;letter-spacing:.03em;
+}
+.nav-btn:hover{border-color:rgba(159,239,0,.4);color:var(--green);background:var(--green-dim)}
 
-    /* Layout */
-    .layout { max-width: 1140px; margin: 0 auto; padding: 28px 20px; display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
-    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+/* ── Layout ── */
+.wrap{max-width:1160px;margin:0 auto;padding:24px 20px 80px}
 
-    /* Machine card */
-    .machine-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+/* ── Hero banner ── */
+.hero{
+  border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  margin-bottom:20px;
+  background:linear-gradient(135deg,var(--bg1) 0%,var(--surface) 100%);
+  position:relative;
+}
+.hero::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 700px 300px at 80% 50%,rgba(159,239,0,.04),transparent);
+  pointer-events:none;
+}
+.hero-inner{padding:28px 32px;display:flex;align-items:center;gap:28px}
+.hero-icon{
+  width:72px;height:72px;flex-shrink:0;border-radius:12px;
+  background:linear-gradient(135deg,rgba(159,239,0,.15),rgba(159,239,0,.04));
+  border:1px solid rgba(159,239,0,.25);
+  display:flex;align-items:center;justify-content:center;
+}
+.hero-icon svg{width:34px;height:34px;stroke:var(--green);fill:none;stroke-width:1.4}
+.hero-body{flex:1;min-width:0}
+.hero-tags{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.htag{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  padding:2px 9px;border-radius:3px;border:1px solid;
+}
+.htag-green {color:var(--green);  border-color:rgba(159,239,0,.3); background:rgba(159,239,0,.06)}
+.htag-yellow{color:var(--yellow); border-color:rgba(254,188,46,.3);background:rgba(254,188,46,.06)}
+.htag-blue  {color:var(--blue);   border-color:rgba(94,174,248,.3); background:rgba(94,174,248,.06)}
+.htag-muted {color:var(--muted);  border-color:var(--border2);      background:transparent}
+.hero-title{font-size:1.5rem;font-weight:800;color:var(--white);letter-spacing:-.02em;margin-bottom:5px}
+.hero-desc{font-size:12.5px;color:var(--text);line-height:1.65;max-width:580px}
+.hero-desc b{color:var(--text2)}
+.hero-stats{
+  display:flex;flex-direction:column;align-items:flex-end;gap:14px;flex-shrink:0;
+}
+.hero-stat{text-align:right}
+.hero-stat-val{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--white)}
+.hero-stat-val.green{color:var(--green)}
+.hero-stat-sub{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.hero-meta{
+  display:flex;gap:0;border-top:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+}
+.hm{
+  display:flex;flex-direction:column;padding:10px 24px;
+  border-right:1px solid var(--border);
+}
+.hm:last-child{border-right:none}
+.hm-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:2px;font-weight:600}
+.hm-val{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--text2)}
+.hm-val a{color:var(--green);text-decoration:none}
+.hm-val a:hover{text-decoration:underline}
 
-    .machine-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; gap: 20px; align-items: flex-start; }
-    .machine-icon { width: 64px; height: 64px; border-radius: 8px; background: rgba(159,239,0,.08); border: 1px solid rgba(159,239,0,.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 28px; }
-    .machine-info { flex: 1; min-width: 0; }
-    .machine-tags { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-    .tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border-radius: 3px; border: 1px solid; }
-    .tag-green  { color: var(--green);  border-color: rgba(159,239,0,.3);  background: rgba(159,239,0,.06); }
-    .tag-yellow { color: var(--yellow); border-color: rgba(254,188,46,.3); background: rgba(254,188,46,.06); }
-    .tag-muted  { color: var(--muted);  border-color: var(--border);       background: transparent; }
-    .machine-name { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .machine-desc { color: var(--muted); font-size: 13px; line-height: 1.65; }
+/* ── Grid ── */
+.grid{display:grid;grid-template-columns:1fr 290px;gap:18px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
 
-    /* Meta bar */
-    .machine-meta { padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 28px; flex-wrap: wrap; background: var(--surface2); }
-    .meta-item { display: flex; flex-direction: column; gap: 1px; }
-    .meta-label { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-    .meta-value { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--mono); }
-    .meta-value a { color: var(--green); text-decoration: none; }
-    .meta-value a:hover { text-decoration: underline; }
+/* ── Card ── */
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.card + .card{margin-top:16px}
+.card-head{
+  padding:11px 20px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-head-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--text2);display:flex;align-items:center;gap:8px}
+.ch-dot{width:6px;height:6px;border-radius:50%}
+.ch-dot.green {background:var(--green)}
+.ch-dot.yellow{background:var(--yellow)}
+.ch-dot.red   {background:var(--red)}
+.ch-dot.blue  {background:var(--blue)}
+.card-head-badge{
+  font-size:10px;font-family:var(--mono);color:var(--muted);
+  padding:2px 8px;border:1px solid var(--border2);border-radius:20px;
+}
+.card-body{padding:18px 20px}
 
-    /* Tabs */
-    .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 24px; }
-    .tab { padding: 10px 14px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s; user-select: none; }
-    .tab:hover { color: var(--text); }
-    .tab.active { color: var(--green); border-bottom-color: var(--green); }
+/* ── Tabs ── */
+.tabs{display:flex;padding:0 20px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tab{padding:10px 14px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none;letter-spacing:.03em}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
 
-    /* Tab contents */
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+.tab-content{display:none}
+.tab-content.active{display:block}
 
-    /* Flags list */
-    .flags-section { padding: 20px 24px; }
-    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 14px; }
-    .flag-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .flag-item:last-child { border-bottom: none; }
-    .flag-status { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-family: var(--mono); color: var(--muted); flex-shrink: 0; }
-    .flag-item.done .flag-status { background: rgba(159,239,0,.12); border-color: var(--green); color: var(--green); }
-    .flag-info { flex: 1; min-width: 0; }
-    .flag-name { font-size: 13px; font-weight: 600; color: var(--text); }
-    .flag-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .flag-item.done .flag-name { color: var(--green); }
-    .flag-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
-    .flag-pts { font-size: 12px; font-weight: 700; color: var(--muted); font-family: var(--mono); }
-    .flag-item.done .flag-pts { color: var(--green); }
-    .flag-time { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-    .flag-item.done .flag-time { color: var(--green); }
+/* ── Flag list ── */
+.flags-body{padding:4px 0}
+.flag-row{
+  display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:12px;
+  padding:13px 20px;border-bottom:1px solid var(--border);
+  transition:background .1s;
+}
+.flag-row:last-child{border-bottom:none}
+.flag-row:hover{background:rgba(255,255,255,.02)}
+.flag-badge{
+  width:34px;height:34px;border-radius:8px;
+  background:var(--bg2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;font-family:var(--mono);color:var(--muted);
+  flex-shrink:0;transition:all .2s;
+}
+.flag-row.done .flag-badge{
+  background:var(--green-dim);border-color:rgba(159,239,0,.35);
+  color:var(--green);font-size:14px;
+}
+.flag-center{}
+.flag-name{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:2px}
+.flag-hint{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.flag-row.done .flag-name{color:var(--green)}
+.flag-row.done .flag-hint{color:rgba(159,239,0,.5)}
+.flag-end{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.flag-pts{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--muted)}
+.flag-row.done .flag-pts{color:var(--green)}
+.flag-time-val{font-size:10px;font-family:var(--mono);color:var(--muted)}
+.flag-row.done .flag-time-val{color:rgba(159,239,0,.55)}
 
-    /* Submit */
-    .submit-section { padding: 0 24px 24px; }
-    .submit-grid { display: grid; grid-template-columns: 180px 1fr auto; gap: 8px; margin-bottom: 8px; }
-    @media (max-width: 600px) { .submit-grid { grid-template-columns: 1fr; } }
-    .submit-select, .submit-input {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 4px;
-      color: var(--text); font-family: var(--mono); font-size: 13px; padding: 9px 11px; outline: none;
-    }
-    .submit-select { font-family: var(--sans); }
-    .submit-select:focus, .submit-input:focus { border-color: var(--green); }
-    .submit-input::placeholder { color: var(--muted); opacity: .6; }
-    .submit-btn { padding: 9px 18px; background: var(--green); border: none; border-radius: 4px; color: #141d2b; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
-    .submit-btn:hover { opacity: .85; }
-    .submit-msg { font-size: 12px; font-family: var(--mono); min-height: 18px; padding: 2px 0; }
-    .submit-msg.ok  { color: var(--green); }
-    .submit-msg.err { color: var(--red); }
+/* ── Submit ── */
+.submit-area{padding:16px 20px 20px}
+.submit-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:12px}
+.submit-row{display:grid;grid-template-columns:165px 1fr auto;gap:8px}
+@media(max-width:600px){.submit-row{grid-template-columns:1fr}}
+.s-select,.s-input{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text2);font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.s-select{font-family:var(--sans)}
+.s-input{font-family:var(--mono)}
+.s-select:focus,.s-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(159,239,0,.08)}
+.s-input::placeholder{color:var(--muted);opacity:.7}
+.s-btn{
+  padding:9px 20px;background:var(--green);border:none;border-radius:6px;
+  color:#0e1421;font-weight:800;font-size:13px;cursor:pointer;
+  white-space:nowrap;transition:opacity .15s;letter-spacing:.03em;
+}
+.s-btn:hover{opacity:.85}
+.s-msg{font-size:12px;font-family:var(--mono);min-height:18px;padding:6px 0 0}
+.s-msg.ok {color:var(--green)}
+.s-msg.err{color:var(--red)}
 
-    /* Admin tab */
-    .admin-section { padding: 20px 24px; }
-    .admin-row { margin-bottom: 18px; }
-    .admin-label { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; }
-    .btn-row { display: flex; gap: 8px; }
-    .btn { padding: 9px 16px; border: none; border-radius: 4px; font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
-    .btn:hover { opacity: .85; }
-    .btn-green  { background: var(--green); color: #141d2b; }
-    .btn-red    { background: var(--red);   color: #fff; }
-    .btn-gray   { background: var(--border); color: var(--text); }
-    .team-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 9px 11px; outline: none; margin-bottom: 8px; }
-    .team-input:focus { border-color: var(--green); }
+/* ── Admin ── */
+.admin-body{padding:18px 20px}
+.a-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px}
+.a-row{margin-bottom:16px}
+.a-btns{display:flex;gap:8px;flex-wrap:wrap}
+.a-btn{padding:9px 16px;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.a-btn:hover{opacity:.85}
+.a-btn.start{background:var(--green);color:#0e1421}
+.a-btn.stop {background:var(--red);  color:#fff}
+.a-btn.reset{background:var(--border2);color:var(--text2)}
+.a-input{
+  width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text2);font-size:13px;padding:9px 12px;outline:none;margin-bottom:8px;
+}
+.a-input:focus{border-color:var(--green)}
+.a-save{width:100%;padding:9px;background:var(--border2);border:none;border-radius:6px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.a-save:hover{background:var(--border);color:var(--white)}
 
-    /* Sidebar */
-    .sidebar { display: flex; flex-direction: column; gap: 14px; }
-    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .panel-head { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-    .panel-body { padding: 16px; }
+/* ── Sidebar ── */
+.sidebar{display:flex;flex-direction:column;gap:14px}
 
-    /* Timer */
-    .timer-display { font-family: var(--mono); font-size: 2.2rem; font-weight: 700; color: #fff; text-align: center; letter-spacing: .04em; margin-bottom: 16px; }
-    .timer-display.running { color: var(--green); }
-    .timer-display.stopped { color: var(--red); }
+/* Timer card */
+.timer-card{
+  background:var(--bg1);border:1px solid var(--border);border-radius:10px;
+  padding:24px 20px;text-align:center;
+}
+.timer-val{
+  font-family:var(--mono);font-size:2.6rem;font-weight:700;
+  letter-spacing:.06em;color:var(--white);
+  margin-bottom:4px;transition:color .3s;line-height:1;
+}
+.timer-val.running{color:var(--green);text-shadow:0 0 30px rgba(159,239,0,.3)}
+.timer-val.stopped{color:var(--red)}
+.timer-status{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:20px}
+.score-val{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--white);margin-bottom:2px}
+.score-label{font-size:11px;color:var(--muted);margin-bottom:18px;font-family:var(--mono)}
+.prog-header{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.prog-track{height:5px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .5s ease;box-shadow:0 0 10px rgba(159,239,0,.4)}
 
-    /* Score */
-    .score-big { font-family: var(--mono); font-size: 1.6rem; font-weight: 700; color: var(--green); text-align: center; }
-    .score-sub { text-align: center; font-size: 11px; color: var(--muted); margin-top: 2px; margin-bottom: 14px; }
+/* Steps card */
+.steps-card{background:var(--bg1);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.steps-head{padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+.step-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  transition:background .1s;
+}
+.step-item:last-child{border-bottom:none}
+.step-item.done{background:rgba(159,239,0,.03)}
+.step-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  background:var(--border2);transition:all .2s;
+}
+.step-item.done .step-dot{background:var(--green);box-shadow:0 0 8px rgba(159,239,0,.5)}
+.step-label{font-size:12px;color:var(--muted);flex:1;transition:color .2s}
+.step-item.done .step-label{color:var(--text2)}
+.step-pts{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--muted)}
+.step-item.done .step-pts{color:var(--green)}
 
-    /* Progress */
-    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    .progress-bar { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
-    .progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width .4s; }
-
-    /* Side steps */
-    .side-step { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
-    .side-step:last-child { border-bottom: none; }
-    .side-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
-    .side-step.done .side-dot { background: var(--green); }
-    .side-step-name { font-size: 12px; color: var(--muted); flex: 1; }
-    .side-step.done .side-step-name { color: #fff; }
-    .side-step-pts { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-    .side-step.done .side-step-pts { color: var(--green); }
-  </style>
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-brand">OMEGA <span>PLATFORM</span></div>
-  <div class="topbar-right">
-    <span id="clock">--:--:--</span>
-    <div class="topbar-links">
-      <a href="http://localhost:18080" target="_blank">Hub →</a>
-      <a href="http://localhost:18081" target="_blank">Cible →</a>
+<!-- Navbar -->
+<nav class="nav">
+  <div class="nav-left">
+    <a class="nav-logo" href="#">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <span class="nav-brand">OMEGA <em>PLATFORM</em></span>
+    </a>
+    <div class="nav-sep"></div>
+    <div class="nav-pill">
+      <div class="nav-pill-dot"></div>
+      <span>Session active</span>
     </div>
   </div>
-</div>
+  <div class="nav-right">
+    <span class="nav-clock" id="clock">--:--:--</span>
+    <a class="nav-btn" href="http://localhost:18080" target="_blank">Hub :18080</a>
+    <a class="nav-btn" href="http://localhost:18081" target="_blank">Cible :18081</a>
+  </div>
+</nav>
 
-<div class="layout">
+<div class="wrap">
 
-  <!-- Machine card -->
-  <div class="machine-card">
-
-    <div class="machine-header">
-      <div class="machine-icon">🎯</div>
-      <div class="machine-info">
-        <div class="machine-tags">
-          <span class="tag tag-yellow">Intermédiaire</span>
-          <span class="tag tag-green">Escape Game</span>
-          <span class="tag tag-muted">6 flags · 1725 pts</span>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-icon">
+        <svg viewBox="0 0 24 24">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+          <path d="M7 7h3v3H7zM14 7h3v3h-3zM7 13h3M14 13h3"/>
+        </svg>
+      </div>
+      <div class="hero-body">
+        <div class="hero-tags">
+          <span class="htag htag-yellow">Intermédiaire</span>
+          <span class="htag htag-green">Escape Game</span>
+          <span class="htag htag-blue">Web · PrivEsc · OSINT</span>
+          <span class="htag htag-muted">6 flags · 1725 pts</span>
         </div>
-        <div class="machine-name">Operation OMEGA</div>
-        <div class="machine-desc">
-          Infiltrez le réseau criminel <strong style="color:#fff">Black Tide</strong>.
-          Récoltez du renseignement, exploitez les vulnérabilités du portail partenaire,
-          pivotez vers le réseau interne et exfiltrez le Dossier OMEGA.
+        <div class="hero-title">Operation OMEGA</div>
+        <div class="hero-desc">
+          Infiltrez le réseau criminel <b>Black Tide</b>. Récoltez du renseignement via OSINT, exploitez les vulnérabilités du portail partenaire, pivotez vers le réseau interne et exfiltrez le Dossier OMEGA.
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-val green" id="heroScore">0</div>
+          <div class="hero-stat-sub">points</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val" id="heroFlags">0 / 6</div>
+          <div class="hero-stat-sub">flags</div>
         </div>
       </div>
     </div>
-
-    <div class="machine-meta">
-      <div class="meta-item">
-        <span class="meta-label">Flags validés</span>
-        <span class="meta-value" id="metaFlags">0 / 6</span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Score</span>
-        <span class="meta-value" id="metaScore">0 / 1725</span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Hub</span>
-        <span class="meta-value"><a href="http://localhost:18080" target="_blank">:18080</a></span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Cible</span>
-        <span class="meta-value"><a href="http://localhost:18081" target="_blank">:18081</a></span>
-      </div>
+    <div class="hero-meta">
+      <div class="hm"><span class="hm-label">Flags validés</span><span class="hm-val" id="metaFlags">0 / 6</span></div>
+      <div class="hm"><span class="hm-label">Score</span><span class="hm-val" id="metaScore">0 / 1725</span></div>
+      <div class="hm"><span class="hm-label">Hub</span><span class="hm-val"><a href="http://localhost:18080" target="_blank">:18080</a></span></div>
+      <div class="hm"><span class="hm-label">Cible</span><span class="hm-val"><a href="http://localhost:18081" target="_blank">:18081</a></span></div>
     </div>
+  </div>
 
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('player')">Joueur</div>
-      <div class="tab" onclick="switchTab('admin')">Admin</div>
-    </div>
+  <!-- Grid -->
+  <div class="grid">
 
-    <!-- Tab joueur -->
-    <div class="tab-content active" id="tab-player">
-      <div class="flags-section">
-        <div class="section-title">Flags à trouver</div>
-        <div id="flagsList"></div>
-      </div>
-      <div class="submit-section">
-        <div class="section-title">Soumettre un flag</div>
-        <div class="submit-grid">
-          <select class="submit-select" id="stepSelect"></select>
-          <input class="submit-input" id="flagInput" type="text" placeholder="FLAG: valeur..." />
-          <button class="submit-btn" onclick="submitFlag()">Submit</button>
+    <!-- Left -->
+    <div>
+
+      <!-- Machine card with tabs -->
+      <div class="card">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('player')">Joueur</div>
+          <div class="tab" onclick="switchTab('admin')">Admin</div>
         </div>
-        <div class="submit-msg" id="submitMsg"></div>
-      </div>
-    </div>
 
-    <!-- Tab admin -->
-    <div class="tab-content" id="tab-admin">
-      <div class="admin-section">
-        <div class="admin-row">
-          <div class="admin-label">Contrôles session</div>
-          <div class="btn-row">
-            <button class="btn btn-green" onclick="apiPost('/api/start')">▶ Démarrer</button>
-            <button class="btn btn-red"   onclick="apiPost('/api/stop')">⏹ Arrêter</button>
-            <button class="btn btn-gray"  onclick="apiPost('/api/reset')">↺ Reset</button>
+        <!-- Joueur -->
+        <div class="tab-content active" id="tab-player">
+          <div class="card-head">
+            <div class="card-head-title"><div class="ch-dot green"></div>Flags à trouver</div>
+            <div class="card-head-badge" id="badgeFlags">0 / 6</div>
+          </div>
+          <div class="flags-body" id="flagsList"></div>
+
+          <div class="submit-area">
+            <div class="submit-title">Soumettre un flag</div>
+            <div class="submit-row">
+              <select class="s-select" id="stepSelect"></select>
+              <input class="s-input" id="flagInput" type="text" placeholder="FLAG: valeur..." autocomplete="off"/>
+              <button class="s-btn" onclick="submitFlag()">Submit</button>
+            </div>
+            <div class="s-msg" id="submitMsg"></div>
           </div>
         </div>
-        <div class="admin-row">
-          <div class="admin-label">Nom de l'équipe</div>
-          <input class="team-input" id="teamInput" type="text" placeholder="Équipe 1" />
-          <button class="btn btn-gray" style="width:100%" onclick="saveTeam()">Enregistrer</button>
+
+        <!-- Admin -->
+        <div class="tab-content" id="tab-admin">
+          <div class="admin-body">
+            <div class="a-row">
+              <div class="a-label">Contrôles session</div>
+              <div class="a-btns">
+                <button class="a-btn start" onclick="apiPost('/api/start')">▶ Démarrer</button>
+                <button class="a-btn stop"  onclick="apiPost('/api/stop')">⏹ Arrêter</button>
+                <button class="a-btn reset" onclick="apiPost('/api/reset')">↺ Reset</button>
+              </div>
+            </div>
+            <div class="a-row">
+              <div class="a-label">Équipe</div>
+              <input class="a-input" id="teamInput" type="text" placeholder="Équipe 1"/>
+              <button class="a-save" onclick="saveTeam()">Enregistrer le nom</button>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
 
-  </div>
+    <!-- Sidebar -->
+    <div class="sidebar">
 
-  <!-- Sidebar -->
-  <div class="sidebar">
-
-    <div class="panel">
-      <div class="panel-head">Session</div>
-      <div class="panel-body">
-        <div class="timer-display" id="timerDisplay">00:00:00</div>
-        <div class="score-big" id="scoreBig">0</div>
-        <div class="score-sub" id="scoreSub">pts / 1725</div>
-        <div class="progress-label">
+      <!-- Timer -->
+      <div class="timer-card">
+        <div class="timer-val" id="timerDisplay">00:00:00</div>
+        <div class="timer-status" id="timerStatus">En attente</div>
+        <div class="score-val" id="scoreBig">0</div>
+        <div class="score-label" id="scoreSub">pts / 1725</div>
+        <div class="prog-header">
           <span id="teamName">Équipe 1</span>
           <span id="progressLabel">0 / 6</span>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        <div class="prog-track">
+          <div class="prog-fill" id="progressFill" style="width:0%"></div>
         </div>
       </div>
-    </div>
 
-    <div class="panel">
-      <div class="panel-head">Étapes</div>
-      <div class="panel-body" style="padding:8px 14px" id="sideSteps"></div>
+      <!-- Steps -->
+      <div class="steps-card">
+        <div class="steps-head">Étapes</div>
+        <div id="sideSteps"></div>
+      </div>
+
     </div>
 
   </div>
 </div>
 
 <script>
-  var ws, state = {};
+var ws, state = {};
 
-  function connect() {
-    ws = new WebSocket("ws://" + window.location.host + "/ws");
-    ws.onmessage = function(e) { state = JSON.parse(e.data); render(); };
-    ws.onclose   = function()  { setTimeout(connect, 2000); };
-  }
+function connect() {
+  ws = new WebSocket("ws://" + window.location.host + "/ws");
+  ws.onmessage = function(e) { state = JSON.parse(e.data); render(); };
+  ws.onclose   = function()  { setTimeout(connect, 2000); };
+}
 
-  function pad(n) { return String(n).padStart(2, "0"); }
-  function fmt(s) { return pad(Math.floor(s/3600)) + ":" + pad(Math.floor((s%3600)/60)) + ":" + pad(s%60); }
+function pad(n) { return String(n).padStart(2, "0"); }
+function fmt(s) { return pad(Math.floor(s/3600)) + ":" + pad(Math.floor((s%3600)/60)) + ":" + pad(s%60); }
 
-  function render() {
-    if (!state.steps) return;
+function render() {
+  if (!state.steps) return;
 
-    // Timer
-    var td = document.getElementById("timerDisplay");
-    td.textContent = fmt(state.elapsed || 0);
-    td.className = "timer-display" + (state.running ? " running" : (state.elapsed ? " stopped" : ""));
+  var td = document.getElementById("timerDisplay");
+  td.textContent = fmt(state.elapsed || 0);
+  td.className   = "timer-val" + (state.running ? " running" : (state.elapsed ? " stopped" : ""));
+  document.getElementById("timerStatus").textContent = state.running ? "Session en cours" : (state.elapsed ? "Session terminée" : "En attente");
 
-    // Score
-    document.getElementById("scoreBig").textContent  = state.points || 0;
-    document.getElementById("metaFlags").textContent = (state.done||0) + " / " + (state.total||6);
-    document.getElementById("metaScore").textContent = (state.points||0) + " / " + (state.total_pts||1725);
-    document.getElementById("teamName").textContent  = state.team || "Équipe 1";
-    document.getElementById("progressLabel").textContent = (state.done||0) + " / " + (state.total||6);
-    document.getElementById("progressFill").style.width = Math.round((state.done||0)/(state.total||6)*100) + "%";
+  var pts = state.points || 0;
+  var done = state.done || 0;
+  var total = state.total || 6;
 
-    // Flags list
-    document.getElementById("flagsList").innerHTML = state.steps.map(function(s, i) {
-      return '<div class="flag-item' + (s.validated ? " done" : "") + '">' +
-        '<div class="flag-status">' + (s.validated ? "✓" : (i+1)) + '</div>' +
-        '<div class="flag-info"><div class="flag-name">' + s.name + '</div><div class="flag-desc">' + s.desc + '</div></div>' +
-        '<div class="flag-right">' +
-          '<div class="flag-pts">+' + s.points + ' pts</div>' +
-          '<div class="flag-time">' + (s.validated ? fmt(s.time) : "—") + '</div>' +
-        '</div>' +
-        '</div>';
-    }).join("");
+  document.getElementById("scoreBig").textContent     = pts;
+  document.getElementById("heroScore").textContent    = pts;
+  document.getElementById("heroFlags").textContent    = done + " / " + total;
+  document.getElementById("metaFlags").textContent    = done + " / " + total;
+  document.getElementById("metaScore").textContent    = pts + " / " + (state.total_pts || 1725);
+  document.getElementById("badgeFlags").textContent   = done + " / " + total;
+  document.getElementById("teamName").textContent     = state.team || "Équipe 1";
+  document.getElementById("progressLabel").textContent= done + " / " + total;
+  document.getElementById("progressFill").style.width = Math.round(done/total*100) + "%";
 
-    // Select
-    var sel = document.getElementById("stepSelect");
-    var cur = sel.value;
-    sel.innerHTML = state.steps.filter(function(s){ return !s.validated; }).map(function(s) {
-      return '<option value="' + s.id + '">' + s.name + '</option>';
-    }).join("");
-    if (cur) sel.value = cur;
+  // Flags list
+  document.getElementById("flagsList").innerHTML = state.steps.map(function(s, i) {
+    return '<div class="flag-row' + (s.validated ? " done" : "") + '">' +
+      '<div class="flag-badge">' + (s.validated ? "✓" : (i+1)) + '</div>' +
+      '<div class="flag-center">' +
+        '<div class="flag-name">' + s.name + '</div>' +
+        '<div class="flag-hint">' + s.desc + '</div>' +
+      '</div>' +
+      '<div class="flag-end">' +
+        '<div class="flag-pts">+' + s.points + ' pts</div>' +
+        '<div class="flag-time-val">' + (s.validated ? fmt(s.time) : "—") + '</div>' +
+      '</div></div>';
+  }).join("");
 
-    // Side steps
-    document.getElementById("sideSteps").innerHTML = state.steps.map(function(s) {
-      return '<div class="side-step' + (s.validated ? " done" : "") + '">' +
-        '<div class="side-dot"></div>' +
-        '<div class="side-step-name">' + s.name + '</div>' +
-        '<div class="side-step-pts">+' + s.points + '</div>' +
-        '</div>';
-    }).join("");
+  // Select
+  var sel = document.getElementById("stepSelect");
+  var cur = sel.value;
+  sel.innerHTML = state.steps.filter(function(s){ return !s.validated; }).map(function(s) {
+    return '<option value="' + s.id + '">' + s.name + '</option>';
+  }).join("");
+  if (cur) sel.value = cur;
 
-    // Team input
-    var ti = document.getElementById("teamInput");
-    if (ti && document.activeElement !== ti) ti.value = state.team || "";
-  }
+  // Side steps
+  document.getElementById("sideSteps").innerHTML = state.steps.map(function(s) {
+    return '<div class="step-item' + (s.validated ? " done" : "") + '">' +
+      '<div class="step-dot"></div>' +
+      '<div class="step-label">' + s.name + '</div>' +
+      '<div class="step-pts">+' + s.points + '</div>' +
+    '</div>';
+  }).join("");
 
-  function apiPost(url, body) {
-    fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: body ? JSON.stringify(body) : "{}" });
-  }
+  var ti = document.getElementById("teamInput");
+  if (ti && document.activeElement !== ti) ti.value = state.team || "";
+}
 
-  function submitFlag() {
-    var stepId = document.getElementById("stepSelect").value;
-    var flag   = document.getElementById("flagInput").value.trim();
-    var msg    = document.getElementById("submitMsg");
-    if (!stepId || !flag) { msg.textContent = "Sélectionnez une étape et entrez le flag."; msg.className = "submit-msg err"; return; }
-    fetch("/api/flag", {
-      method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({step_id: stepId, flag: flag})
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      msg.textContent = d.msg;
-      msg.className = "submit-msg " + (d.ok ? "ok" : "err");
-      if (d.ok) document.getElementById("flagInput").value = "";
-    });
-  }
+function apiPost(url, body) {
+  fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body: body ? JSON.stringify(body) : "{}" });
+}
 
-  function saveTeam() {
-    var name = document.getElementById("teamInput").value.trim();
-    if (name) apiPost("/api/team", {name: name});
-  }
+function submitFlag() {
+  var stepId = document.getElementById("stepSelect").value;
+  var flag   = document.getElementById("flagInput").value.trim();
+  var msg    = document.getElementById("submitMsg");
+  if (!stepId || !flag) { msg.textContent = "Sélectionnez une étape et entrez le flag."; msg.className = "s-msg err"; return; }
+  fetch("/api/flag", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({step_id: stepId, flag: flag})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    msg.textContent = d.msg;
+    msg.className = "s-msg " + (d.ok ? "ok" : "err");
+    if (d.ok) document.getElementById("flagInput").value = "";
+  });
+}
 
-  function switchTab(tab) {
-    document.querySelectorAll(".tab").forEach(function(t, i) {
-      t.classList.toggle("active", (i===0&&tab==="player")||(i===1&&tab==="admin"));
-    });
-    document.getElementById("tab-player").classList.toggle("active", tab==="player");
-    document.getElementById("tab-admin").classList.toggle("active",  tab==="admin");
-  }
+function saveTeam() {
+  var name = document.getElementById("teamInput").value.trim();
+  if (name) apiPost("/api/team", {name: name});
+}
 
-  setInterval(function(){ document.getElementById("clock").textContent = new Date().toLocaleTimeString("fr-FR"); }, 1000);
-  connect();
+function switchTab(tab) {
+  document.querySelectorAll(".tab").forEach(function(t, i) {
+    t.classList.toggle("active", (i===0&&tab==="player")||(i===1&&tab==="admin"));
+  });
+  document.getElementById("tab-player").classList.toggle("active", tab==="player");
+  document.getElementById("tab-admin").classList.toggle("active",  tab==="admin");
+}
+
+setInterval(function(){ document.getElementById("clock").textContent = new Date().toLocaleTimeString("fr-FR"); }, 1000);
+connect();
 </script>
 </body>
 </html>
